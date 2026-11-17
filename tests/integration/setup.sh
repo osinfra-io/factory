@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Sets up the whole local gateway stack on Docker Desktop Kind.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+if [ "$#" -ne 0 ]; then
+  echo "Usage: setup.sh" >&2
+  exit 2
+fi
+
+"${SCRIPT_DIR}/shared/preflight.sh"
+
+# Kubernetes manifest providers need CRDs at plan time, so each component is a separate stage.
+"${SCRIPT_DIR}/istio/setup.sh"
+"${SCRIPT_DIR}/authentik/setup.sh"
+"${SCRIPT_DIR}/istio/apply-auth.sh"
+"${SCRIPT_DIR}/istio/apply-routes.sh"
+"${SCRIPT_DIR}/agentgateway/setup.sh"
+"${SCRIPT_DIR}/agent-substrate/setup.sh"
+"${SCRIPT_DIR}/kagent/setup.sh"
+"${SCRIPT_DIR}/openbao/setup.sh"
+"${SCRIPT_DIR}/floor/setup.sh"
+
+echo "Local gateway stack is ready. Run tests/integration/verify.sh, then complete Google sign-in manually."

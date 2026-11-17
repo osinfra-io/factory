@@ -1,0 +1,58 @@
+# Input Variables
+# https://opentofu.org/docs/language/values/variables
+
+variable "agentgateway_version" {
+  description = "AgentGateway Helm chart version"
+  type        = string
+  default     = "v1.6.0"
+}
+
+variable "chart_repository" {
+  description = "OCI repository containing the AgentGateway Helm charts"
+  type        = string
+  default     = "oci://cr.agentgateway.dev/charts"
+}
+
+variable "controller_cpu_limits" {
+  description = "CPU limit for the AgentGateway controller"
+  type        = string
+  default     = "500m"
+}
+
+variable "controller_cpu_requests" {
+  description = "CPU request for the AgentGateway controller"
+  type        = string
+  default     = "100m"
+}
+
+variable "controller_memory_limits" {
+  description = "Memory limit for the AgentGateway controller"
+  type        = string
+  default     = "512Mi"
+}
+
+variable "controller_memory_requests" {
+  description = "Memory request for the AgentGateway controller"
+  type        = string
+  default     = "128Mi"
+}
+
+variable "crds_postrender" {
+  description = "Optional Helm post-renderer for the CRD chart; local fixtures use it to retain cluster-wide CRDs on uninstall"
+  type = object({
+    args        = optional(list(string), [])
+    binary_path = string
+  })
+  default = null
+}
+
+variable "labels" {
+  description = "Labels applied to AgentGateway resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace for AgentGateway"
+  type        = string
+}

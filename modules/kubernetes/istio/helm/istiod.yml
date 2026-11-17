@@ -1,0 +1,54 @@
+autoscaleEnabled: true
+autoscaleMax: 5
+autoscaleMin: 1
+
+profile: ambient
+
+cpu:
+  targetAverageUtilization: 85
+
+env:
+  ENABLE_CA_SERVER: "false"
+  PILOT_ENABLE_IP_AUTOALLOCATE: "true"
+
+# global.network is intentionally omitted here — it's set dynamically per cluster in
+# locals.tofu (local.istio_network) and merged in via the second values file.
+global:
+  caAddress: cert-manager-istio-csr.cert-manager.svc:443
+  meshID: default
+
+meshConfig:
+  accessLogFile: /dev/stdout
+  defaultConfig:
+    proxyMetadata:
+      ECC_CURVE: "P256"
+      ECC_SIGNATURE_ALGORITHM: "ECDSA"
+      ISTIO_META_DNS_CAPTURE: "true"
+
+podAnnotations:
+  ad.datadoghq.com/discovery.check_names: '["istio"]'
+  ad.datadoghq.com/discovery.init_configs: '[{}]'
+
+  ad.datadoghq.com/discovery.instances: |
+    [
+      {
+        "istio_mode": "ambient",
+        "istiod_endpoint": "http://%%host%%:15014/metrics",
+        "use_openmetrics": "true"
+      }
+    ]
+
+  ad.datadoghq.com/discovery.logs: '[{"source":"istio"}]'
+
+rollingMaxSurge: 100%
+rollingMaxUnavailable: 25%
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app: istiod
+
+traceSampling: 100.0

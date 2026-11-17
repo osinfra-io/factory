@@ -1,0 +1,10 @@
+.terraform/
+.tofu/
+*.tfstate
+*.tfstate.*
+*.log
+*.tmp
+*.swp
+__pycache__/
+*.py[cod]
+tests/integration/**/.work/
