@@ -160,7 +160,6 @@ def verify(root_token):
         expect(root_token, "GET", f"sys/policies/acl/{policy}", {200})
 
     expect(root_token, "POST", f"kv2/data/{TEAM_PATH}", {200}, {"data": {"value": "fixture"}})
-    expect(root_token, "POST", f"kv2/data/{OTHER_TEAM_PATH}", {200}, {"data": {"value": "fixture"}})
 
     tokens = {}
     try:
@@ -174,6 +173,7 @@ def verify(root_token):
                 "The reader's top-level team listing does not match the registered local teams "
                 f"(found: {sorted(team_list)})"
             )
+        expect(root_token, "POST", f"kv2/data/{OTHER_TEAM_PATH}", {200}, {"data": {"value": "fixture"}})
         expect(tokens["reader"], "POST", f"kv2/data/{TEAM_PATH}", {403}, {"data": {"value": "denied"}})
         expect(tokens["reader"], "GET", "kv2/data/other/README", {403})
         expect(tokens["reader"], "GET", f"kv2/data/{OTHER_TEAM_PATH}", {403})

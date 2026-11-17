@@ -273,8 +273,8 @@ else
   echo "main-sandbox is already applied; skipping approval"
 fi
 
-kubectl get namespace floor-fixture >/dev/null 2>&1 ||
-  fail "the floor-fixture namespace was not created by main-sandbox"
+kubectl get configmap main --namespace=floor-fixture >/dev/null 2>&1 ||
+  fail "the floor-fixture/main ConfigMap was not created by main-sandbox"
 
 # Review Focus 3: approval lives in the cluster, so Flux must never revert spec.approvePlan.
 approved_plan="$(terraform_field main-sandbox '{.spec.approvePlan}')"

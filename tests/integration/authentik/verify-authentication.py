@@ -91,7 +91,7 @@ def verify(work):
     selected_flow = None
     for resource in state["resources"]:
         kind = resource["type"]
-        shared = resource.get("module") == "module.authentication"
+        shared = resource.get("module") == "module.authentik"
         identification = (
             resource.get("module") == "module.authentik_config"
             and kind == "authentik_stage_identification"

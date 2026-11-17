@@ -1,8 +1,8 @@
 # Local Values
 # https://opentofu.org/docs/language/values/locals
 
-# The verification identity needs the approver group floor-api enforces and the
-# group the authentik application binds, which only authenticates the caller.
+# The local test group keeps this identity out of application groups owned by the
+# authentik configuration. The binding group only authenticates the caller.
 
 locals {
   # An address keeps the local accounts distinct from the other local identities.

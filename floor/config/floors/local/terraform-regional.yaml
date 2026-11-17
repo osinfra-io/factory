@@ -1,5 +1,4 @@
-# The regional workspace reads what main creates, so it stays unplanned until
-# main-sandbox is Ready.
+# The regional workspace stays unplanned until main-sandbox is Ready.
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
