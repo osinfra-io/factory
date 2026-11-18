@@ -4,6 +4,8 @@ audit:
 controllerManager:
   disableCertRotation: true
 
+enableDeleteOperations: true
+
 externalCertInjection:
   enabled: true
 

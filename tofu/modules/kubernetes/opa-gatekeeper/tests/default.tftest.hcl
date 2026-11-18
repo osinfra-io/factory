@@ -32,3 +32,16 @@ run "default_regional_constraints" {
     source = "./tests/fixtures/default/regional/constraints"
   }
 }
+
+run "regional_delete_operations" {
+  command = plan
+
+  module {
+    source = "./regional"
+  }
+
+  assert {
+    condition     = yamldecode(helm_release.gatekeeper.values[0]).enableDeleteOperations
+    error_message = "Gatekeeper must evaluate delete operations so protection constraints can enforce them."
+  }
+}

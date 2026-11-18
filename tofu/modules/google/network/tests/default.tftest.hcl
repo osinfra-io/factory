@@ -37,6 +37,47 @@ run "regional" {
   }
 }
 
+run "regional_flow_logs" {
+  command = plan
+
+  module {
+    source = "./regional"
+  }
+
+  variables {
+    ip_cidr_range = "10.0.0.0/24"
+    name          = "mock-subnet"
+    network       = "mock-vpc"
+    project       = "mock-project"
+  }
+
+  assert {
+    condition     = length(google_compute_subnetwork.this.log_config) == 1
+    error_message = "Ordinary subnetworks must keep VPC Flow Logs enabled."
+  }
+}
+
+run "regional_proxy_only_subnet" {
+  command = plan
+
+  module {
+    source = "./regional"
+  }
+
+  variables {
+    ip_cidr_range = "10.0.0.0/24"
+    name          = "mock-proxy-subnet"
+    network       = "mock-vpc"
+    project       = "mock-project"
+    purpose       = "REGIONAL_MANAGED_PROXY"
+  }
+
+  assert {
+    condition     = length(google_compute_subnetwork.this.log_config) == 0
+    error_message = "Proxy-only subnetworks must not enable VPC Flow Logs."
+  }
+}
+
 run "regional_nat" {
   command = apply
 

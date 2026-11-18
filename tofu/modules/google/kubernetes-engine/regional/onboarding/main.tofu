@@ -31,7 +31,8 @@ resource "kubernetes_namespace_v1" "this" {
   }
 
   metadata {
-    labels = each.value.labels
+    annotations = each.value.annotations
+    labels      = each.value.labels
 
     name = each.key
   }

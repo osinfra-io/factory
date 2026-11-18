@@ -4,7 +4,8 @@
 locals {
   kubernetes_namespaces = {
     for name, namespace in local.namespaces_with_platform : name => {
-      labels = namespace.mesh_enabled ? { "istio.io/dataplane-mode" = "ambient" } : {}
+      annotations = try(namespace.annotations, null)
+      labels      = namespace.mesh_enabled ? { "istio.io/dataplane-mode" = "ambient" } : {}
     }
   }
 
