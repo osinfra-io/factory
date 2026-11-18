@@ -1,0 +1,594 @@
+# Istio Runtime
+# https://github.com/osinfra-io/pt-arche-kubernetes-istio
+
+module "runtime" {
+  source = "./runtime"
+
+  ca_address                      = "cert-manager-istio-csr.cert-manager.svc:443"
+  chart_repository                = var.chart_repository
+  cluster_name                    = local.multi_cluster_name
+  cni_cpu_limits                  = var.cni_cpu_limits
+  cni_cpu_requests                = var.cni_cpu_requests
+  cni_memory_limits               = var.cni_memory_limits
+  cni_memory_requests             = var.cni_memory_requests
+  cni_platform                    = "gke"
+  enable_ca_server                = false
+  enable_multi_network            = true
+  environment                     = module.core_helpers.environment
+  image_hub                       = local.istio_image_hub
+  istio_version                   = var.istio_version
+  mesh_config_extension_providers = var.mesh_config_extension_providers
+  mesh_config_service_settings    = var.mesh_config_service_settings
+  network                         = local.istio_network
+  pilot_autoscale_max             = var.pilot_autoscale_max
+  pilot_autoscale_min             = var.pilot_autoscale_min
+  pilot_cpu_limits                = var.pilot_cpu_limits
+  pilot_cpu_requests              = var.pilot_cpu_requests
+  pilot_memory_limits             = var.pilot_memory_limits
+  pilot_memory_requests           = var.pilot_memory_requests
+  pilot_replica_count             = var.pilot_replica_count
+  proxy_cpu_limits                = var.proxy_cpu_limits
+  proxy_cpu_requests              = var.proxy_cpu_requests
+  proxy_memory_limits             = var.proxy_memory_limits
+  proxy_memory_requests           = var.proxy_memory_requests
+  ztunnel_cpu_limits              = var.ztunnel_cpu_limits
+  ztunnel_cpu_requests            = var.ztunnel_cpu_requests
+  ztunnel_memory_limits           = var.ztunnel_memory_limits
+  ztunnel_memory_requests         = var.ztunnel_memory_requests
+}
+
+# Google Compute Global Address Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/compute_global_address
+
+resource "google_compute_global_address" "istio_gateway" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  labels  = var.labels
+  name    = local.istio_gateway_name
+  project = var.project
+}
+
+# DNS Record Set Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/dns_record_set
+
+resource "google_dns_record_set" "istio_gateways" {
+  for_each = var.gateway_dns
+
+  managed_zone = each.value.managed_zone
+  name         = local.gateway_dns_record_names[each.key]
+  project      = each.value.project
+  rrdatas      = [google_compute_global_address.istio_gateway.address]
+  ttl          = 300
+  type         = "A"
+}
+
+# Kubernetes Cluster Role Binding Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1
+
+resource "kubernetes_cluster_role_binding_v1" "istio_reader_gateway_api" {
+  depends_on = [
+    module.runtime,
+    kubernetes_cluster_role_v1.istio_reader_gateway_api
+  ]
+
+  metadata {
+    name = "istio-reader-gateway-api"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "istio-reader-gateway-api"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "istio-reader-service-account"
+    namespace = "istio-system"
+  }
+}
+
+# Kubernetes Cluster Role Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1
+
+resource "kubernetes_cluster_role_v1" "istio_reader_gateway_api" {
+  depends_on = [
+    module.runtime
+  ]
+
+  metadata {
+    name = "istio-reader-gateway-api"
+  }
+
+  rule {
+    api_groups = ["gateway.networking.k8s.io"]
+    resources  = ["grpcroutes", "httproutes", "referencegrants", "tcproutes", "tlsroutes"]
+    verbs      = ["get", "list", "watch"]
+  }
+}
+
+# Kubernetes Config Map Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/config_map_v1
+
+# Strategic-merge patches applied by istiod to the auto-provisioned gateway data plane. Ports
+# the resources, autoscaling, disruption budget, tolerations, topology spread, and NodePort
+# Service type required by the GKE NEG/MCS ingress path.
+
+resource "kubernetes_config_map_v1" "istio_east_west_gateway_options" {
+  metadata {
+    name      = "east-west-gateway-options"
+    namespace = "istio-system"
+  }
+
+  data = {
+    deployment = local.istio_east_west_gateway_deployment_patch
+  }
+}
+
+resource "kubernetes_config_map_v1" "istio_gateway_options" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  metadata {
+    name      = "gateway-options"
+    namespace = "istio-ingress"
+  }
+
+  data = {
+    deployment              = local.istio_gateway_deployment_patch
+    horizontalPodAutoscaler = local.istio_gateway_hpa_patch
+    podDisruptionBudget     = local.istio_gateway_pdb_patch
+    service                 = local.istio_gateway_service_patch
+  }
+}
+
+# Kubernetes Ingress Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/ingress_v1
+
+resource "kubernetes_ingress_v1" "istio_gateway" {
+  depends_on = [
+    kubernetes_manifest.istio_gateway
+  ]
+
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  metadata {
+    name      = "istio-gateway"
+    namespace = "istio-ingress"
+
+    annotations = {
+      "kubernetes.io/ingress.allow-http"            = "false"
+      "kubernetes.io/ingress.global-static-ip-name" = google_compute_global_address.istio_gateway.name
+      "networking.gke.io/v1beta1.FrontendConfig"    = kubernetes_manifest.istio_gateway_frontendconfig.manifest.metadata.name
+      "networking.gke.io/managed-certificates"      = kubernetes_manifest.istio_gateway_managed_certificate.manifest.metadata.name
+    }
+  }
+
+  spec {
+    rule {
+      http {
+        path {
+          backend {
+            service {
+              name = "gateway-istio"
+              port {
+                number = 443
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  wait_for_load_balancer = true
+}
+
+# Kubernetes Labels Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/labels
+
+resource "kubernetes_labels" "istio_system_network" {
+  depends_on = [
+    module.runtime
+  ]
+
+  api_version = "v1"
+  kind        = "Namespace"
+
+  metadata {
+    name = "istio-system"
+  }
+
+  labels = {
+    "topology.istio.io/network" = local.istio_network
+  }
+}
+
+# Kubernetes Manifest Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/manifest
+
+resource "kubernetes_manifest" "istio_east_west_gateway" {
+  depends_on = [
+    module.runtime
+  ]
+
+  manifest = {
+    apiVersion = "gateway.networking.k8s.io/v1"
+    kind       = "Gateway"
+
+    metadata = {
+      name      = "istio-eastwestgateway"
+      namespace = "istio-system"
+
+      labels = {
+        "topology.istio.io/network" = local.istio_network
+      }
+    }
+
+    spec = {
+      gatewayClassName = "istio-east-west"
+
+      # Keeps the auto-provisioned Service/Deployment off the public internet — cross-cluster
+      # mesh traffic stays within the Shared VPC. GCP internal passthrough load balancers are
+      # regional, so allow-global-access is required for ztunnels/gateways in other regions to
+      # reach this gateway's LB IP (e.g. us-east1 clusters dialing a us-east4 east-west
+      # gateway). The annotations only affect the Service; they're harmless on the Deployment.
+      #
+      # topology.istio.io/network must be repeated here: when infrastructure.labels is set,
+      # Istio's gateway deployment controller uses it exclusively for the generated Service and
+      # does not merge in the Gateway's own top-level metadata.labels. Without it here, the
+      # auto-provisioned Service never carries the network label, so pilot can't discover this
+      # gateway as a network gateway for cross-cluster HBONE routing.
+      infrastructure = {
+        annotations = {
+          "networking.gke.io/internal-load-balancer-allow-global-access" = "true"
+          "networking.gke.io/load-balancer-type"                         = "Internal"
+        }
+
+        labels = {
+          "topology.istio.io/network" = local.istio_network
+        }
+
+        # Carries the strategic-merge patch that makes the generated Deployment's resource
+        # requests tunable; the chart's defaults are sized for gateways carrying real
+        # cross-cluster traffic.
+        parametersRef = {
+          group = ""
+          kind  = "ConfigMap"
+          name  = kubernetes_config_map_v1.istio_east_west_gateway_options.metadata[0].name
+        }
+      }
+
+      listeners = local.istio_east_west_gateway_listeners
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "gateway.networking.k8s.io/v1"
+    kind       = "Gateway"
+
+    metadata = {
+      name      = "gateway"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      gatewayClassName = "istio"
+
+      # istiod provisions the data plane Deployment/Service (named gateway-istio) from this
+      # Gateway. The GKE Service annotations are copied onto the generated resources via
+      # infrastructure; the parametersRef ConfigMap carries the strategic-merge patches for the
+      # Service (NodePort), Deployment, HPA, and PodDisruptionBudget.
+
+      infrastructure = {
+        annotations = {
+          "cloud.google.com/app-protocols"  = jsonencode({ "https" = "HTTPS" })
+          "cloud.google.com/backend-config" = jsonencode({ "default" = "istio-gateway-backend" })
+          "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
+
+          # Suppress IST0170: The MCS only exports port 443 (not status-port 15021) by design,
+          # so Istio sees inconsistent ports across clusters. This is expected.
+          "galley.istio.io/analyze-suppress" = "IST0170"
+        }
+
+        parametersRef = {
+          group = ""
+          kind  = "ConfigMap"
+          name  = kubernetes_config_map_v1.istio_gateway_options.metadata[0].name
+        }
+      }
+
+      listeners = local.gateway_listeners
+    }
+  }
+}
+
+# Kubernetes Manifest Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/manifest
+
+resource "kubernetes_manifest" "istio_gateway_backendconfig" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "cloud.google.com/v1"
+    kind       = "BackendConfig"
+    metadata = {
+      name      = "istio-gateway-backend"
+      namespace = "istio-ingress"
+    }
+    spec = {
+      healthCheck = {
+        checkIntervalSec   = "5"
+        healthyThreshold   = "1"
+        port               = "15021"
+        requestPath        = "/healthz/ready"
+        timeoutSec         = "3"
+        type               = "HTTP"
+        unhealthyThreshold = "2"
+      }
+      securityPolicy = {
+        name = "shared-ingress"
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_ca_certificate" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+
+    metadata = {
+      name      = "istio-gateway-ca"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      commonName = "istio-gateway-intermediate-ca.osinfra.io"
+      duration   = "720h"
+      isCA       = true
+
+      issuerRef = {
+        group = "cert-manager.io"
+        kind  = "Issuer"
+        name  = kubernetes_manifest.istio_gateway_intermediate_ca_issuer.manifest.metadata.name
+      }
+
+      privateKey = {
+        algorithm = "ECDSA"
+        size      = 256
+      }
+
+      secretName = "istio-gateway-ca"
+
+      subject = {
+        organizations = ["Open Source Infrastructure (as Code) Istio Gateway Intermediate CA"]
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_frontendconfig" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "networking.gke.io/v1beta1"
+    kind       = "FrontendConfig"
+    metadata = {
+      name      = "istio-gateway-frontend"
+      namespace = "istio-ingress"
+    }
+    spec = {
+      redirectToHttps = {
+        enabled = true
+      }
+      sslPolicy = "shared-ingress"
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_intermediate_ca_issuer" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Issuer"
+
+    metadata = {
+      name      = "istio-gateway-intermediate-ca"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      ca = {
+        secretName = kubernetes_secret_v1.istio_cert_manager_ca.metadata[0].name
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_managed_certificate" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "networking.gke.io/v1"
+    kind       = "ManagedCertificate"
+    metadata = {
+      name      = "istio-gateway-tls"
+      namespace = "istio-ingress"
+    }
+    spec = {
+      domains = local.gateway_domains
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_mci" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "networking.gke.io/v1"
+    kind       = "MultiClusterIngress"
+
+    metadata = {
+      annotations = {
+        "networking.gke.io/frontend-config"  = kubernetes_manifest.istio_gateway_frontendconfig.manifest.metadata.name
+        "networking.gke.io/pre-shared-certs" = local.gateway_mci_pre_shared_certs
+        "networking.gke.io/static-ip"        = var.gateway_mci_global_address
+      }
+      name      = "istio-gateway-mci"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      template = {
+        spec = {
+          backend = {
+            serviceName = kubernetes_manifest.istio_gateway_mcs.manifest.metadata.name
+            servicePort = kubernetes_manifest.istio_gateway_mcs.manifest.spec.template.spec.ports[0].port
+          }
+          rules = [
+            {
+              http = {
+                paths = [
+                  {
+                    backend = {
+                      serviceName = kubernetes_manifest.istio_gateway_mcs.manifest.metadata.name
+                      servicePort = kubernetes_manifest.istio_gateway_mcs.manifest.spec.template.spec.ports[0].port
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_mcs" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "networking.gke.io/v1"
+    kind       = "MultiClusterService"
+
+    metadata = {
+      annotations = {
+        "cloud.google.com/backend-config" = jsonencode({ "default" = kubernetes_manifest.istio_gateway_backendconfig.manifest.metadata.name })
+        "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
+        "networking.gke.io/app-protocols" = jsonencode({ "https" = "HTTPS" })
+      }
+      name      = "istio-gateway-mcs"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      template = {
+        spec = {
+          selector = {
+            "gateway.networking.k8s.io/gateway-name" = "gateway"
+          }
+
+          ports = [
+            {
+              name       = "https"
+              port       = 443
+              protocol   = "TCP"
+              targetPort = 443
+            }
+          ]
+        }
+      }
+
+      clusters = var.multi_cluster_service_clusters
+    }
+  }
+}
+
+resource "kubernetes_manifest" "istio_gateway_tls" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+
+    metadata = {
+      name      = "istio-gateway-tls"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      commonName = "istio-gateway.osinfra.io"
+      dnsNames   = ["*"]
+      duration   = "720h"
+      isCA       = false
+
+      issuerRef = {
+        group = "cert-manager.io"
+        kind  = "Issuer"
+        name  = kubernetes_manifest.istio_gateway_intermediate_ca_issuer.manifest.metadata.name
+      }
+
+      privateKey = {
+        algorithm = "ECDSA"
+        size      = 256
+      }
+
+      secretName = "istio-gateway-tls"
+
+      subject = {
+        organizations = ["Open Source Infrastructure (as Code) Istio Gateway"]
+      }
+    }
+  }
+}
+
+# Kubernetes Secret Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/secret_v1
+
+resource "kubernetes_secret_v1" "istio_cert_manager_ca" {
+  lifecycle {
+    enabled = var.enable_istio_gateway
+  }
+
+  metadata {
+    name      = "cert-manager-ca"
+    namespace = "istio-ingress"
+  }
+
+  data = {
+    "tls.crt" = var.tls_self_signed_cert_cert_manager_root_cert
+    "tls.key" = var.tls_self_signed_cert_cert_manager_root_key
+  }
+}

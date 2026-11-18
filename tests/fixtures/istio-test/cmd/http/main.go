@@ -1,0 +1,91 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"istio-test/internal/auth"
+	"istio-test/internal/config"
+	"istio-test/internal/metadata"
+	"istio-test/internal/observability"
+	"istio-test/internal/security"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// Load configuration
+	conf := config.Load()
+
+	// Validate configuration
+	if err := conf.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "Configuration validation failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	observability.Init(conf.Observability.LogLevel, observability.Config{
+		EnablePIIRedaction: conf.Observability.EnablePIIRedaction,
+	})
+
+	observability.InfoWithContext(ctx, "Application is starting")
+
+	apiSecurityOptions := security.SecurityHeadersOptions{
+		COOP: "same-origin-allow-popups",
+		CORP: "cross-origin",
+	}
+	defaultSecurityOptions := security.SecurityHeadersOptions{
+		COEP: "require-corp",
+		COOP: "same-origin",
+		CORP: "same-origin",
+	}
+
+	// Create metadata client with configuration
+	metadataClient := metadata.NewClient(
+		conf.Metadata.HTTPTimeout,
+		conf.Metadata.MaxRetries,
+		conf.Metadata.BaseRetryDelay,
+		conf.Metadata.MaxRetryDelay,
+		conf.Metadata.RetryMultiplier,
+	)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/istio-test/metadata/", metadata.SecureMetadataHandlerWithOptions(metadataClient.FetchMetadata, apiSecurityOptions))
+	mux.HandleFunc("/istio-test/health", metadata.SecureEnhancedHealthCheckHandlerWithOptions(metadataClient, apiSecurityOptions))
+	mux.HandleFunc("/istio-test/auth", auth.SecureHandlerWithOptions(apiSecurityOptions))
+	mux.HandleFunc("/", metadata.SecureNotFoundHandlerWithOptions(defaultSecurityOptions))
+
+	// Wrap the entire mux with request logging middleware
+	loggedHandler := observability.RequestLoggingMiddleware(mux)
+
+	server := &http.Server{
+		Addr:         ":" + conf.Server.Port,
+		ReadTimeout:  conf.Server.ReadTimeout,
+		WriteTimeout: conf.Server.WriteTimeout,
+		IdleTimeout:  conf.Server.IdleTimeout,
+		Handler:      loggedHandler,
+	}
+
+	go func() {
+		observability.InfoWithContext(ctx, fmt.Sprintf("Starting server on port %s...", conf.Server.Port))
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			observability.ErrorWithContext(ctx, fmt.Sprintf("Failed to start server: %v", err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	observability.InfoWithContext(ctx, "Shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), conf.Observability.ShutdownTimeout)
+	defer cancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		observability.ErrorWithContext(ctx, fmt.Sprintf("Server forced to shutdown: %v", err))
+	}
+
+	observability.InfoWithContext(ctx, "Server exiting")
+}

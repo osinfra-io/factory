@@ -1,0 +1,171 @@
+# Input Variables
+# https://opentofu.org/docs/language/values/variables
+
+variable "authentik_version" {
+  default     = "2026.8.5"
+  description = "The Authentik Helm chart and application version to install"
+  type        = string
+}
+
+variable "chart_repository" {
+  default     = "https://charts.goauthentik.io"
+  description = "The repository to pull the Authentik Helm chart from"
+  type        = string
+}
+
+variable "cloud_sql_connection_name" {
+  default     = null
+  description = "Connection name (project:region:instance) of the Cloud SQL instance the Auth Proxy sidecar dials. Authentik connects to the proxy over the pod loopback, so the private-IP instance is reachable without exposing the database on the mesh."
+  type        = string
+
+  validation {
+    condition     = var.cloud_sql_connection_name != null || var.external_database_host != "127.0.0.1"
+    error_message = "Set cloud_sql_connection_name for the loopback Cloud SQL proxy, or specify an external_database_host for a direct database connection."
+  }
+}
+
+variable "cloud_sql_proxy_image" {
+  default     = "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.24.1"
+  description = "The Cloud SQL Auth Proxy image run as a sidecar in the server and worker pods"
+  type        = string
+}
+
+variable "cloud_sql_proxy_resources_limits_cpu" {
+  default     = null
+  description = "The CPU limit for the Cloud SQL Auth Proxy sidecar, unset by default so the proxy is never throttled while brokering database connections"
+  type        = string
+}
+
+variable "cloud_sql_proxy_resources_limits_memory" {
+  default     = "128Mi"
+  description = "The memory limit for the Cloud SQL Auth Proxy sidecar"
+  type        = string
+}
+
+variable "cloud_sql_proxy_resources_requests_cpu" {
+  default     = "50m"
+  description = "The CPU request for the Cloud SQL Auth Proxy sidecar"
+  type        = string
+}
+
+variable "cloud_sql_proxy_resources_requests_memory" {
+  default     = "64Mi"
+  description = "The memory request for the Cloud SQL Auth Proxy sidecar"
+  type        = string
+}
+
+variable "existing_secret" {
+  description = "Name of an existing Kubernetes Secret providing the Authentik environment (AUTHENTIK_SECRET_KEY, AUTHENTIK_POSTGRESQL__PASSWORD, AUTHENTIK_BOOTSTRAP_TOKEN, AUTHENTIK_BOOTSTRAP_PASSWORD). Mounted into the server and worker via envFrom so no secrets are stored in the Helm release."
+  type        = string
+}
+
+variable "external_database_host" {
+  default     = "127.0.0.1"
+  description = "PostgreSQL hostname; defaults to the loopback Cloud SQL proxy, or can name a directly reachable database Service"
+  type        = string
+
+  validation {
+    condition     = length(trimspace(var.external_database_host)) > 0
+    error_message = "The external_database_host must not be empty."
+  }
+}
+
+variable "external_database_name" {
+  default     = "authentik"
+  description = "The name of the external PostgreSQL database"
+  type        = string
+}
+
+variable "external_database_port" {
+  default     = 5432
+  description = "The port of the external PostgreSQL database"
+  type        = number
+}
+
+variable "external_database_user" {
+  default     = "authentik"
+  description = "The user for the external PostgreSQL database"
+  type        = string
+}
+
+variable "google_service_account_email" {
+  default     = null
+  description = "Email of the Google service account the Cloud SQL Auth Proxy sidecar impersonates via Workload Identity (annotated onto the chart's ServiceAccount). It must hold roles/cloudsql.client on the instance's project."
+  type        = string
+
+  validation {
+    condition     = var.cloud_sql_connection_name == null || var.google_service_account_email != null
+    error_message = "Cloud SQL proxy connections require a google_service_account_email for Workload Identity."
+  }
+}
+
+variable "helm_timeout" {
+  default     = 900
+  description = "Seconds to wait for the Authentik Helm release to become ready. The default exceeds the Helm provider's 300s because Authentik's first boot runs database migrations and blueprint bootstrapping, which can take several minutes under STRICT mTLS sidecar startup"
+  type        = number
+}
+
+variable "namespace" {
+  description = "The Kubernetes namespace to deploy Authentik into"
+  type        = string
+}
+
+variable "server_replicas" {
+  default     = 2
+  description = "The number of Authentik server replicas to run"
+  type        = number
+}
+
+variable "server_resources_limits_cpu" {
+  default     = null
+  description = "The CPU limit for the Authentik server, unset by default so request handling is never throttled"
+  type        = string
+}
+
+variable "server_resources_limits_memory" {
+  default     = "1Gi"
+  description = "The memory limit for the Authentik server"
+  type        = string
+}
+
+variable "server_resources_requests_cpu" {
+  default     = "200m"
+  description = "The CPU request for the Authentik server"
+  type        = string
+}
+
+variable "server_resources_requests_memory" {
+  default     = "512Mi"
+  description = "The memory request for the Authentik server"
+  type        = string
+}
+
+variable "worker_replicas" {
+  default     = 1
+  description = "The number of Authentik worker replicas to run"
+  type        = number
+}
+
+variable "worker_resources_limits_cpu" {
+  default     = null
+  description = "The CPU limit for the Authentik worker, unset by default so background task processing is never throttled"
+  type        = string
+}
+
+variable "worker_resources_limits_memory" {
+  default     = "512Mi"
+  description = "The memory limit for the Authentik worker"
+  type        = string
+}
+
+variable "worker_resources_requests_cpu" {
+  default     = "100m"
+  description = "The CPU request for the Authentik worker"
+  type        = string
+}
+
+variable "worker_resources_requests_memory" {
+  default     = "256Mi"
+  description = "The memory request for the Authentik worker"
+  type        = string
+}

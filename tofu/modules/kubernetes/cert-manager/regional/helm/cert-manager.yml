@@ -1,0 +1,8 @@
+crds:
+  enabled: true
+
+webhook:
+  serviceAnnotations:
+    # IST0118: Port name 'metrics' doesn't follow Istio naming convention.
+    # The chart doesn't support customizing port names, so we suppress the warning.
+    galley.istio.io/analyze-suppress: IST0118
