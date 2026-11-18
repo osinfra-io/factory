@@ -37,7 +37,7 @@ locals {
             to = [
               {
                 operation = {
-                  hosts    = [policy.host]
+                  hosts    = [policy.host, "${policy.host}:*"]
                   notPaths = policy.exempt_paths
                   paths    = policy.paths
                 }

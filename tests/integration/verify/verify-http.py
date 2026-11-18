@@ -168,6 +168,11 @@ def main():
         )
         check_public(base + "/outpost.goauthentik.io/ping", expected_status=204)
     check_protected("https://agentgateway.localhost/ui/", "agentgateway.localhost")
+    check_protected(
+        "https://agentgateway.localhost:443/ui/",
+        "agentgateway.localhost:443",
+        {"Host": "agentgateway.localhost:443"},
+    )
     print("Anonymous HTTP checks passed. Real Google sign-in and authenticated checks remain pending.")
 
 
