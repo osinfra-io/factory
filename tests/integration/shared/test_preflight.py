@@ -111,5 +111,86 @@ class PreflightTests(unittest.TestCase):
                         self.assertIn("Existing workloads in the default namespace", run.stderr)
 
 
+class SetupPrerequisiteTests(unittest.TestCase):
+    def test_prerequisites_are_checked_before_preflight(self):
+        source = Path(__file__).parent.parent / "setup.sh"
+        scenarios = {
+            "oauth_id": "TF_VAR_google_oauth_client_id",
+            "oauth_secret": "TF_VAR_google_oauth_client_secret",
+            "email": "git config user.email",
+            "github": "No GitHub token",
+            "branch": "Set FLOOR_CONFIG_REF",
+            "remote": "Cannot find Floor configuration branch",
+            "success": None,
+            "override": None,
+        }
+        for scenario, expected in scenarios.items():
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                integration = root / "tests" / "integration"
+                integration.mkdir(parents=True)
+                shutil.copy(source, integration / "setup.sh")
+                marker = root / "preflight-ran"
+                for stage in (
+                    "shared/preflight.sh", "istio/setup.sh", "authentik/setup.sh",
+                    "istio/apply-auth.sh", "istio/apply-routes.sh", "agentgateway/setup.sh",
+                    "agent-substrate/setup.sh", "kagent/setup.sh", "openbao/setup.sh",
+                    "floor/setup.sh",
+                ):
+                    script = integration / stage
+                    script.parent.mkdir(parents=True, exist_ok=True)
+                    script.write_text('#!/usr/bin/env bash\ntouch "$STAGE_MARKER"\n')
+                    script.chmod(0o755)
+                mock = root / "mock"
+                mock.write_text(
+                    f"#!{sys.executable}\n"
+                    "import os, pathlib, sys\n"
+                    "tool = pathlib.Path(sys.argv[0]).name\n"
+                    "args = sys.argv[1:]\n"
+                    "scenario = os.environ['SCENARIO']\n"
+                    "if tool == 'gh':\n"
+                    "    sys.exit(1 if scenario == 'github' else 0)\n"
+                    "if 'user.email' in args:\n"
+                    "    print('' if scenario == 'email' else 'test@example.com')\n"
+                    "elif 'branch' in args:\n"
+                    "    print('' if scenario == 'branch' else 'test-branch')\n"
+                    "elif 'ls-remote' in args:\n"
+                    "    pathlib.Path(os.environ['REMOTE_ARGS']).write_text('\\n'.join(args))\n"
+                    "    sys.exit(1 if scenario == 'remote' else 0)\n"
+                    "else:\n"
+                    "    sys.exit(1)\n"
+                )
+                mock.chmod(0o755)
+                for tool in ("git", "gh"):
+                    (root / tool).symlink_to(mock)
+                env = {
+                    **os.environ,
+                    "PATH": f"{root}:{os.environ['PATH']}",
+                    "SCENARIO": scenario,
+                    "STAGE_MARKER": str(marker),
+                    "REMOTE_ARGS": str(root / "remote-args"),
+                    "TF_VAR_google_oauth_client_id": "" if scenario == "oauth_id" else "client",
+                    "TF_VAR_google_oauth_client_secret": "" if scenario == "oauth_secret" else "secret",
+                    "FLOOR_CONFIG_REPO": "https://example.com/factory",
+                    "FLOOR_CONFIG_REF": "custom-branch" if scenario == "override" else "",
+                }
+                run = subprocess.run(
+                    ["bash", str(integration / "setup.sh")],
+                    env=env, text=True, capture_output=True, check=False,
+                )
+                if expected:
+                    self.assertNotEqual(run.returncode, 0)
+                    self.assertIn(expected, run.stderr)
+                    self.assertFalse(marker.exists())
+                else:
+                    self.assertEqual(run.returncode, 0, run.stderr)
+                    self.assertTrue(marker.exists())
+                    branch = "custom-branch" if scenario == "override" else "test-branch"
+                    self.assertIn(
+                        f"--heads\nhttps://example.com/factory\n{branch}",
+                        (root / "remote-args").read_text(),
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()
