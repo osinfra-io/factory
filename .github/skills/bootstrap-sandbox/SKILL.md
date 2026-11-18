@@ -37,11 +37,11 @@ This grants the API namespace-scoped access to bootstrap Terraform objects, not 
 
 ## Review and approve stages
 
-Review the seed `bootstrap-sandbox` first, then `foundation-sandbox`, which creates the single Factory team folder. From the Factory root, call the Floor MCP endpoint directly if its tools are not already connected. Use the non-approver identity created by Floor setup; do not print or register its app password in Copilot settings.
+Process stages in order: review and approve `bootstrap-sandbox` first, then `foundation-sandbox`, which creates the single Factory team folder. Do not query or inspect the Foundation workspace until the seed reports Ready. From the Factory root, call the Floor MCP endpoint directly if its tools are not already connected. Use the non-approver identity created by Floor setup; do not print or register its app password in Copilot settings.
 
 ```bash
 set -euo pipefail
-object=bootstrap-sandbox # Use foundation-sandbox for the second stage.
+object=bootstrap-sandbox
 token_file=tests/integration/floor/.work/auth/visitor-token
 test -s "$token_file" || { echo "Missing Floor visitor app password; check Floor setup." >&2; exit 1; }
 printf 'user = "floor-visitor:%s"\n' "$(cat "$token_file")" |
@@ -58,7 +58,7 @@ printf 'user = "floor-visitor:%s"\n' "$(cat "$token_file")" |
     else .result.structuredContent.workspace end'
 ```
 
-`get_workspace` reports the pending plan ID, not its contents. If there is no pending plan, check the Terraform object's Ready condition and do not continue to approval. For a pending plan, use the local Kubernetes context to read **only** the controller's readable JSON plan Secret. Verify the plan ID matches Floor and the planned revision matches the expected pushed commit. This command checks that the plan belongs to the current Terraform object and is still current after reading it:
+`get_workspace` reports the pending plan ID, not its contents. If there is no pending plan, check the Terraform object's Ready condition: proceed only if the seed is Ready; otherwise stop. For a pending plan, use the local Kubernetes context to read **only** the controller's readable JSON plan Secret. Verify the plan ID matches Floor and the planned revision matches the expected pushed commit. This command checks that the plan belongs to the current Terraform object and is still current after reading it:
 
 ```bash
 set -euo pipefail
@@ -86,16 +86,24 @@ printf 'Workspace: %s\nRevision: %s\nPlan: %s\n' "$workspace" "$revision" "$plan
 printf 'Readable plan SHA-256: '
 printf '%s' "$plan" | sha256sum
 jq -e '{
-  resources: [.resource_changes[]? | select(.change.actions != ["no-op"]) | {address, actions: .change.actions}],
+  resources: [.resource_changes[]? | select(.change.actions != ["no-op"]) | {
+    address,
+    actions: .change.actions,
+    details: (.change.after // {} | with_entries(select(
+      .key == "account_id" or .key == "display_name" or .key == "folder_id" or
+      .key == "location" or .key == "name" or .key == "project_id" or
+      .key == "service"
+    )))
+  }],
   drift: [.resource_drift[]? | {address, actions: .change.actions}],
   outputs: [.output_changes // {} | to_entries[] | select(.value.actions != ["no-op"]) | {name: .key, actions: .value.actions}]
 }' <<< "$plan"
 unset plan
 ```
 
-Review the affected resources and inspect any details needed to explain the changes without exposing secret values. Never dump the raw JSON plan into the conversation or read the binary plan, credential, or state Secrets. If the readable plan is missing or cannot be matched, stop.
+Review the listed changes and selected non-sensitive identifiers from this read. If more detail is needed, add a focused projection from the in-memory `$plan` before unsetting it; do not reread the plan Secret for initial review. Never dump the raw JSON plan into the conversation or read the binary plan, credential, or state Secrets. If the readable plan is missing or cannot be matched, stop.
 
-Present the workspace, revision, plan ID, and planned changes. After the user explicitly confirms that exact plan, repeat the read and check that the revision, plan ID, and readable plan hash are unchanged. Only then call Floor's `approve` MCP tool with the fully qualified `name` and exact `planId` using an authorized approver identity. If the tool is not connected in the CLI, use the same `tools/call` request pattern against the MCP endpoint with `floor-verify` and `tests/integration/floor/.work/auth/verify-token` from local Floor setup; never patch `spec.approvePlan` directly. After approval, wait for the workspace to report Ready before proceeding.
+Present the workspace, revision, plan ID, and planned changes. After the user explicitly confirms that exact plan, repeat the read and check that the revision, plan ID, and readable plan hash are unchanged. Only then call Floor's `approve` MCP tool with the fully qualified `name` and exact `planId` using an authorized approver identity. If the tool is not connected in the CLI, use the same `tools/call` request pattern against the MCP endpoint with `floor-verify` and `tests/integration/floor/.work/auth/verify-token` from local Floor setup; never patch `spec.approvePlan` directly. After approval, wait for the workspace to report Ready, then repeat the workspace and plan-review procedure with `object=foundation-sandbox`.
 
 Stop on plan errors, unexpected replacements or deletions, missing state, or an unexpected source revision. Do not repair state, import resources, or bypass a failed plan without explicit direction.
 
