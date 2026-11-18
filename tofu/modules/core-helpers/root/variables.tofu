@@ -51,3 +51,9 @@ variable "team" {
     error_message = "The team name should contain only lowercase alphanumeric characters and hyphens"
   }
 }
+
+variable "workspace" {
+  description = "Overrides the OpenTofu workspace name for tests."
+  type        = string
+  default     = null
+}

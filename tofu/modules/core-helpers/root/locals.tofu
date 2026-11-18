@@ -31,6 +31,10 @@ locals {
     keys(local.environment_teams)
   ))
 
+  env = module.workspace.env
+
+  environment = module.workspace.environment
+
   environment_teams = local.environment != "production" && length(local.foundation_workspaces) > 0 ? merge([
     for workspace_name, workspace_data in data.terraform_remote_state.foundation_environment :
     try(workspace_data.outputs.teams, {})
@@ -41,6 +45,8 @@ locals {
   environment_key = local.environment != null ? title(local.environment) : null
 
   environment_root_folder_id = local.team_data != null ? try(local.team_data.environment_root_folder_id, null) : null
+
+  foundation_environment_bucket = local.env != null ? "foundation-state-${local.env}" : null
 
   # Environment workspace names mirror the production workspace names supplied by consumers.
   foundation_environment_workspaces = var.foundation_workspaces != null && local.environment != "production" ? toset([
@@ -59,10 +65,10 @@ locals {
     cost-center         = var.cost_center
     data-classification = var.data_classification
     env                 = local.environment
-    region              = local.region
+    region              = module.workspace.region
     repository          = var.repository
     team                = var.team
-    zone                = local.zone != null ? "${local.region}-${local.zone}" : null
+    zone                = module.workspace.zone != null ? "${module.workspace.region}-${module.workspace.zone}" : null
   }
 
   # Project naming components for downstream consumption

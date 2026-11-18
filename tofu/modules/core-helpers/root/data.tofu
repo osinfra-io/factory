@@ -20,7 +20,7 @@ data "terraform_remote_state" "foundation_environment" {
   backend = "gcs"
 
   config = {
-    bucket = "foundation-state-${local.env}"
+    bucket = local.foundation_environment_bucket
     prefix = "foundation"
   }
 

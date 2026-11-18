@@ -1,6 +1,16 @@
 # Output Values
 # https://opentofu.org/docs/language/values/outputs
 
+output "env" {
+  description = "The short name for the environment for example prod, nonprod, sb"
+  value       = local.env
+}
+
+output "environment" {
+  description = "The environment name for example production, non-production, sandbox"
+  value       = local.environment
+}
+
 output "environment_folder_id" {
   description = "The folder ID for the current team and environment from Foundation state"
   value       = local.environment_folder_id
@@ -21,6 +31,11 @@ output "project_naming" {
   value       = local.project_naming
 }
 
+output "region" {
+  description = "The region where resources will be deployed"
+  value       = module.workspace.region
+}
+
 output "repository" {
   description = "The repository name"
   value       = var.repository
@@ -34,4 +49,9 @@ output "team" {
 output "teams" {
   description = "All teams data from Foundation workspaces"
   value       = local.all_teams
+}
+
+output "zone" {
+  description = "The zone where resources will be deployed"
+  value       = module.workspace.zone
 }
