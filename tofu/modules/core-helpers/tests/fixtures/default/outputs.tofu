@@ -22,7 +22,7 @@ output "labels" {
 }
 
 output "project_naming" {
-  description = "The project naming configuration from logos state"
+  description = "The project naming configuration from Foundation state"
   value       = module.core_helpers_root.project_naming
 }
 

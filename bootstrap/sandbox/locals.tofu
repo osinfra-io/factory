@@ -9,15 +9,15 @@ locals {
   }
 
   runner_service_accounts = {
-    corpus = {
-      account_id   = "corpus-floor-${module.core_helpers.env}"
-      description  = "Sandbox Corpus floor identity and shared billing/state group membership manager"
-      display_name = "Sandbox Corpus floor runner"
+    assembly = {
+      account_id   = "assembly-floor-${module.core_helpers.env}"
+      description  = "Sandbox Assembly floor identity and shared billing/state group membership manager"
+      display_name = "Sandbox Assembly floor runner"
     }
-    pneuma = {
-      account_id   = "pneuma-floor-${module.core_helpers.env}"
-      description  = "Sandbox Pneuma floor identity and GKE security group membership manager"
-      display_name = "Sandbox Pneuma floor runner"
+    runtime = {
+      account_id   = "runtime-floor-${module.core_helpers.env}"
+      description  = "Sandbox Runtime floor identity and GKE security group membership manager"
+      display_name = "Sandbox Runtime floor runner"
     }
   }
 

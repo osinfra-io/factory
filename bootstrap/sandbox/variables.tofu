@@ -3,7 +3,7 @@
 
 variable "billing_account_id" {
   default     = "01C550-A2C86B-B8F16B"
-  description = "Existing billing account used by Logos and Corpus"
+  description = "Existing billing account used by Foundation and Assembly"
   type        = string
 
   validation {

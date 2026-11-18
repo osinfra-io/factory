@@ -12,7 +12,7 @@ output "project_id" {
 }
 
 output "runner_service_account_emails" {
-  description = "Stable keyless Sandbox floor identities delegated shared-group membership management by Logos global"
+  description = "Stable keyless Sandbox floor identities delegated shared-group membership management by Foundation"
   value       = local.runner_service_account_emails
 }
 

@@ -10,7 +10,7 @@ Use the local Factory Floor to bootstrap the first GCP Sandbox environment. Keep
 ## Preconditions
 
 - The Factory local integration stack is running and its Floor API is available. Follow `.github/skills/local-integration-testing/SKILL.md` to set it up.
-- The currently checked-out Factory branch, including the bootstrap source, and the configured Foundation source commit are pushed so Flux can fetch their exact revisions.
+- The currently checked-out Factory branch, including the bootstrap and Foundation source, is pushed so Flux can fetch it.
 - `gcloud auth login` and `gcloud auth application-default login` are current for an account that can read the Sandbox folder. Never print or store access tokens. If authentication fails, stop and have the user refresh credentials.
 - Use only the dedicated `docker-desktop` cluster. Never reset it during bootstrap.
 
@@ -39,10 +39,10 @@ This grants the API namespace-scoped access to bootstrap Terraform objects, not 
 
 Use the Floor tools `list_workspaces`, `pending_approvals`, and `get_workspace`. Outside the default namespace, pass the fully qualified object name, for example `bootstrap-sandbox/bootstrap-sandbox`. Review the exact pending plan, source revision, and workspace before presenting its changes to the user.
 
-The stages are ordered by `dependsOn`: the seed `bootstrap-sandbox`, then `logos-foundation-sandbox`, then the Sandbox team workspaces. Approve only the exact pending plan after the user explicitly confirms that plan. Use its current plan ID; if the revision or plan changes, inspect and present the new plan instead. After approval, wait for the workspace to report Ready before preparing or reviewing the next stage.
+The stages are ordered by `dependsOn`: the seed `bootstrap-sandbox`, then `foundation-sandbox`, which creates the single Factory team folder. Approve only the exact pending plan after the user explicitly confirms that plan. Use its current plan ID; if the revision or plan changes, inspect and present the new plan instead. After approval, wait for the workspace to report Ready before proceeding.
 
 Stop on plan errors, unexpected replacements or deletions, missing state, or an unexpected source revision. Do not repair state, import resources, or bypass a failed plan without explicit direction.
 
 ## Scope boundary
 
-This bootstrap covers the seed and the currently defined Sandbox Foundation and team stages. It does not create GKE, networking, team projects, or Non-Production and Production environments. Stop after the configured Sandbox stages are Ready and report the remaining handoff work; do not expand scope to those later stages.
+This bootstrap covers the Sandbox seed and Foundation stage for the Factory team. It does not create GKE, networking, team projects, or Non-Production and Production environments. Stop after the configured Sandbox stages are Ready and report the remaining handoff work; do not expand scope to those later stages.

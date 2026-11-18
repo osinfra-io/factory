@@ -144,7 +144,7 @@ run "custom_server_configuration" {
       seal "gcpckms" {
         crypto_key = "openbao"
         key_ring = "openbao"
-        project = "pt-example"
+        project = "example"
         region = "us"
       }
 

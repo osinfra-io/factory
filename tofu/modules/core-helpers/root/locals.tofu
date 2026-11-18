@@ -31,8 +31,8 @@ locals {
     keys(local.environment_teams)
   ))
 
-  environment_teams = local.environment != "production" && length(local.logos_workspaces) > 0 ? merge([
-    for workspace_name, workspace_data in data.terraform_remote_state.logos_environment :
+  environment_teams = local.environment != "production" && length(local.foundation_workspaces) > 0 ? merge([
+    for workspace_name, workspace_data in data.terraform_remote_state.foundation_environment :
     try(workspace_data.outputs.teams, {})
   ]...) : {}
 
@@ -43,15 +43,15 @@ locals {
   environment_root_folder_id = local.team_data != null ? try(local.team_data.environment_root_folder_id, null) : null
 
   # Environment workspace names mirror the production workspace names supplied by consumers.
-  logos_environment_workspaces = var.logos_workspaces != null && local.environment != "production" ? toset([
-    for workspace_name in var.logos_workspaces :
+  foundation_environment_workspaces = var.foundation_workspaces != null && local.environment != "production" ? toset([
+    for workspace_name in var.foundation_workspaces :
     "${trimsuffix(workspace_name, "-main-production")}-main-${local.environment}"
   ]) : toset([])
 
-  logos_workspaces = var.logos_workspaces != null ? toset(var.logos_workspaces) : toset([])
+  foundation_workspaces = var.foundation_workspaces != null ? toset(var.foundation_workspaces) : toset([])
 
-  production_teams = length(local.logos_workspaces) > 0 ? merge([
-    for workspace_name, workspace_data in data.terraform_remote_state.logos :
+  production_teams = length(local.foundation_workspaces) > 0 ? merge([
+    for workspace_name, workspace_data in data.terraform_remote_state.foundation :
     try(workspace_data.outputs.teams, {})
   ]...) : {}
 
@@ -67,13 +67,9 @@ locals {
 
   # Project naming components for downstream consumption
   project_naming = local.team_data != null ? {
-    prefix      = local.team_prefix
-    team_key    = var.team
-    team_prefix = local.team_prefix
+    prefix   = var.team
+    team_key = var.team
   } : null
 
-  team_data = var.logos_workspaces != null ? try(local.all_teams[var.team], null) : null
-
-  # Team prefix extraction (pt, st, ct, et)
-  team_prefix = var.team != null ? split("-", var.team)[0] : null
+  team_data = var.foundation_workspaces != null ? try(local.all_teams[var.team], null) : null
 }

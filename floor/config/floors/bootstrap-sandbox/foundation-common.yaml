@@ -1,18 +1,18 @@
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: logos-common
+  name: foundation-common
 spec:
   backendConfig:
     customConfiguration: |
       backend "gcs" {}
   backendConfigsFrom:
     - kind: ConfigMap
-      name: logos-bootstrap-backend
+      name: foundation-bootstrap-backend
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./workspace
+  path: ./foundation
   runnerPodTemplate:
     spec:
       envFrom:
@@ -23,8 +23,8 @@ spec:
   serviceAccountName: tf-bootstrap
   sourceRef:
     kind: GitRepository
-    name: logos-bootstrap-da6c2d69e1eb51cf48a277675935c7db3bdc79b3
+    name: foundation-source
   storeReadablePlan: json
   varsFrom:
     - kind: ConfigMap
-      name: logos-bootstrap-inputs
+      name: foundation-bootstrap-inputs
