@@ -228,4 +228,4 @@ kubectl rollout restart deployment/floor-api --namespace=floor-system >/dev/null
 kubectl rollout status deployment/floor-api --namespace=floor-system --timeout=180s ||
   fail "the floor-api deployment did not become available"
 
-"${SCRIPT_DIR}/verify.sh"
+echo "Floor is ready. The integration verifier exercises the GitHub fixture PR workflow."

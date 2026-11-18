@@ -1,5 +1,5 @@
 module "agentgateway_manifests" {
-  source = "../../../../modules/kubernetes/agentgateway-manifests"
+  source = "../../../../tofu/modules/kubernetes/agentgateway/regional/manifests"
 
   namespace = "agentgateway"
 

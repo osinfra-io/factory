@@ -1,5 +1,5 @@
 module "agent_substrate" {
-  source = "../../../../modules/kubernetes/agent-substrate"
+  source = "../../../../tofu/modules/kubernetes/agent-substrate/regional"
 
   depends_on = [
     kubernetes_secret_v1.postgres_owner,

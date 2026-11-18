@@ -8,7 +8,7 @@ run "cloud_crd_lifecycle_unchanged" {
   command = plan
 
   module {
-    source = "../../../../modules/kubernetes/agentgateway"
+    source = "../../../../tofu/modules/kubernetes/agentgateway/regional"
   }
 
   variables {

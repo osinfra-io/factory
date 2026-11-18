@@ -7,7 +7,7 @@ run "cloud_wrapper_helm_parity" {
   command = apply
 
   module {
-    source = "../../../../modules/kubernetes/istio/runtime"
+    source = "../../../../tofu/modules/kubernetes/istio/regional/runtime"
   }
 
   variables {
@@ -51,11 +51,11 @@ run "cloud_wrapper_helm_parity" {
 
   assert {
     condition = (
-      yamldecode(helm_release.cni.values[0]).podAnnotations["ad.datadoghq.com/install-cni.logs"] ==
-      "[{\"service\":\"istio-cni\",\"source\":\"istio\"}]" &&
-      local.cni_helm_values.platform == "gke"
+      local.cni_helm_values.platform == "gke" &&
+      !contains(keys(local.cni_helm_values), "podAnnotations") &&
+      !contains(keys(local.cni_helm_values), "podLabels")
     )
-    error_message = "The shared runtime must preserve the regional wrapper's GKE CNI Helm values."
+    error_message = "The shared runtime must preserve the regional wrapper's GKE CNI profile without vendor-specific instrumentation."
   }
 
   assert {
@@ -70,10 +70,14 @@ run "cloud_wrapper_helm_parity" {
 
   assert {
     condition = (
-      jsondecode(yamldecode(helm_release.ztunnel.values[0]).podAnnotations["ad.datadoghq.com/istio-proxy.logs"])[0].source == "istio" &&
-      jsondecode(yamldecode(helm_release.ztunnel.values[0]).podAnnotations["ad.datadoghq.com/istio-proxy.logs"])[0].service == "istio-ztunnel"
+      !contains(keys(yamldecode(helm_release.istiod.values[1])), "deploymentLabels") &&
+      !contains(keys(yamldecode(helm_release.istiod.values[1])), "podLabels") &&
+      !contains(keys(yamldecode(helm_release.istiod.values[1])), "podAnnotations") &&
+      !contains(keys(yamldecode(helm_release.istiod.values[1]).global.proxy), "tracer") &&
+      !contains(keys(yamldecode(helm_release.ztunnel.values[0])), "podAnnotations") &&
+      !contains(keys(yamldecode(helm_release.ztunnel.values[0])), "podLabels")
     )
-    error_message = "ztunnel logs must use the Istio source and service."
+    error_message = "Istio workloads must not configure external telemetry collectors."
   }
 }
 
@@ -81,7 +85,7 @@ run "local_runtime_profile" {
   command = apply
 
   module {
-    source = "../../../../modules/kubernetes/istio/runtime"
+    source = "../../../../tofu/modules/kubernetes/istio/regional/runtime"
   }
 
   variables {
@@ -124,7 +128,7 @@ run "local_runtime_profile" {
   }
 
   assert {
-    condition     = helm_release.cni.values[0] == yamlencode({ global = { hub = "docker.io/istio" }, podAnnotations = { "ad.datadoghq.com/install-cni.logs" = "[{\"service\":\"istio-cni\",\"source\":\"istio\"}]" }, podLabels = { "tags.datadoghq.com/env" = "local", "tags.datadoghq.com/service" = "istio-cni", "tags.datadoghq.com/version" = "1.31.0-rc.0" }, profile = "ambient", resources = { requests = { cpu = "100m", memory = "100Mi" } } })
+    condition     = helm_release.cni.values[0] == yamlencode({ global = { hub = "docker.io/istio" }, profile = "ambient", resources = { requests = { cpu = "100m", memory = "100Mi" } } })
     error_message = "The local CNI profile must omit the GKE platform selector and use public images."
   }
 

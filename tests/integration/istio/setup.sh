@@ -24,7 +24,7 @@ ensure_owned_resource deployment istio-test istio-test
 ensure_owned_resource service istio-test istio-test
 ensure_owned_resource secret gateway-localhost-tls istio-ingress
 
-# Gateway API is a shared prerequisite; teardown deliberately never deletes its CRDs.
+# Gateway API is a shared prerequisite; a full cluster reset removes its CRDs.
 kube apply --server-side \
   --filename="https://github.com/kubernetes-sigs/gateway-api/releases/download/${GATEWAY_API_VERSION}/standard-install.yaml"
 kube wait --for=condition=Established \

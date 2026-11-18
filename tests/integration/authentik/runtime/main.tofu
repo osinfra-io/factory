@@ -2,7 +2,7 @@
 # https://github.com/osinfra-io/factory
 
 module "authentik" {
-  source = "../../../../modules/kubernetes/authentik"
+  source = "../../../../tofu/modules/kubernetes/authentik/regional"
 
   depends_on = [kubernetes_secret_v1.authentik, kubernetes_stateful_set_v1.postgresql]
 

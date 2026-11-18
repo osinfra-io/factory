@@ -3,7 +3,16 @@
 
 output "authentication" {
   description = "Shared authentication configuration exercised by the local fixture"
-  value       = module.authentik
+  value = {
+    authentication_stage_policies         = module.authentik_config.authentication_stage_policies
+    authentication_stages                 = module.authentik_config.authentication_stages
+    brand                                 = module.authentik_config.brand
+    built_in_brand_domain                 = module.authentik_config.built_in_brand_domain
+    default_authentication_stage_settings = module.authentik_config.default_authentication_stage_settings
+    flow                                  = module.authentik_config.flow
+    policy_bindings                       = module.authentik_config.policy_bindings
+    stage_bindings                        = module.authentik_config.stage_bindings
+  }
 }
 
 output "openbao_client_id" {

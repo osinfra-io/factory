@@ -4,6 +4,7 @@ set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/shared.sh"
 require_local_cluster
+set_local_test_user_email
 
 if [ -z "${TF_VAR_google_oauth_client_id:-}" ] || [ -z "${TF_VAR_google_oauth_client_secret:-}" ]; then
   echo "Set TF_VAR_google_oauth_client_id and TF_VAR_google_oauth_client_secret; full integration requires real Google sign-in." >&2
@@ -120,6 +121,4 @@ local_tofu config init -input=false
 # No additional OpenTofu arguments are needed during initial setup.
 # shellcheck disable=SC2119
 apply_local_config
-# Authentik adds memberships (e.g. the bootstrap administrator) after creation; sync state so verification compares against it.
-apply_local_config -refresh-only
 echo "Authentik configured in Kubernetes. Browser verification remains pending."

@@ -13,7 +13,7 @@ fail() {
   exit 1
 }
 
-for command_name in docker kubectl helm tofu; do
+for command_name in docker git go helm jq kubectl python3 tofu; do
   command -v "${command_name}" >/dev/null 2>&1 || fail "required command '${command_name}' was not found"
 done
 
@@ -27,13 +27,7 @@ readonly SUBSTRATE_SOURCE_DIR="${WORK_DIR}/substrate-src"
 readonly PODCERT_NAMESPACE="podcertificate-controller-system"
 readonly PODCERT_OWNER_LABEL="local-fixture.osinfra.io/owner=agent-substrate"
 
-# The substrate chart needs the ClusterTrustBundle, ClusterTrustBundleProjection and
-# PodCertificateRequest feature gates plus certificates.k8s.io/v1beta1; the fixture
-# checks for them rather than reconfiguring the cluster.
-kubectl api-versions | grep --fixed-strings --line-regexp --quiet certificates.k8s.io/v1beta1 ||
-  fail "certificates.k8s.io/v1beta1 is not served; enable the ClusterTrustBundle, ClusterTrustBundleProjection and PodCertificateRequest feature gates"
-
-command -v go >/dev/null 2>&1 || fail "required command 'go' was not found (used to run the upstream ate-setup CA tool)"
+"${SCRIPT_DIR}/enable-feature-gates.sh"
 
 mkdir -p "${WORK_DIR}"
 if [ ! -d "${SUBSTRATE_SOURCE_DIR}" ]; then

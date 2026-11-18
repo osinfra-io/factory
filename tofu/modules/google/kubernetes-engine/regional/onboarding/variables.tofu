@@ -1,0 +1,19 @@
+# Input Variables
+# https://opentofu.org/docs/language/values/variables
+
+variable "namespaces" {
+  default     = {}
+  description = "A map of namespaces with the Google service account bound as the namespace administrator and whether the namespace is enrolled in the ambient Istio mesh. A namespace-admin Role and RoleBinding are always created for the service account."
+
+  type = map(object({
+    annotations                  = optional(map(string))
+    google_service_account       = string
+    istio_control_plane_clusters = optional(string)
+    mesh_enabled                 = optional(bool, false)
+  }))
+}
+
+variable "workload_identity_service_account_emails" {
+  description = "A map of workload identity service account emails for each namespace. Each key should be a namespace name, and the value should be the email address of the service account to associate with that namespace."
+  type        = map(string)
+}

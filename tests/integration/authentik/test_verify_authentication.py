@@ -65,5 +65,20 @@ class PasswordFlowTests(unittest.TestCase):
             self.execute({"component": "ak-stage-authenticator-validate"})
 
 
+class SharedStateSelectionTests(unittest.TestCase):
+    def test_selects_moved_shared_resources_only(self):
+        selected = [
+            {"module": "module.authentik_config", "type": kind, "name": name}
+            for kind, names in verifier.AUTHENTICATION_RESOURCES.items()
+            for name in names
+        ]
+        unrelated = [
+            {"module": "module.authentik_config", "type": "authentik_flow", "name": "google_authentication"},
+            {"module": "module.authentik", "type": "authentik_flow", "name": "authentication"},
+        ]
+        self.assertTrue(all(verifier.is_shared_authentication_resource(resource) for resource in selected))
+        self.assertFalse(any(verifier.is_shared_authentication_resource(resource) for resource in unrelated))
+
+
 if __name__ == "__main__":
     unittest.main()

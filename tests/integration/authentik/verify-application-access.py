@@ -2,10 +2,36 @@
 """Exercise deployed application mappings inside Authentik without a browser identity."""
 
 import json
+import os
 from pathlib import Path
 import ssl
 import sys
+import urllib.parse
 import urllib.request
+
+
+def verify_memberships(api, groups, mapping_id, email):
+    profile = {"email": email, "verified_email": True}
+    result = api(f"propertymappings/all/{mapping_id}/test/", {"context": {"info": profile}})
+    if not groups or not result["successful"] or set(json.loads(result["result"])["groups"]) != {
+        group["name"] for group in groups
+    }:
+        raise ValueError("The verified local test identity must be mapped to all application groups; restore access or rerun authentik setup")
+
+    # First Google sign-in can create memberships after OpenTofu last saved state.
+    query = urllib.parse.urlencode({"email": email})
+    expected_users = {
+        str(user["pk"])
+        for user in api(f"core/users/?{query}")["results"]
+        if user["is_active"] and user["email"] == email
+        and user["attributes"].get("osinfra_google_email") == email
+    }
+    for expected in groups:
+        actual = api(f"core/groups/{expected['id']}/")
+        if actual["is_superuser"] != expected["is_superuser"] or actual["name"] != expected["name"]:
+            raise ValueError("Application group name or administrative status differs from applied configuration")
+        if set(map(str, actual["users"])) != expected_users:
+            raise ValueError(f"{expected['name']} membership differs from the verified local test identity")
 
 
 def verify(work):
@@ -170,12 +196,9 @@ def verify(work):
     if headers.get("X-authentik-osinfra-google-email") != "":
         raise ValueError("A source-independent test identity received a verified Google header")
 
-    for expected in objects("authentik_group", "application"):
-        actual = api(f"core/groups/{expected['id']}/")
-        if actual["is_superuser"] != expected["is_superuser"] or actual["name"] != expected["name"]:
-            raise ValueError("Application group name or administrative status differs from applied configuration")
-        if sorted(map(str, actual["users"])) != sorted(map(str, expected["users"])):
-            raise ValueError("Application memberships differ from applied configuration")
+    verify_memberships(
+        api, objects("authentik_group", "application"), mappings[0]["id"], os.environ["TF_VAR_local_test_user_email"],
+    )
     print("Live Authentik evaluator verified native/OIDC email fields, unverified denial, source-independent header denial, and application groups.")
     print("Applied state confirms browser proxy providers use ten-minute claim validity.")
     print("These dry-run checks do not establish real Google browser sign-in or session revocation.")

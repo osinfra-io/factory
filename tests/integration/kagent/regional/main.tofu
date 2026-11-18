@@ -1,5 +1,5 @@
 module "kagent" {
-  source = "../../../../modules/kubernetes/kagent"
+  source = "../../../../tofu/modules/kubernetes/kagent/regional"
 
   depends_on = [
     kubernetes_secret_v1.openai,

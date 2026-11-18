@@ -4,6 +4,7 @@ set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/shared.sh"
 require_local_cluster
+set_local_test_user_email
 kubectl --context="${KUBE_CONTEXT}" rollout status statefulset/postgresql --namespace=authentik --timeout=180s
 kubectl --context="${KUBE_CONTEXT}" rollout status deployment/authentik-server --namespace=authentik --timeout=180s
 kubectl --context="${KUBE_CONTEXT}" rollout status deployment/authentik-worker --namespace=authentik --timeout=180s

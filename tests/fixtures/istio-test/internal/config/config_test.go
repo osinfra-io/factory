@@ -13,7 +13,7 @@ func TestLoad(t *testing.T) {
 		"PORT", "SERVER_READ_TIMEOUT", "SERVER_WRITE_TIMEOUT", "SERVER_IDLE_TIMEOUT",
 		"METADATA_HTTP_TIMEOUT", "METADATA_MAX_RETRIES", "METADATA_BASE_RETRY_DELAY",
 		"METADATA_MAX_RETRY_DELAY", "METADATA_RETRY_MULTIPLIER",
-		"LOG_LEVEL", "ENABLE_PROFILER", "ENABLE_TRACING", "ENABLE_PII_REDACTION", "SHUTDOWN_TIMEOUT",
+		"LOG_LEVEL", "ENABLE_PII_REDACTION", "SHUTDOWN_TIMEOUT",
 	}
 
 	for _, env := range envVars {
@@ -69,12 +69,6 @@ func TestLoad(t *testing.T) {
 		if conf.Observability.LogLevel != "info" {
 			t.Errorf("Expected default log level 'info', got %s", conf.Observability.LogLevel)
 		}
-		if !conf.Observability.EnableProfiler {
-			t.Errorf("Expected default enable profiler true, got %t", conf.Observability.EnableProfiler)
-		}
-		if !conf.Observability.EnableTracing {
-			t.Errorf("Expected default enable tracing true, got %t", conf.Observability.EnableTracing)
-		}
 		if !conf.Observability.EnablePIIRedaction {
 			t.Errorf("Expected default enable PII redaction true, got %t", conf.Observability.EnablePIIRedaction)
 		}
@@ -95,8 +89,6 @@ func TestLoad(t *testing.T) {
 		os.Setenv("METADATA_MAX_RETRY_DELAY", "5s")
 		os.Setenv("METADATA_RETRY_MULTIPLIER", "1.5")
 		os.Setenv("LOG_LEVEL", "debug")
-		os.Setenv("ENABLE_PROFILER", "false")
-		os.Setenv("ENABLE_TRACING", "false")
 		os.Setenv("ENABLE_PII_REDACTION", "false")
 		os.Setenv("SHUTDOWN_TIMEOUT", "30s")
 
@@ -137,12 +129,6 @@ func TestLoad(t *testing.T) {
 		if conf.Observability.LogLevel != "debug" {
 			t.Errorf("Expected log level 'debug', got %s", conf.Observability.LogLevel)
 		}
-		if conf.Observability.EnableProfiler {
-			t.Errorf("Expected enable profiler false, got %t", conf.Observability.EnableProfiler)
-		}
-		if conf.Observability.EnableTracing {
-			t.Errorf("Expected enable tracing false, got %t", conf.Observability.EnableTracing)
-		}
 		if conf.Observability.EnablePIIRedaction {
 			t.Errorf("Expected enable PII redaction false, got %t", conf.Observability.EnablePIIRedaction)
 		}
@@ -157,8 +143,6 @@ func TestLoad(t *testing.T) {
 		os.Setenv("SERVER_READ_TIMEOUT", "invalid")
 		os.Setenv("METADATA_MAX_RETRIES", "not-a-number")
 		os.Setenv("METADATA_RETRY_MULTIPLIER", "invalid-float")
-		os.Setenv("ENABLE_PROFILER", "maybe")
-
 		conf := Load()
 
 		// Should fallback to defaults for invalid values
@@ -173,9 +157,6 @@ func TestLoad(t *testing.T) {
 		}
 		if conf.Metadata.RetryMultiplier != 2.0 {
 			t.Errorf("Expected fallback to default retry multiplier 2.0, got %f", conf.Metadata.RetryMultiplier)
-		}
-		if !conf.Observability.EnableProfiler {
-			t.Errorf("Expected fallback to default enable profiler true, got %t", conf.Observability.EnableProfiler)
 		}
 	})
 }

@@ -2,7 +2,7 @@
 # https://github.com/osinfra-io/factory
 
 module "browser_auth" {
-  source = "../../../../modules/kubernetes/gateway-auth"
+  source = "../../../../tofu/modules/kubernetes/istio/regional/gateway-auth"
 
   extension_provider_name = "authentik"
   gateway_name            = "gateway"

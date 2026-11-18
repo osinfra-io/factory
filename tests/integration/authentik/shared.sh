@@ -20,6 +20,12 @@ require_local_cluster() {
   fi
 }
 
+set_local_test_user_email() {
+  local git_email
+  git_email="$(git -C "${LOCAL_DIR}/../../.." config user.email)"
+  export TF_VAR_local_test_user_email="${git_email}"
+}
+
 local_tofu() {
   local stage="$1"
   shift

@@ -13,11 +13,6 @@ import (
 	"istio-test/internal/metadata"
 	"istio-test/internal/observability"
 	"istio-test/internal/security"
-
-	"github.com/DataDog/dd-trace-go/v2/ddtrace/tracer"
-	"github.com/DataDog/dd-trace-go/v2/profiler"
-
-	httptrace "github.com/DataDog/dd-trace-go/contrib/net/http/v2"
 )
 
 func main() {
@@ -48,24 +43,6 @@ func main() {
 		CORP: "same-origin",
 	}
 
-	if conf.Observability.EnableTracing {
-		tracer.Start(tracer.WithRuntimeMetrics())
-		defer tracer.Stop()
-	}
-
-	if conf.Observability.EnableProfiler {
-		err := profiler.Start(
-			profiler.WithProfileTypes(
-				profiler.CPUProfile,
-				profiler.HeapProfile,
-			),
-		)
-		if err != nil {
-			observability.ErrorWithContext(ctx, fmt.Sprintf("Warning: Failed to start profiler: %v", err))
-		}
-		defer profiler.Stop()
-	}
-
 	// Create metadata client with configuration
 	metadataClient := metadata.NewClient(
 		conf.Metadata.HTTPTimeout,
@@ -75,7 +52,7 @@ func main() {
 		conf.Metadata.RetryMultiplier,
 	)
 
-	mux := httptrace.NewServeMux()
+	mux := http.NewServeMux()
 	mux.HandleFunc("/istio-test/metadata/", metadata.SecureMetadataHandlerWithOptions(metadataClient.FetchMetadata, apiSecurityOptions))
 	mux.HandleFunc("/istio-test/health", metadata.SecureEnhancedHealthCheckHandlerWithOptions(metadataClient, apiSecurityOptions))
 	mux.HandleFunc("/istio-test/auth", auth.SecureHandlerWithOptions(apiSecurityOptions))

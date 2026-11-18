@@ -14,6 +14,7 @@ class ApplicationAccessCommandTests(unittest.TestCase):
             (root / script.name).write_text(script.read_text())
             (root / "shared.sh").write_text(
                 'require_local_cluster() { echo ownership; }\n'
+                'set_local_test_user_email() { echo test-identity; }\n'
                 'start_admin_forward() { echo forward; }\n'
                 'apply_local_config() { printf "apply %s\\n" "$@"; }\n'
             )
@@ -28,7 +29,7 @@ class ApplicationAccessCommandTests(unittest.TestCase):
                 result = self.run_command(action)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(result.stdout.splitlines(), [
-                    "ownership", "forward",
+                    "test-identity", "ownership", "forward",
                     f"apply -var=revoke_application_access={expected}",
                 ])
 

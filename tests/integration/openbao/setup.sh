@@ -137,7 +137,7 @@ bootstrap_openbao() {
   fi
 
   [ -s "${INIT_FILE}" ] ||
-    fail "OpenBao is initialized but ${INIT_FILE} is missing; run tests/integration/openbao/teardown.sh to start fresh"
+    fail "OpenBao is initialized but ${INIT_FILE} is missing; reset Docker Desktop Kubernetes using the local-integration-testing skill to start fresh"
 
   if [ "$(jq -r '.sealed' <<<"${status}")" = "true" ]; then
     # Expand the key only inside the container.

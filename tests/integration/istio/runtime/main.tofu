@@ -2,7 +2,7 @@
 # https://github.com/osinfra-io/factory
 
 module "browser_auth" {
-  source = "../../../../modules/kubernetes/gateway-auth"
+  source = "../../../../tofu/modules/kubernetes/istio/regional/gateway-auth"
 
   extension_provider_name = "authentik"
   outpost_namespace       = "authentik"
@@ -15,7 +15,7 @@ module "browser_auth" {
 # https://github.com/osinfra-io/factory
 
 module "istio_runtime" {
-  source = "../../../../modules/kubernetes/istio/runtime"
+  source = "../../../../tofu/modules/kubernetes/istio/regional/runtime"
 
   ca_address           = null
   cluster_name         = "docker-desktop"

@@ -1,0 +1,202 @@
+# Local Values
+# https://opentofu.org/docs/language/values/locals
+
+locals {
+  gateway_dns_record_names = {
+    for domain, _ in var.gateway_dns : domain => "${domain}."
+  }
+
+  gateway_domains = keys(var.gateway_dns)
+
+  gateway_mci_pre_shared_certs = join(",", var.gateway_mci_ssl_certificate_names)
+
+  # Gateway listener. A single catch-all HTTPS listener terminates TLS for every
+  # team's traffic. hostname is null so Envoy builds a default (no-SNI) filter
+  # chain: the fronting GCP L7 load balancer re-originates TLS to the backend
+  # without forwarding client SNI, so an SNI-matched chain would never match.
+  # allowedRoutes.from is All because per-team isolation is enforced upstream in
+  # IaC/workflows (route intent is declared in Logos and PR-reviewed, HTTPRoute
+  # hostnames are derived from each team's authoritative DNS zone, and only the
+  # deploy workflow applies routes), not at runtime by the gateway. The
+  # istio-gateway-tls wildcard certificate covers every host.
+  gateway_listeners = [
+    {
+      allowedRoutes = {
+        namespaces = {
+          from = "All"
+
+          selector = null
+        }
+      }
+
+      # hostname is intentionally absent — the field is omitted, not set to null. A listener with
+      # no hostname is catch-all, and the kubernetes_manifest provider treats an explicit null as
+      # a known-after-apply value, which produces a perpetual in-place diff on every plan.
+      name     = "https"
+      port     = 443
+      protocol = "HTTPS"
+
+      tls = {
+        certificateRefs = [
+          {
+            kind = "Secret"
+            name = "istio-gateway-tls"
+          }
+        ]
+
+        mode = "Terminate"
+      }
+    }
+  ]
+
+  # Strategic-merge patch for the generated east-west gateway Deployment. istiod names the
+  # gateway container "istio-proxy". The chart's default requests are sized for gateways
+  # carrying real cross-cluster traffic; this makes them tunable per environment.
+  istio_east_west_gateway_deployment_patch = yamlencode({
+    spec = {
+      template = {
+        spec = {
+          containers = [
+            {
+              name = "istio-proxy"
+
+              resources = {
+                limits = {
+                  cpu    = var.east_west_gateway_cpu_limits
+                  memory = var.east_west_gateway_memory_limits
+                }
+
+                requests = {
+                  cpu    = var.east_west_gateway_cpu_requests
+                  memory = var.east_west_gateway_memory_requests
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  })
+
+  # East-west gateway listener. HBONE-only, double-HBONE terminate, per the ambient
+  # multicluster install guide — this is the only supported ambient east-west shape.
+  istio_east_west_gateway_listeners = [
+    {
+      name     = "mesh"
+      port     = 15008
+      protocol = "HBONE"
+
+      tls = {
+        mode = "Terminate"
+
+        options = {
+          "gateway.istio.io/tls-terminate-mode" = "ISTIO_MUTUAL"
+        }
+      }
+    }
+  ]
+
+  istio_gateway_address = var.enable_istio_gateway ? google_compute_global_address.istio_gateway.address : null
+
+  # Strategic-merge patch for the generated gateway Deployment. istiod names the gateway
+  # container "istio-proxy". Ports the resources, tolerations, and topology spread that were set
+  # on the Helm gateway release.
+  istio_gateway_deployment_patch = yamlencode({
+    spec = {
+      template = {
+        spec = {
+          containers = [
+            {
+              name = "istio-proxy"
+
+              resources = {
+                limits = {
+                  cpu    = var.gateway_cpu_limits
+                  memory = var.gateway_memory_limits
+                }
+
+                requests = {
+                  cpu    = var.gateway_cpu_requests
+                  memory = var.gateway_memory_requests
+                }
+              }
+            }
+          ]
+
+          tolerations = [
+            {
+              effect = "NoExecute"
+              key    = "dedicated"
+              value  = "gateway"
+            }
+          ]
+
+          topologySpreadConstraints = [
+            {
+              labelSelector = {
+                matchLabels = {
+                  "gateway.networking.k8s.io/gateway-name" = "gateway"
+                }
+              }
+
+              maxSkew           = 1
+              topologyKey       = "topology.kubernetes.io/zone"
+              whenUnsatisfiable = "ScheduleAnyway"
+            }
+          ]
+        }
+      }
+    }
+  })
+
+  # Strategic-merge patch creating a HorizontalPodAutoscaler for the generated gateway
+  # Deployment (istiod wires the scaleTargetRef automatically).
+  istio_gateway_hpa_patch = yamlencode({
+    spec = {
+      maxReplicas = var.gateway_autoscale_max
+
+      metrics = [
+        {
+          resource = {
+            name = "cpu"
+
+            target = {
+              averageUtilization = 85
+              type               = "Utilization"
+            }
+          }
+
+          type = "Resource"
+        }
+      ]
+
+      minReplicas = var.gateway_autoscale_min
+    }
+  })
+
+  istio_gateway_name = "istio-gateway-${module.core_helpers.region}-${module.core_helpers.zone}"
+
+  # Strategic-merge patch creating a PodDisruptionBudget for the generated gateway Deployment.
+  istio_gateway_pdb_patch = yamlencode({
+    spec = {
+      maxUnavailable = 1
+    }
+  })
+
+  # Strategic-merge patch setting the generated gateway Service type to NodePort, required by
+  # the GKE NEG/MultiClusterIngress path (the default is LoadBalancer).
+  istio_gateway_service_patch = yamlencode({
+    spec = {
+      type = "NodePort"
+    }
+  })
+
+  istio_image_hub = "${var.artifact_registry}/istio"
+
+  # Every cluster is its own logical Istio network so cross-cluster ambient traffic takes the
+  # supported multi-network east-west gateway path (same-network ambient multicluster is
+  # untested upstream).
+  istio_network = local.multi_cluster_name
+
+  multi_cluster_name = module.core_helpers.zone != null ? "${var.cluster_prefix}-${module.core_helpers.region}-${module.core_helpers.zone}-${module.core_helpers.env}" : "${var.cluster_prefix}-${module.core_helpers.region}-${module.core_helpers.env}"
+}

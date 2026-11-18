@@ -1,0 +1,16 @@
+audit:
+  disableCertRotation: true
+
+controllerManager:
+  disableCertRotation: true
+
+externalCertInjection:
+  enabled: true
+
+
+
+mutatingWebhookAnnotations:
+  cert-manager.io/inject-ca-from: gatekeeper-system/gatekeeper-webhook-server-cert
+
+validatingWebhookAnnotations:
+  cert-manager.io/inject-ca-from: gatekeeper-system/gatekeeper-webhook-server-cert

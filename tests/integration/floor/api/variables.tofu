@@ -132,9 +132,3 @@ variable "service_port" {
   type        = number
   default     = 8080
 }
-
-variable "version_label" {
-  description = "Release of floor-api reported to Datadog"
-  type        = string
-  default     = "local"
-}

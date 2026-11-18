@@ -5,11 +5,7 @@ FROM golang:1.27-alpine
 RUN addgroup -S istio-test && adduser -S istio-test -G istio-test
 USER istio-test
 
-ARG DD_GIT_REPOSITORY_URL
-ARG DD_GIT_COMMIT_SHA
 ARG VERSION=dev
-ENV DD_GIT_REPOSITORY_URL=${DD_GIT_REPOSITORY_URL}
-ENV DD_GIT_COMMIT_SHA=${DD_GIT_COMMIT_SHA}
 
 # Set the working directory inside the container
 
@@ -28,8 +24,7 @@ COPY internal/ /app/internal/
 
 # Build the application
 
-# For Datadog ASM the Go build tag appsec is not necessary if CGO is enabled with CGO_ENABLED=1
-RUN GOOS=linux CGO_ENABLED=0 go build -v -tags appsec -ldflags "-X istio-test/internal/metadata.version=${VERSION}" -o main cmd/http/main.go
+RUN GOOS=linux CGO_ENABLED=0 go build -v -ldflags "-X istio-test/internal/metadata.version=${VERSION}" -o main cmd/http/main.go
 
 # Expose the port your application listens on
 

@@ -2,25 +2,7 @@
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/brand
 
 data "authentik_brand" "built_in" {
-  domain = module.authentik.built_in_brand_domain
-}
-
-# Authentik Expression Policy
-# https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/policy_expression
-
-data "authentik_policy_expression" "authentication_stage_policies" {
-  for_each = module.authentik.authentication_stage_policies
-
-  name = each.value.policy_name
-}
-
-# Authentik Stage
-# https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/stage
-
-data "authentik_stage" "authentication_stages" {
-  for_each = module.authentik.authentication_stages
-
-  name = each.value.name
+  domain = module.authentik_config.built_in_brand_domain
 }
 
 data "authentik_stage" "default_authentication" {

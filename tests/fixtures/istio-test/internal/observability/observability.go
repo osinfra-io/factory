@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-
-	dd_logrus "github.com/DataDog/dd-trace-go/contrib/sirupsen/logrus/v2"
 )
 
 var log = logrus.New()
@@ -53,8 +51,6 @@ func Init(logLevel string, cfg Config) {
 	// Store configuration
 	config = cfg
 
-	// Add Datadog context log hook
-	log.AddHook(&dd_logrus.DDContextLogHook{})
 }
 
 func InfoWithContext(ctx context.Context, msg string) {

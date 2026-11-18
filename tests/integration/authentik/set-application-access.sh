@@ -9,6 +9,8 @@ if [ "$#" -ne 1 ] || { [ "$1" != "revoke" ] && [ "$1" != "restore" ]; }; then
   exit 1
 fi
 
+set_local_test_user_email
+
 revoke=false
 if [ "$1" = "revoke" ]; then
   revoke=true

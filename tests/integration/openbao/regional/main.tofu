@@ -1,5 +1,5 @@
 module "openbao" {
-  source = "../../../../modules/kubernetes/openbao"
+  source = "../../../../tofu/modules/kubernetes/openbao/regional"
 
   anti_affinity_enabled = false
   namespace             = kubernetes_namespace_v1.openbao.metadata[0].name

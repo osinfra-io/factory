@@ -40,8 +40,6 @@ type MetadataConfig struct {
 // ObservabilityConfig holds observability related configuration
 type ObservabilityConfig struct {
 	LogLevel           string        `json:"log_level"`
-	EnableProfiler     bool          `json:"enable_profiler"`
-	EnableTracing      bool          `json:"enable_tracing"`
 	EnablePIIRedaction bool          `json:"enable_pii_redaction"`
 	ShutdownTimeout    time.Duration `json:"shutdown_timeout"`
 }
@@ -79,8 +77,6 @@ func Load() *Config {
 		},
 		Observability: ObservabilityConfig{
 			LogLevel:           getEnv("LOG_LEVEL", "info"),
-			EnableProfiler:     parseBool("ENABLE_PROFILER", true),
-			EnableTracing:      parseBool("ENABLE_TRACING", true),
 			EnablePIIRedaction: parseBool("ENABLE_PII_REDACTION", true),
 			ShutdownTimeout:    getDuration("SHUTDOWN_TIMEOUT", 5*time.Second),
 		},

@@ -129,14 +129,6 @@ ensure_owned_resource() {
   fi
 }
 
-delete_owned_resource() {
-  local kind="$1" name="$2" namespace="$3"
-  ensure_owned_resource "${kind}" "${name}" "${namespace}"
-  if kube get "${kind}" "${name}" --namespace="${namespace}" >/dev/null 2>&1; then
-    kube delete "${kind}" "${name}" --namespace="${namespace}"
-  fi
-}
-
 auth_policy_name() {
   local key="$1"
   printf 'gateway-auth-%s' "$(printf '%s-custom' "${key}" | openssl sha1 | awk '{print substr($2, 1, 8)}')"

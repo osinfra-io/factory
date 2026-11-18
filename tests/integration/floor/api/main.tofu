@@ -96,7 +96,7 @@ resource "kubernetes_deployment_v1" "floor_api" {
     template {
       metadata {
         annotations = local.pod_annotations
-        labels      = local.pod_labels
+        labels      = local.selector_labels
       }
 
       spec {

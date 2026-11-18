@@ -82,12 +82,7 @@ items:
             app: istio-test
         spec:
           containers:
-            - env:
-                - name: ENABLE_PROFILER
-                  value: "false"
-                - name: ENABLE_TRACING
-                  value: "false"
-              image: istio-test:local
+            - image: istio-test:local
               imagePullPolicy: Never
               name: istio-test
               ports:

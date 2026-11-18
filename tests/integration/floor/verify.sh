@@ -427,9 +427,8 @@ kubectl get events --namespace="${FIXTURE_NAMESPACE}" \
 pull_request_comments | grep --quiet "${VERIFY_USER}" ||
   fail "floor-api did not comment the approval on pull request ${pull_request}"
 
-# The fixture repository requires a review, which no local identity can give.
-gh pr merge "${pull_request}" --repo="${FIXTURE_REPO}" --squash --delete-branch --admin ||
-  fail "could not merge pull request ${pull_request}"
+gh pr merge "${pull_request}" --repo="${FIXTURE_REPO}" --squash --delete-branch ||
+  fail "could not merge pull request ${pull_request} under the fixture repository's normal merge rules"
 
 trap - EXIT
 

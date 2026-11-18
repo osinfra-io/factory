@@ -8,9 +8,9 @@ Factory composes its local modules, so everything cross-cutting lives here: the 
 
 | Path | Purpose |
 | --- | --- |
-| `setup.sh`, `verify.sh`, `teardown.sh` | Stack entry points: Istio → Authentik → agentgateway → Agent Substrate → kagent → OpenBao (teardown in reverse) |
+| `setup.sh`, `verify.sh` | Stack entry points: Istio → Authentik → agentgateway → Agent Substrate → kagent → OpenBao → Floor |
 | `shared/` | Preflight/ownership, cluster guards, and `hostnames.txt` |
-| `istio/`, `authentik/`, `agentgateway/`, `agent-substrate/`, `kagent/`, `openbao/` | Per-component fixtures with their own `setup.sh`, `verify.sh`, and `teardown.sh`; OpenBao also applies a local OIDC and team-policy configuration stage |
+| `istio/`, `authentik/`, `agentgateway/`, `agent-substrate/`, `kagent/`, `openbao/` | Per-component fixtures with their own `setup.sh` and `verify.sh`; OpenBao also applies a local OIDC and team-policy configuration stage |
 | `verify/` | Holistic HTTP and runtime (fail-closed, admin denial, ztunnel mTLS) verifiers |
 
 Fixtures use the modules in this repository directly, without release pins. Generated credentials and state live in ignored `.work/` directories while the fixture cluster is owned.
@@ -20,7 +20,6 @@ Fixtures use the modules in this repository directly, without release pins. Gene
 ```bash
 tests/integration/setup.sh
 tests/integration/verify.sh
-tests/integration/teardown.sh        # deletes local users and database data
 ```
 
 Before setup, set `TF_VAR_google_oauth_client_id` and `TF_VAR_google_oauth_client_secret`. The Google web client must allow `https://localhost/source/oauth/callback/google/`.
@@ -28,8 +27,11 @@ Before setup, set `TF_VAR_google_oauth_client_id` and `TF_VAR_google_oauth_clien
 On first setup, preflight checks that the `docker-desktop` Kind cluster has no non-system namespaces, Helm releases, or gateway/mesh CRDs, then records ownership automatically. If those checks pass, stale component `.work/` directories are removed before setup; this deletes local state and generated credentials, so provide OAuth variables again. Preflight preserves `.work/` on an already-owned cluster and refuses an unowned cluster that is not empty.
 
 Component scripts can be rerun individually (for example `tests/integration/authentik/setup.sh`) while iterating.
+Agent Substrate setup enables its required certificate feature gates on the dedicated single-node cluster; it can restart the node's kubelet and API server.
 
-- The `floor` component installs the floor engine off the ambient mesh in `flux-system`: the Flux Operator, a `FluxInstance` running source, kustomize, and notification controllers, and tofu-controller with its Branch Planner scoped to the `floor-fixture` namespace. It deploys `floor-api`, the Go MCP server behind `floor.localhost`, as the only writer of plan approvals. The Floor config is reconciled from this repository's current branch, so push that branch before setup; its GitHub PR verification uses the external `osinfra-io/factory-floor-fixture` repository. It requires the `gh` CLI and a token that can read pull requests, comment on them, and merge with admin bypass on that fixture repository. `verify.sh` opens and merges a pull request there on every run.
+Full teardown must be performed in the Docker Desktop application because WSL cannot reset its Kubernetes cluster. It removes all cluster resources, not just these fixtures. Use the `local-integration-testing` skill.
+
+- The `floor` component installs the floor engine off the ambient mesh in `flux-system`: the Flux Operator, a `FluxInstance` running source, kustomize, and notification controllers, and tofu-controller with its Branch Planner scoped to the `floor-fixture` namespace. It deploys `floor-api`, the Go MCP server behind `floor.localhost`, as the only writer of plan approvals. The Floor config is reconciled from this repository's current branch, so push that branch before setup. Setup does not open a PR. After the local checks pass, `verify.sh` opens and squash-merges a PR in `osinfra-io/factory-floor-fixture`, using `gh` with permission to write contents and create, comment on, and merge PRs under the repository's normal rules.
 
 The OpenBao setup applies its fixture-owned OIDC and KV v2 configuration using the local Authentik outputs and credentials under `.work/`. It seeds a README under the local `factory` team key and lets each team role list the top-level team names; secret values remain team-scoped. Automated verification checks OIDC settings, reader/writer/admin capabilities, top-level team listing, and cross-team denial; it uses short-lived test tokens and never prints them.
 
@@ -44,7 +46,7 @@ Google-backed OIDC sign-in is a separate manual developer check and is not cover
    bao login -method=oidc -path=oidc role=default
    ```
 
-3. Optionally set `TF_VAR_local_test_user_email` to a lowercase Google email before setup to add that user to local application groups. Verify team-scoped access after sign-in. Automated policy checks do not prove that Google sign-in or group claims work end to end.
+3. Authentik setup uses `git config user.email` as the local test identity; it must match the Google account used for sign-in. The identity is added to every sandbox application group, including Authentik Admins. Verify team-scoped access after sign-in. Automated policy checks do not prove that Google sign-in or group claims work end to end.
 
 The local fixture uses the same host-level authorization as the cloud: `agentgateway.localhost` requires the managed agentgateway Admins group, `kagent.localhost` requires kagent Admins, while `dev.localhost` uses the baseline `all` group. No post-auth authorization Lua is deployed; only identity-header stripping remains.
 

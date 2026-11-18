@@ -9,6 +9,22 @@ import urllib.request
 from pathlib import Path
 
 
+AUTHENTICATION_RESOURCES = {
+    "authentik_brand": {"built_in", "this"},
+    "authentik_flow": {"authentication"},
+    "authentik_flow_stage_binding": {"authentication_stages"},
+    "authentik_policy_binding": {"authentication_stage_policies"},
+    "authentik_stage_identification": {"default_authentication"},
+}
+
+
+def is_shared_authentication_resource(resource):
+    return (
+        resource.get("module") == "module.authentik_config"
+        and resource["name"] in AUTHENTICATION_RESOURCES.get(resource["type"], set())
+    )
+
+
 def verify_password_flow(context):
     cookies = http.cookiejar.CookieJar()
     client = urllib.request.build_opener(
@@ -91,13 +107,7 @@ def verify(work):
     selected_flow = None
     for resource in state["resources"]:
         kind = resource["type"]
-        shared = resource.get("module") == "module.authentik"
-        identification = (
-            resource.get("module") == "module.authentik_config"
-            and kind == "authentik_stage_identification"
-            and resource["name"] == "default_authentication"
-        )
-        if not (shared or identification) or kind not in endpoints:
+        if not is_shared_authentication_resource(resource) or kind not in endpoints:
             continue
         endpoint, fields = endpoints[kind]
         built_in_brand = kind == "authentik_brand" and resource["name"] == "built_in"

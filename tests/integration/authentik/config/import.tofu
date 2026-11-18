@@ -5,12 +5,12 @@ import {
   for_each = var.import_built_in_brand ? toset(["built_in"]) : toset([])
 
   id = data.authentik_brand.built_in.id
-  to = module.authentik.authentik_brand.built_in
+  to = module.authentik_config.authentik_brand.built_in
 }
 
 import {
   id = var.embedded_outpost_id
-  to = module.authentik_config.authentik_outpost.embedded
+  to = module.authentik_regional_config.authentik_outpost.embedded
 }
 
 import {

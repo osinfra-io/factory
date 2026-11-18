@@ -1,5 +1,5 @@
 module "agentgateway" {
-  source = "../../../../modules/kubernetes/agentgateway"
+  source = "../../../../tofu/modules/kubernetes/agentgateway/regional"
 
   crds_postrender = local.crds_postrender
   namespace       = kubernetes_namespace_v1.agentgateway.metadata[0].name

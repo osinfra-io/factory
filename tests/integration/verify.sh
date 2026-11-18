@@ -19,12 +19,13 @@ run_stage() {
   fi
 }
 
-for component in istio authentik agentgateway agent-substrate kagent openbao floor; do
+for component in istio authentik agentgateway agent-substrate kagent openbao; do
   run_stage "${component}" "${SCRIPT_DIR}/${component}/verify.sh"
 done
 
 run_stage "holistic anonymous HTTP" python3 -B "${SCRIPT_DIR}/verify/verify-http.py"
 run_stage "fail-closed, in-mesh admin-denial, and ztunnel mTLS (Authentik is restored afterwards)" \
   python3 -B "${SCRIPT_DIR}/verify/verify-runtime.py"
+run_stage floor "${SCRIPT_DIR}/floor/verify.sh"
 
 echo "Automated local integration checks passed. Google browser sign-in and authenticated identity verification remain pending."

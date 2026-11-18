@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Ownership marker for the dedicated local gateway-stack cluster. Changing these
-# values requires a teardown and fresh setup of every component.
+# values requires a full Docker Desktop Kubernetes reset and fresh setup.
 
 # Constants consumed by scripts sourcing this file.
 # shellcheck disable=SC2034

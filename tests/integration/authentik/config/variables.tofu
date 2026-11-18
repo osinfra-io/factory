@@ -43,7 +43,7 @@ variable "import_built_in_brand" {
 
 variable "local_test_user_email" {
   default     = null
-  description = "Optional lowercase Google email to grant local integration access"
+  description = "Lowercase Google email for local integration access, populated from Git user.email during setup."
   type        = string
 }
 
