@@ -66,7 +66,7 @@ variables {
   prefix = "foundation"
 }
 
-run "plans_the_shared_host_registry_and_state_for_factory" {
+run "plans_the_shared_host_and_state_for_factory" {
   command = plan
 
   assert {
@@ -81,16 +81,15 @@ run "plans_the_shared_host_registry_and_state_for_factory" {
       length(output.regional_subnets) == 0 &&
       length(google_compute_shared_vpc_service_project.workloads) == 0 &&
       length(google_project_iam_member.gke_host_agent) == 0 &&
-      google_artifact_registry_repository.docker_remote["sandbox"].mode == "REMOTE_REPOSITORY" &&
-      google_artifact_registry_repository.docker_standard["factory"].repository_id == "factory-standard" &&
-      google_artifact_registry_repository.docker_virtual["factory"].mode == "VIRTUAL_REPOSITORY" &&
-      google_artifact_registry_repository.docker_virtual["factory"].repository_id == "factory-virtual" &&
+      length(google_artifact_registry_repository.docker_remote) == 0 &&
+      length(google_artifact_registry_repository.docker_standard) == 0 &&
+      length(google_artifact_registry_repository.docker_virtual) == 0 &&
       output.team_state["factory"].bucket == "factory-567188438944-state-sb" &&
       google_kms_crypto_key_iam_member.state_storage["factory"].role == "roles/cloudkms.cryptoKeyEncrypterDecrypter" &&
       length(google_storage_bucket_iam_member.state_writers) == 0 &&
       length(google_service_account.registry_publishers) == 0
     )
-    error_message = "Factory must get registries and encrypted state in the shared host without a workload project or unrequested access grants."
+    error_message = "Factory must get encrypted state in the shared host without registries, a workload project, or unrequested access grants."
   }
 }
 
