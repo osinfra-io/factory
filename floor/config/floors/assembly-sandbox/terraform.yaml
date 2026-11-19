@@ -47,4 +47,8 @@ spec:
   varsFrom:
     - kind: ConfigMap
       name: foundation-bootstrap-backend
+    - kind: ConfigMap
+      name: foundation-bootstrap-inputs
+      varsKeys:
+        - google_quota_project
   workspace: assembly-main-sandbox

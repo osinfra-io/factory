@@ -23,6 +23,10 @@ locals {
 module "google_project" {
   source = "../../../"
 
+  providers = {
+    google.budget = google
+  }
+
   billing_account                 = "000000-000000-000000"
   cis_2_2_logging_sink            = local.logging_sink
   cis_2_2_logging_sink_project_id = local.logging_sink_project_id

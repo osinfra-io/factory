@@ -1,4 +1,10 @@
 mock_provider "google" {
+  mock_data "google_logging_project_cmek_settings" {
+    defaults = {
+      service_account_id = "service-123456789012@gcp-sa-logging.iam.gserviceaccount.com"
+    }
+  }
+
   mock_data "google_storage_project_service_account" {
     defaults = {
       member = "serviceAccount:service-123456789012@gs-project-accounts.iam.gserviceaccount.com"
@@ -29,6 +35,10 @@ mock_provider "google" {
       name  = "projects/factory-tfabc-sb/serviceAccounts/factory-publisher@factory-tfabc-sb.iam.gserviceaccount.com"
     }
   }
+}
+
+mock_provider "google" {
+  alias = "budget"
 }
 
 mock_provider "google-beta" {
@@ -62,8 +72,9 @@ mock_provider "terraform" {
 }
 
 variables {
-  bucket = "sandbox-bootstrap-state"
-  prefix = "foundation"
+  bucket               = "sandbox-bootstrap-state"
+  google_quota_project = "sandbox-bootstrap"
+  prefix               = "foundation"
 }
 
 run "plans_the_shared_host_and_state_for_factory" {

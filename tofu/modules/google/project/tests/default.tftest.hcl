@@ -1,4 +1,10 @@
 mock_provider "google" {
+  mock_data "google_logging_project_cmek_settings" {
+    defaults = {
+      service_account_id = "service-mock@gcp-sa-logging.iam.gserviceaccount.com"
+    }
+  }
+
   mock_resource "google_logging_project_sink" {
     defaults = {
       writer_identity = "serviceAccount:mock-cis-2-2-logging-sink@mock.iam.gserviceaccount.com"

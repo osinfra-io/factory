@@ -64,6 +64,11 @@ variable "github_repository_owner_id" {
   }
 }
 
+variable "google_quota_project" {
+  description = "Existing project with Billing Budgets enabled for runner quota"
+  type        = string
+}
+
 variable "host_project_team" {
   description = "Declared team whose key prefixes the environment's shared host project ID"
   type        = string

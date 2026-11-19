@@ -53,6 +53,9 @@ module "google_project_network" {
   source = "../tofu/modules/google/project"
 
   for_each = local.network_projects
+  providers = {
+    google.budget = google.budget
+  }
 
   billing_account              = var.billing_account_id
   folder_id                    = each.value
@@ -67,6 +70,9 @@ module "google_project_teams" {
 
   depends_on = [module.google_project_network]
   for_each   = local.team_projects
+  providers = {
+    google.budget = google.budget
+  }
 
   billing_account = var.billing_account_id
   cis_2_2_logging_sink = {
@@ -83,6 +89,9 @@ module "google_project_workloads" {
 
   depends_on = [module.google_project_network]
   for_each   = local.workload_teams
+  providers = {
+    google.budget = google.budget
+  }
 
   billing_account = var.billing_account_id
   cis_2_2_logging_sink = {

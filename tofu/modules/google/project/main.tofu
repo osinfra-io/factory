@@ -2,6 +2,8 @@
 # https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/billing_budget
 
 resource "google_billing_budget" "project" {
+  provider = google.budget
+
   all_updates_rule {
     monitoring_notification_channels = [
       google_monitoring_notification_channel.this["budget"].name
@@ -75,8 +77,7 @@ resource "google_kms_crypto_key" "cis_2_2_logging_sink" {
 
 resource "google_kms_crypto_key_iam_member" "cis_2_2_logging_sink" {
   lifecycle {
-    enabled        = local.cis_2_2_logging_sink_local
-    ignore_changes = [member]
+    enabled = local.cis_2_2_logging_sink_local
   }
 
   crypto_key_id = google_kms_crypto_key.cis_2_2_logging_sink.id
@@ -113,6 +114,8 @@ resource "google_logging_metric" "cis_logging_metrics" {
 # https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/logging_project_bucket_config
 
 resource "google_logging_project_bucket_config" "cis_2_2_logging_sink" {
+  depends_on = [google_kms_crypto_key_iam_member.cis_2_2_logging_sink]
+
   lifecycle {
     enabled = local.cis_2_2_logging_sink_local
   }

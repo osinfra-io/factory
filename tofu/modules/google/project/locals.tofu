@@ -92,7 +92,7 @@ locals {
 
   external_logging_project_id      = var.cis_2_2_logging_sink != null ? var.cis_2_2_logging_sink.project_id : var.cis_2_2_logging_sink_project_id
   logging_service_identity_enabled = true
-  logging_service_identity_member  = try("serviceAccount:${google_project_service_identity.logging.email}", "serviceAccount:pending@pending.iam.gserviceaccount.com")
+  logging_service_identity_member  = local.cis_2_2_logging_sink_local ? "serviceAccount:${data.google_logging_project_cmek_settings.this.service_account_id}" : null
 
   monitoring_notification_channels = {
     "budget" = {

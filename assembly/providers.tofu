@@ -10,3 +10,9 @@ terraform {
     }
   }
 }
+
+provider "google" {
+  alias                 = "budget"
+  billing_project       = var.google_quota_project
+  user_project_override = true
+}
