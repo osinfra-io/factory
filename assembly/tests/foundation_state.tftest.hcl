@@ -66,21 +66,25 @@ variables {
   prefix = "foundation"
 }
 
-run "skips_infrastructure_without_team_opt_ins" {
+run "plans_only_the_shared_host_for_the_current_factory_team" {
   command = plan
-
-  variables {
-    teams = { factory = { display_name = "Factory" } }
-  }
 
   assert {
     condition = (
-      length(module.google_project_network) == 0 &&
+      output.shared_vpc.host_project_id == "network-567188438944-sb" &&
+      output.shared_vpc.name == "standard-shared" &&
+      output.public_dns.dns_name == "sb.osinfra.io." &&
+      output.private_dns.dns_name == "private.sb.osinfra.io." &&
       length(output.workload_projects) == 0 &&
+      length(output.team_projects) == 0 &&
+      length(output.team_dns) == 0 &&
+      length(output.regional_subnets) == 0 &&
+      length(google_compute_shared_vpc_service_project.workloads) == 0 &&
+      length(google_project_iam_member.gke_host_agent) == 0 &&
       length(output.artifact_registries) == 0 &&
       length(output.team_state) == 0
     )
-    error_message = "Declaring a team without infrastructure requests must not create Assembly resources."
+    error_message = "The current Factory team must get the shared host baseline without provisioning team or workload infrastructure."
   }
 }
 
@@ -128,6 +132,17 @@ run "reads_only_sandbox_foundation_for_declared_teams" {
 
 run "ports_the_shared_vpc_for_the_factory_location" {
   command = plan
+
+  variables {
+    teams = {
+      factory = {
+        display_name = "Factory"
+        kubernetes_engine = {
+          locations = { us-east1-b = {} }
+        }
+      }
+    }
+  }
 
   assert {
     condition = (
@@ -239,6 +254,14 @@ run "rejects_a_cluster_without_an_allocation" {
 
   variables {
     cluster_subnets = {}
+    teams = {
+      factory = {
+        display_name = "Factory"
+        kubernetes_engine = {
+          locations = { us-east1-b = {} }
+        }
+      }
+    }
   }
 
   expect_failures = [var.teams]

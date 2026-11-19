@@ -17,7 +17,7 @@ module "google_network_environment_dns" {
 module "google_network_private_dns" {
   source = "../tofu/modules/google/network/dns"
 
-  for_each = local.vpc_hosts
+  for_each = local.network_projects
 
   dns_name                           = "private.sb.osinfra.io."
   name                               = "private-sb-osinfra-io"
@@ -42,7 +42,7 @@ module "google_network_vpc" {
   source = "../tofu/modules/google/network"
 
   depends_on = [module.google_project_network]
-  for_each   = local.vpc_hosts
+  for_each   = local.network_projects
 
   name       = "standard-shared"
   project    = module.google_project_network[each.key].id
@@ -321,7 +321,7 @@ resource "google_project_iam_custom_role" "dns_records" {
 }
 
 resource "google_project_iam_custom_role" "gke_firewall" {
-  for_each = length(local.gke_teams) == 0 ? {} : local.vpc_hosts
+  for_each = length(local.gke_teams) == 0 ? {} : local.network_projects
 
   permissions = [
     "compute.firewalls.create",

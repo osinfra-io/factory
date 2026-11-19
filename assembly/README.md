@@ -27,10 +27,12 @@ do not grant access to Foundation or Assembly state. The Production parent zone
 still owns delegation of `sb.osinfra.io`; it can use the main `public_dns` output
 after a reviewed Sandbox apply. Assembly does not adopt legacy resources.
 
-The Factory team currently requests `us-east1-b`. The `us-east1` regional
-workspace is configured in Floor. Register a separate regional workspace before
-requesting infrastructure in another region. Both Sandbox workspaces are
-plan-only. Main must publish its outputs before a live regional plan can run.
+The first Sandbox plan provisions the shared host project and network, with no
+workload project or GKE request. The `us-east1-b` address allocations are
+reserved for when the Factory team requests GKE. The `us-east1` regional
+workspace is configured in Floor; register a separate workspace before requesting
+infrastructure in another region. Both Sandbox workspaces are plan-only. Main
+must publish its outputs before a live regional plan can run.
 
 Run the mocked tests from the repository root without cloud credentials:
 

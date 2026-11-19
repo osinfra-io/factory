@@ -58,13 +58,7 @@ locals {
   network_project_id     = "${local.network_project_prefix}-${module.core_helpers.env}"
   network_project_prefix = "network-${local.network_folder_id}"
 
-  network_projects = alltrue([
-    length(local.workload_teams) == 0,
-    length(local.team_projects) == 0,
-    length(local.artifact_registries) == 0,
-    length(var.external_service_projects) == 0,
-    length(local.state_buckets) == 0,
-    ]) ? {} : {
+  network_projects = {
     (var.environment) = local.network_folder_id
   }
 
@@ -73,7 +67,7 @@ locals {
     ["artifactregistry.googleapis.com", "container.googleapis.com", "dns.googleapis.com", "iamcredentials.googleapis.com", "servicenetworking.googleapis.com", "storage.googleapis.com", "sts.googleapis.com"],
   )
 
-  private_dns = length(local.vpc_hosts) == 0 ? null : {
+  private_dns = {
     dns_name = module.google_network_private_dns[var.environment].dns_name
     name     = module.google_network_private_dns[var.environment].name
   }
@@ -107,7 +101,7 @@ locals {
     "serviceusage.googleapis.com",
   ]
 
-  public_dns = length(local.network_projects) == 0 ? null : {
+  public_dns = {
     dns_name     = module.google_network_environment_dns[var.environment].dns_name
     name_servers = module.google_network_environment_dns[var.environment].name_servers
   }
@@ -156,7 +150,7 @@ locals {
     ]
   ])...)
 
-  shared_vpc = length(local.vpc_hosts) == 0 ? null : {
+  shared_vpc = {
     host_project_id = module.google_project_network[var.environment].id
     name            = module.google_network_vpc[var.environment].name
   }
@@ -206,8 +200,6 @@ locals {
       }
     }
   ]...)
-
-  vpc_hosts = length(local.workload_teams) == 0 && length(var.external_service_projects) == 0 ? {} : local.network_projects
 
   workload_folder_ids = {
     for team in setunion(keys(local.workload_teams), keys(local.team_projects)) : team => trimprefix(local.team_folder_ids[team], "folders/")
