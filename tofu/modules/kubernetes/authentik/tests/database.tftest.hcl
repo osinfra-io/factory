@@ -77,6 +77,26 @@ run "direct_postgresql" {
   }
 }
 
+run "web_base_url" {
+  command = plan
+
+  module {
+    source = "./regional"
+  }
+
+  variables {
+    existing_secret        = "authentik-local"
+    external_database_host = "postgresql.authentik.svc.cluster.local"
+    namespace              = "authentik"
+    web_base_url           = "https://authentik.example.com"
+  }
+
+  assert {
+    condition     = yamldecode(helm_release.authentik.values[0]).global.env == [{ name = "AUTHENTIK_WEB__BASE_URL", value = "https://authentik.example.com" }]
+    error_message = "The public Authentik base URL must be configured through AUTHENTIK_WEB__BASE_URL."
+  }
+}
+
 run "missing_database_connection" {
   command = plan
 

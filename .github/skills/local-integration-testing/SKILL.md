@@ -17,6 +17,8 @@ https://localhost/source/oauth/callback/google/
 
 The Floor fixture also requires `gh auth login` with access to `osinfra-io/factory-floor-fixture`. Flux reads the Factory branch selected by `FLOOR_CONFIG_REF` (the current checkout branch by default), so push that branch before setup.
 
+Use `tests/integration/setup.sh` as the prerequisite gate and setup entry point; it checks credentials and branch access, then invokes `tests/integration/shared/preflight.sh` for local tools and cluster readiness before installing components. Do not manually probe those prerequisites first. The shared preflight script is not read-only: on a qualifying unowned cluster it records ownership and clears component `.work` directories, so do not run it standalone as a harmless check.
+
 Run:
 
 ```bash
