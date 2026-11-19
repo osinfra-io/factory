@@ -27,8 +27,15 @@ do not grant access to Foundation or Assembly state. The Production parent zone
 still owns delegation of `sb.osinfra.io`; it can use the main `public_dns` output
 after a reviewed Sandbox apply. Assembly does not adopt legacy resources.
 
-The first Sandbox plan proposes the shared host project and network, with no
-workload project or GKE request. The host ID follows `factory-tfXXX-sb`: the team
+The first Sandbox plan proposes the shared host project and network, Docker
+repositories, and the Factory team's versioned, KMS-encrypted state bucket. It
+does not create a workload project or GKE. Registry and state access grants
+require explicit principals. The seed remains on cluster-local state, and
+Foundation and Assembly still use the seed project's backend. Moving those
+states is a separate handoff after the destination exists and runner access
+has been configured.
+
+The host ID follows `factory-tfXXX-sb`: the team
 key is the prefix, and three random hexadecimal digits are assigned at apply
 time. The `us-east1-b` address allocations are reserved for when the Factory
 team requests GKE. The `us-east1` regional
