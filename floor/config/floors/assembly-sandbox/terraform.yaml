@@ -28,7 +28,7 @@ spec:
   disableDriftDetection: true
   interval: 10m
   path: ./assembly
-  planOnly: true
+  planOnly: false
   runnerPodTemplate:
     spec:
       envFrom:

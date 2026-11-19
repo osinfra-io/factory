@@ -46,8 +46,9 @@ key is the prefix, and three random hexadecimal digits are assigned at apply
 time. The `us-east1-b` address allocations are reserved for when the Factory
 team requests GKE. The `us-east1` regional
 workspace is configured in Floor; register a separate workspace before requesting
-infrastructure in another region. Both Sandbox workspaces are plan-only. Main
-must publish its outputs before a live regional plan can run.
+infrastructure in another region. Main applies only after manual approval of
+its exact plan. The regional workspace remains plan-only and needs the applied
+main outputs before it can plan.
 
 Run the mocked tests from the repository root without cloud credentials:
 
