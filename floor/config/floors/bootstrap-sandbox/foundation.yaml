@@ -38,5 +38,5 @@ spec:
   dependsOn:
     - name: bootstrap-sandbox
   tfVarsFiles:
-    - teams/factory.tfvars
+    - foundation/teams/factory.tfvars
   workspace: foundation-main-sandbox
