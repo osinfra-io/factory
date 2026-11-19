@@ -25,8 +25,8 @@ mock_provider "google" {
 
   mock_resource "google_service_account" {
     defaults = {
-      email = "factory-publisher@network-567188438944-sb.iam.gserviceaccount.com"
-      name  = "projects/network-567188438944-sb/serviceAccounts/factory-publisher@network-567188438944-sb.iam.gserviceaccount.com"
+      email = "factory-publisher@factory-tfabc-sb.iam.gserviceaccount.com"
+      name  = "projects/factory-tfabc-sb/serviceAccounts/factory-publisher@factory-tfabc-sb.iam.gserviceaccount.com"
     }
   }
 }
@@ -42,7 +42,7 @@ mock_provider "google-beta" {
 mock_provider "random" {
   mock_resource "random_id" {
     defaults = {
-      hex = "tfab"
+      hex = "tfabcd"
     }
   }
 }
@@ -71,7 +71,7 @@ run "plans_only_the_shared_host_for_the_current_factory_team" {
 
   assert {
     condition = (
-      output.shared_vpc.host_project_id == "network-567188438944-sb" &&
+      output.shared_vpc.host_project_id == "factory-tfabc-sb" &&
       output.shared_vpc.name == "standard-shared" &&
       output.public_dns.dns_name == "sb.osinfra.io." &&
       output.private_dns.dns_name == "private.sb.osinfra.io." &&
@@ -149,6 +149,7 @@ run "ports_the_shared_vpc_for_the_factory_location" {
       output.shared_vpc.name == "standard-shared" &&
       google_compute_shared_vpc_service_project.workloads["factory"].host_project == output.shared_vpc.host_project_id &&
       google_compute_shared_vpc_service_project.workloads["factory"].service_project == output.workload_projects["factory"].id &&
+      output.workload_projects["factory"].id == "factory-work-tfab-sb" &&
       output.regional_subnets["us-east1"]["factory-us-east1-b"].location == "us-east1-b" &&
       output.regional_subnets["us-east1"]["factory-us-east1-b"].service_project_number == "123456789012" &&
       output.team_dns["factory"].dns_name == "factory.sb.osinfra.io."

@@ -39,6 +39,24 @@ run "logging" {
   }
 }
 
+run "plans_an_external_logging_sink_with_a_deferred_project_id" {
+  command = plan
+
+  module {
+    source = "./tests/fixtures/default"
+  }
+
+  variables {
+    cis_2_2_logging_sink_project_id = "mock-logging-sink-project"
+    defer_logging_sink              = true
+  }
+
+  assert {
+    condition     = output.cis_2_2_logging_bucket_locked == null
+    error_message = "A deferred external logging project ID must not prevent planning or create a local logging bucket."
+  }
+}
+
 variables {
   environment = "sandbox"
 }

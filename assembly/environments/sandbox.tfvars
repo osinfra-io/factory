@@ -1,5 +1,6 @@
 billing_account_id = "01C550-A2C86B-B8F16B"
 environment        = "sandbox"
+host_project_team  = "factory"
 
 cluster_subnets = {
   factory = {

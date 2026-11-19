@@ -47,7 +47,7 @@ mock_provider "terraform" {
           us-east4 = {}
         }
         shared_vpc = {
-          host_project_id = "network-567188438944-sb"
+          host_project_id = "factory-tfabc-sb"
           name            = "standard-shared"
         }
       }
@@ -68,7 +68,7 @@ run "provides_the_runtime_network_and_private_database" {
       output.runtime_networks["factory-us-east1-b"].subnet == "factory-us-east1-b" &&
       output.runtime_networks["factory-us-east1-b"].enable_gke_hub_host &&
       output.runtime_networks["factory-us-east1-b"].private_endpoint_subnetwork == "factory-us-east1-b-master" &&
-      output.runtime_networks["factory-us-east1-b"].host_project_id == "network-567188438944-sb" &&
+      output.runtime_networks["factory-us-east1-b"].host_project_id == "factory-tfabc-sb" &&
       output.runtime_networks["factory-us-east1-b"].project_id == "factory-workloads-sb" &&
       google_compute_subnetwork_iam_member.workloads["factory-us-east1-b/gke"].member == "serviceAccount:service-123456789012@container-engine-robot.iam.gserviceaccount.com" &&
       !contains(keys(output.cloud_sql_instances), "factory/other-region") &&

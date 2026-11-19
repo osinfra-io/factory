@@ -64,6 +64,16 @@ variable "github_repository_owner_id" {
   }
 }
 
+variable "host_project_team" {
+  description = "Declared team whose key prefixes the environment's shared host project ID"
+  type        = string
+
+  validation {
+    condition     = contains(keys(var.teams), var.host_project_team)
+    error_message = "The shared host project's prefix must be a declared team key."
+  }
+}
+
 variable "monthly_project_budgets" {
   default     = {}
   description = "Monthly project budgets in USD for the Shared VPC host, team projects, and workload projects"

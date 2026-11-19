@@ -54,9 +54,7 @@ locals {
     if anytrue([for location in values(config.kubernetes_engine.locations) : location.enable_gke_hub_host])
   }
 
-  network_folder_id      = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
-  network_project_id     = "${local.network_project_prefix}-${module.core_helpers.env}"
-  network_project_prefix = "network-${local.network_folder_id}"
+  network_folder_id = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
 
   network_projects = {
     (var.environment) = local.network_folder_id

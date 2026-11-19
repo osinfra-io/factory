@@ -54,12 +54,12 @@ module "google_project_network" {
 
   for_each = local.network_projects
 
-  billing_account       = var.billing_account_id
-  folder_id             = each.value
-  monthly_budget_amount = var.monthly_project_budgets.host
-  prefix                = local.network_project_prefix
-  random_project_id     = false
-  services              = local.network_services
+  billing_account              = var.billing_account_id
+  folder_id                    = each.value
+  monthly_budget_amount        = var.monthly_project_budgets.host
+  prefix                       = var.host_project_team
+  random_project_id_hex_length = 3
+  services                     = local.network_services
 }
 
 module "google_project_teams" {
@@ -68,12 +68,14 @@ module "google_project_teams" {
   depends_on = [module.google_project_network]
   for_each   = local.team_projects
 
-  billing_account                 = var.billing_account_id
-  cis_2_2_logging_sink_project_id = local.network_project_id
-  folder_id                       = local.workload_folder_ids[each.key]
-  monthly_budget_amount           = var.monthly_project_budgets.team
-  prefix                          = local.team_project_prefixes[each.key]
-  services                        = concat(local.project_services, tolist(each.value.services))
+  billing_account = var.billing_account_id
+  cis_2_2_logging_sink = {
+    project_id = module.google_project_network[var.environment].id
+  }
+  folder_id             = local.workload_folder_ids[each.key]
+  monthly_budget_amount = var.monthly_project_budgets.team
+  prefix                = local.team_project_prefixes[each.key]
+  services              = concat(local.project_services, tolist(each.value.services))
 }
 
 module "google_project_workloads" {
@@ -82,12 +84,14 @@ module "google_project_workloads" {
   depends_on = [module.google_project_network]
   for_each   = local.workload_teams
 
-  billing_account                 = var.billing_account_id
-  cis_2_2_logging_sink_project_id = local.network_project_id
-  folder_id                       = local.workload_folder_ids[each.key]
-  monthly_budget_amount           = var.monthly_project_budgets.workload
-  prefix                          = local.workload_project_prefixes[each.key]
-  services                        = local.workload_project_services[each.key]
+  billing_account = var.billing_account_id
+  cis_2_2_logging_sink = {
+    project_id = module.google_project_network[var.environment].id
+  }
+  folder_id             = local.workload_folder_ids[each.key]
+  monthly_budget_amount = var.monthly_project_budgets.workload
+  prefix                = local.workload_project_prefixes[each.key]
+  services              = local.workload_project_services[each.key]
 }
 
 module "google_storage_bucket" {

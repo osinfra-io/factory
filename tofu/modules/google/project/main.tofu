@@ -299,6 +299,6 @@ resource "random_id" "this" {
     enabled = var.random_project_id
   }
 
-  byte_length = "1"
-  prefix      = "tf"
+  byte_length = local.random_project_id_bytes
+  prefix      = local.random_project_id_prefix
 }
