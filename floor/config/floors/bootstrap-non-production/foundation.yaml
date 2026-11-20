@@ -24,6 +24,7 @@ metadata:
   name: foundation-bootstrap-inputs
   namespace: bootstrap-non-production
 data:
+  environment: non-production
   google_environment_root_folder_id: "851025769053"
   google_quota_project: bootstrap-851025769053-nonprod
 ---

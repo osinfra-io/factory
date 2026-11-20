@@ -24,6 +24,7 @@ metadata:
   name: foundation-bootstrap-inputs
   namespace: bootstrap-sandbox
 data:
+  environment: sandbox
   google_environment_root_folder_id: "567188438944"
   google_quota_project: bootstrap-567188438944-sb
 ---
