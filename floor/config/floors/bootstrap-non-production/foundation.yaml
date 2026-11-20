@@ -39,5 +39,5 @@ spec:
   dependsOn:
     - name: bootstrap-non-production
   tfVarsFiles:
-    - foundation/teams/factory.tfvars
+    - tofu/foundation/teams/factory.tfvars
   workspace: foundation-main-non-production

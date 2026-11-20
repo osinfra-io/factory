@@ -55,7 +55,7 @@ the team key is the prefix, and each project gets its own three random
 hexadecimal digits at apply time. Floor defines `us-east1` and `us-east4` regional workspaces
 for Sandbox, Non-Production, and Production. Only Sandbox is wired into the
 current Floor deployment. Include the matching
-[regional overlay](../floor/config/floors/assembly-regional/) when bringing up
+[regional overlay](../../floor/config/floors/assembly-regional/) when bringing up
 Non-Production or Production. Each overlay needs its own `bootstrap-<env>`
 namespace, runner credentials, `foundation-source`, and backend ConfigMaps.
 Its `assembly-<env>` dependency must publish `assembly-main-<env>` state
@@ -68,9 +68,9 @@ outputs. The Non-Production and Production regional overlays remain plan-only.
 Run the mocked tests from the repository root without cloud credentials:
 
 ```shell
-TF_WORKSPACE=assembly-main-sandbox tofu -chdir=assembly test \
+TF_WORKSPACE=assembly-main-sandbox tofu -chdir=tofu/assembly test \
   -var-file=environments/sandbox.tfvars -var-file=../foundation/teams/factory.tfvars
-TF_WORKSPACE=us-east1-assembly-sandbox tofu -chdir=assembly/regional test
+TF_WORKSPACE=us-east1-assembly-sandbox tofu -chdir=tofu/assembly/regional test
 ```
 
 Environment DNS domains are `sb.osinfra.io`, `nonprod.osinfra.io`, and `osinfra.io`

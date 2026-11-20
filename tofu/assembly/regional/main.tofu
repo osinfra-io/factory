@@ -1,9 +1,9 @@
 module "core_helpers" {
-  source = "../../tofu/modules/core-helpers/child"
+  source = "../../modules/core-helpers/child"
 }
 
 module "google_cloud_sql" {
-  source = "../../tofu/modules/google/cloud-sql/regional"
+  source = "../../modules/google/cloud-sql/regional"
 
   for_each = local.cloud_sql_instances
 
@@ -17,7 +17,7 @@ module "google_cloud_sql" {
 }
 
 module "google_network_master_subnets" {
-  source = "../../tofu/modules/google/network/regional"
+  source = "../../modules/google/network/regional"
 
   for_each = local.regional_subnets
 
@@ -29,7 +29,7 @@ module "google_network_master_subnets" {
 }
 
 module "google_network_subnets" {
-  source = "../../tofu/modules/google/network/regional"
+  source = "../../modules/google/network/regional"
 
   for_each = local.regional_subnets
 
@@ -52,7 +52,7 @@ module "google_network_subnets" {
 }
 
 module "google_network_nat" {
-  source = "../../tofu/modules/google/network/regional/nat"
+  source = "../../modules/google/network/regional/nat"
 
   depends_on = [module.google_network_subnets]
   for_each   = length(local.regional_subnets) > 0 ? toset([module.core_helpers.region]) : toset([])

@@ -14,7 +14,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./assembly/regional
+  path: ./tofu/assembly/regional
   planOnly: true
   runnerPodTemplate:
     spec:

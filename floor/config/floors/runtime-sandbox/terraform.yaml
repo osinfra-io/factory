@@ -27,7 +27,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./runtime
+  path: ./tofu/runtime
   planOnly: false
   runnerPodTemplate:
     spec:
@@ -69,7 +69,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./runtime
+  path: ./tofu/runtime
   planOnly: false
   runnerPodTemplate:
     spec:

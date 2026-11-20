@@ -1,9 +1,9 @@
 module "core_helpers" {
-  source = "../tofu/modules/core-helpers/child"
+  source = "../modules/core-helpers/child"
 }
 
 module "google_network_environment_dns" {
-  source = "../tofu/modules/google/network/dns"
+  source = "../modules/google/network/dns"
 
   depends_on = [module.google_project_network]
   for_each   = local.network_projects
@@ -15,7 +15,7 @@ module "google_network_environment_dns" {
 }
 
 module "google_network_private_dns" {
-  source = "../tofu/modules/google/network/dns"
+  source = "../modules/google/network/dns"
 
   for_each = local.network_projects
 
@@ -27,7 +27,7 @@ module "google_network_private_dns" {
 }
 
 module "google_network_team_dns" {
-  source = "../tofu/modules/google/network/dns"
+  source = "../modules/google/network/dns"
 
   depends_on = [module.google_project_network]
   for_each   = local.team_dns
@@ -39,7 +39,7 @@ module "google_network_team_dns" {
 }
 
 module "google_network_vpc" {
-  source = "../tofu/modules/google/network"
+  source = "../modules/google/network"
 
   depends_on = [module.google_project_network]
   for_each   = local.network_projects
@@ -50,7 +50,7 @@ module "google_network_vpc" {
 }
 
 module "google_project_network" {
-  source = "../tofu/modules/google/project"
+  source = "../modules/google/project"
 
   for_each = local.network_projects
   providers = {
@@ -65,7 +65,7 @@ module "google_project_network" {
 }
 
 module "google_project_teams" {
-  source = "../tofu/modules/google/project"
+  source = "../modules/google/project"
 
   depends_on = [module.google_project_network]
   for_each   = local.team_projects
@@ -84,7 +84,7 @@ module "google_project_teams" {
 }
 
 module "google_project_workloads" {
-  source = "../tofu/modules/google/project"
+  source = "../modules/google/project"
 
   depends_on = [module.google_project_network]
   for_each   = local.workload_teams
@@ -103,7 +103,7 @@ module "google_project_workloads" {
 }
 
 module "google_storage_bucket" {
-  source = "../tofu/modules/google/storage-bucket"
+  source = "../modules/google/storage-bucket"
 
   depends_on = [google_kms_crypto_key_iam_member.state_storage]
   for_each   = local.state_bucket_names

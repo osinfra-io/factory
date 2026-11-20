@@ -12,7 +12,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./foundation
+  path: ./tofu/foundation
   runnerPodTemplate:
     spec:
       envFrom:

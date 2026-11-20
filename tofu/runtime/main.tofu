@@ -1,5 +1,5 @@
 module "google_kubernetes_engine_regional" {
-  source = "../tofu/modules/google/kubernetes-engine/regional"
+  source = "../modules/google/kubernetes-engine/regional"
 
   for_each = local.clusters
 

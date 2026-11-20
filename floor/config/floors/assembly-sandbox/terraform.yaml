@@ -27,7 +27,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./assembly
+  path: ./tofu/assembly
   planOnly: false
   runnerPodTemplate:
     spec:
@@ -42,8 +42,8 @@ spec:
     name: foundation-source
   storeReadablePlan: json
   tfVarsFiles:
-    - assembly/environments/sandbox.tfvars
-    - foundation/teams/factory.tfvars
+    - tofu/assembly/environments/sandbox.tfvars
+    - tofu/foundation/teams/factory.tfvars
   varsFrom:
     - kind: ConfigMap
       name: foundation-bootstrap-backend
