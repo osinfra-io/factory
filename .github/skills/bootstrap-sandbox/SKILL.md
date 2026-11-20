@@ -21,8 +21,10 @@ The bootstrap uses cluster-local Terraform state and does not support surviving 
 From the Factory repository root, run:
 
 ```bash
-bash bootstrap/sandbox/prepare.sh
+bash bootstrap/seed/prepare.sh
 ```
+
+Pass `non-production` or `production` to prepare that environment's `bootstrap-<environment>` namespace, seed, and Foundation stage instead; the stages, workspace names, and review process are the same with the environment in place of `sandbox`.
 
 This validates access, creates the `bootstrap-sandbox` namespace and encrypted runner secrets, and registers the seed and Foundation Terraform objects with Flux. It does **not** approve or apply cloud changes. If the seed is already Ready, rerunning the script refreshes the short-lived Google credential and prepares the Foundation stage's KMS-backed state encryption.
 

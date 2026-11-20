@@ -8,6 +8,9 @@ patches:
   - target:
       kind: Terraform
     patch: |-
+      - op: replace
+        path: /spec/planOnly
+        value: false
       - op: add
         path: /spec/backendConfigsFrom/-
         value:

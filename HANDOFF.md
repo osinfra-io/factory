@@ -44,7 +44,7 @@ These are snapshot values, **not approval**. Fetch the live seed status and revi
 
 ### Current Factory bootstrap branch
 
-- `117d827` added the Factory-owned bootstrap workflow, [seed configuration and preparation script](bootstrap/sandbox/), and [Flux configuration](floor/config/floors/bootstrap-sandbox/). Sandbox uses the existing GCP folder `567188438944`.
+- `117d827` added the Factory-owned bootstrap workflow, [seed configuration and preparation script](bootstrap/seed/), and [Flux configuration](floor/config/floors/bootstrap-sandbox/). Sandbox uses the existing GCP folder `567188438944`.
 - The seed is intended to create the bootstrap project, enable its required APIs, provision the state bucket and KMS key, and create keyless Assembly and Runtime runner service accounts. That is the intended resource set, not a substitute for checking the exact pending plan. Initial seed state is encrypted and cluster-local; Foundation is configured to start on the seed's GCS/KMS backend.
 - `15438e1` added the [minimal Foundation root](foundation/) and its single [Factory team input](foundation/teams/factory.tfvars). Foundation creates the Factory folder and publishes team/environment metadata; it does not recreate legacy teams or their integrations.
 - `aff604c` fixed a seed planning failure: Flux omitted the Core Helpers symlinks from its source artifact. The root helper now calls the child module directly. The seed subsequently produced a pending plan.

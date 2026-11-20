@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: assembly-non-production-backend
+  namespace: bootstrap-non-production
+data:
+  prefix: assembly
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: assembly-non-production
+  namespace: bootstrap-non-production
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: assembly-non-production-backend
+  dependsOn:
+    - name: foundation-non-production
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./assembly
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  tfVarsFiles:
+    - assembly/environments/non-production.tfvars
+    - foundation/teams/factory.tfvars
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+    - kind: ConfigMap
+      name: foundation-bootstrap-inputs
+      varsKeys:
+        - google_quota_project
+  workspace: assembly-main-non-production

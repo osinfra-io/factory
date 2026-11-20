@@ -7,7 +7,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./bootstrap/sandbox
+  path: ./bootstrap/seed
   runnerPodTemplate:
     spec:
       envFrom:

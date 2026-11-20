@@ -11,14 +11,3 @@ variable "billing_account_id" {
     error_message = "Provide a billing account ID in XXXXXX-XXXXXX-XXXXXX format."
   }
 }
-
-variable "sandbox_folder_id" {
-  default     = "567188438944"
-  description = "Existing sandbox environment folder; this root never creates or owns it"
-  type        = string
-
-  validation {
-    condition     = var.sandbox_folder_id == "567188438944"
-    error_message = "This bootstrap configuration is restricted to sandbox folder 567188438944."
-  }
-}

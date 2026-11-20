@@ -37,17 +37,17 @@ resource "google_project" "bootstrap" {
     prevent_destroy = true
 
     precondition {
-      condition     = module.core_helpers.env == "sb"
-      error_message = "The bootstrap root may run only in a sandbox workspace."
+      condition     = contains(keys(local.environment_folders), coalesce(module.core_helpers.environment, "unsupported"))
+      error_message = "Use a bootstrap-<environment> workspace for sandbox, non-production, or production."
     }
   }
 
   auto_create_network = false
   billing_account     = var.billing_account_id
   deletion_policy     = "PREVENT"
-  folder_id           = var.sandbox_folder_id
+  folder_id           = local.environment_folder.id
   labels              = module.core_helpers.labels
-  name                = "Sandbox bootstrap"
+  name                = "${local.environment_folder.title} bootstrap"
   project_id          = local.project_id
 }
 

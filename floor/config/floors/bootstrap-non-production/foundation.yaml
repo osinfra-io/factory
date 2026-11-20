@@ -1,0 +1,42 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: foundation-source
+  namespace: bootstrap-non-production
+spec:
+  interval: 1m
+  ref:
+    branch: ${FLOOR_CONFIG_BRANCH}
+  url: https://github.com/osinfra-io/factory
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foundation-bootstrap-backend
+  namespace: bootstrap-non-production
+data:
+  bucket: bootstrap-851025769053-nonprod-state
+  prefix: foundation
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foundation-bootstrap-inputs
+  namespace: bootstrap-non-production
+data:
+  google_environment_root_folder_id: "851025769053"
+  google_quota_project: bootstrap-851025769053-nonprod
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  labels:
+    app.kubernetes.io/component: foundation
+  name: foundation-non-production
+  namespace: bootstrap-non-production
+spec:
+  dependsOn:
+    - name: bootstrap-non-production
+  tfVarsFiles:
+    - foundation/teams/factory.tfvars
+  workspace: foundation-main-non-production

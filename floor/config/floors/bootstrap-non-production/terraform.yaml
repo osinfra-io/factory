@@ -1,0 +1,23 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: bootstrap-non-production
+  namespace: bootstrap-non-production
+spec:
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./bootstrap/seed
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-bootstrap-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: bootstrap-non-production
+  storeReadablePlan: json
+  workspace: bootstrap-non-production
