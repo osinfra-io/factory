@@ -37,6 +37,21 @@ FLOOR_ADDITIONAL_NAMESPACES=bootstrap-sandbox \
 
 This grants the API namespace-scoped access to bootstrap Terraform objects, not to Secrets. It does not register tools in Copilot or require a CLI extension.
 
+## Fast path with the helper scripts
+
+For each stage (`bootstrap`, `foundation`, `assembly`, `assembly-us-east1`, `assembly-us-east4`, in order), run from the repository root:
+
+```bash
+bootstrap/seed/review.sh <environment> <stage> --wait
+bootstrap/seed/approve.sh <environment> <stage> <plan-sha256-prefix>
+```
+
+`review.sh` waits for the pending plan, verifies its readable Secret, and prints the revision, plan ID, hash and sanitized changes (it warns on deletes). `approve.sh` re-reads the plan, refuses to continue if the hash differs from the reviewed prefix, approves through Floor, and waits for the apply. Run `approve.sh` only after the user confirms the exact plan. These replace the manual query and approval steps below.
+
+## Move the seed state off the cluster
+
+Once the seed is Ready, `bootstrap/seed/migrate-state.sh <environment>` copies its cluster-local state to the environment's GCS bucket (prefix `bootstrap`), re-encrypts it with the environment KMS key, and verifies a clean plan. It leaves the cluster Secret untouched. Switching the seed's Terraform object to the gcs backend is a separate reviewed change.
+
 ## Review and approve stages
 
 Process stages in order: review and approve `bootstrap-sandbox` first, then `foundation-sandbox`, which creates the single Factory team folder. Do not query or inspect the Foundation workspace until the seed reports Ready. From the Factory root, call the Floor MCP endpoint directly if its tools are not already connected. Use the non-approver identity created by Floor setup; do not print or register its app password in Copilot settings.
