@@ -225,6 +225,17 @@ resource "google_dns_managed_zone_iam_member" "team_writers" {
   role         = google_project_iam_custom_role.dns_records[var.environment].name
 }
 
+resource "google_dns_record_set" "records" {
+  for_each = local.dns_records
+
+  managed_zone = module.google_network_environment_dns[var.environment].name
+  name         = each.value.name
+  project      = module.google_project_network[var.environment].id
+  rrdatas      = each.value.rrdatas
+  ttl          = each.value.ttl
+  type         = each.value.type
+}
+
 resource "google_dns_record_set" "team_delegations" {
   for_each = module.google_network_team_dns
 

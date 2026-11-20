@@ -13,6 +13,22 @@ variable "bucket" {
   type        = string
 }
 
+variable "dns_records" {
+  default     = []
+  description = "Records for the environment's public DNS zone; names are relative to the zone and an empty name is the apex"
+  type = list(object({
+    name    = string
+    rrdatas = list(string)
+    ttl     = number
+    type    = string
+  }))
+
+  validation {
+    condition     = length(var.dns_records) == length(distinct([for record in var.dns_records : "${record.name}:${record.type}"]))
+    error_message = "DNS records must have a unique name and type."
+  }
+}
+
 variable "environment" {
   description = "Environment managed by this Assembly workspace"
   type        = string

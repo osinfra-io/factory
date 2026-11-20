@@ -17,6 +17,15 @@ locals {
     sandbox        = "sb.osinfra.io."
   }[var.environment]
 
+  dns_records = {
+    for record in var.dns_records : "${record.name}:${record.type}" => {
+      name    = record.name == "" ? local.dns_domain : "${record.name}.${local.dns_domain}"
+      rrdatas = record.rrdatas
+      ttl     = record.ttl
+      type    = record.type
+    }
+  }
+
   dns_writers = merge({}, [
     for team, config in local.gke_teams : {
       for member in config.kubernetes_engine.dns_writers : "${team}/${member}" => { team = team, member = member }
