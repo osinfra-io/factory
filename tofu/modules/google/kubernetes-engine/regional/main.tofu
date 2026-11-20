@@ -1,16 +1,3 @@
-# Google Cloud Identity Group Membership
-# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/cloud_identity_group_membership
-
-resource "google_cloud_identity_group_membership" "registry_readers" {
-  group = data.google_cloud_identity_group_lookup.registry_readers.name
-
-  preferred_member_key {
-    id = google_service_account.default_node.email
-  }
-
-  roles { name = "MEMBER" }
-}
-
 # Google Container Cluster Resource
 # https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/container_cluster
 
@@ -23,10 +10,6 @@ resource "google_container_cluster" "this" {
 
       min_master_version,
     ]
-  }
-
-  authenticator_groups_config {
-    security_group = "gke-security-groups@osinfra.io"
   }
 
   cluster_autoscaling {

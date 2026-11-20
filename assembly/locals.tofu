@@ -195,7 +195,7 @@ locals {
   workload_project_services = {
     for team, config in local.workload_teams : team => concat(
       local.project_services,
-      contains(keys(local.gke_teams), team) ? ["certificatemanager.googleapis.com", "container.googleapis.com", "gkehub.googleapis.com", "iamcredentials.googleapis.com", "multiclusterservicediscovery.googleapis.com", "trafficdirector.googleapis.com"] : [],
+      contains(keys(local.gke_teams), team) ? ["certificatemanager.googleapis.com", "cloudkms.googleapis.com", "container.googleapis.com", "gkehub.googleapis.com", "iamcredentials.googleapis.com", "multiclusterservicediscovery.googleapis.com", "trafficdirector.googleapis.com"] : [],
       contains(keys(local.hub_teams), team) ? ["multiclusteringress.googleapis.com"] : [],
       length(config.cloud_sql) > 0 ? ["servicenetworking.googleapis.com", "sqladmin.googleapis.com"] : [],
     )
