@@ -1,8 +1,7 @@
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: assembly-us-east1-sandbox
-  namespace: bootstrap-sandbox
+  name: regional-common
 spec:
   backendConfig:
     customConfiguration: |
@@ -12,10 +11,6 @@ spec:
       name: foundation-bootstrap-backend
       keys:
         - bucket
-    - kind: ConfigMap
-      name: assembly-sandbox-backend
-  dependsOn:
-    - name: assembly-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
@@ -38,4 +33,3 @@ spec:
       name: foundation-bootstrap-backend
       varsKeys:
         - bucket
-  workspace: us-east1-assembly-sandbox

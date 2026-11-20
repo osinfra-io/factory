@@ -11,7 +11,7 @@ locals {
 
   main = data.terraform_remote_state.assembly.outputs
 
-  main_workspace = "assembly-main-sandbox"
+  main_workspace = "assembly-main-${coalesce(module.core_helpers.environment, "unsupported")}"
 
   network_users = merge({}, [
     for key, subnet in local.regional_subnets : {
@@ -26,6 +26,8 @@ locals {
   ]...)
 
   regional_subnets = lookup(local.main.regional_subnets, module.core_helpers.region, {})
+
+  regional_workspace_valid = can(regex("^us-east[14]-assembly-(sandbox|non-production|production)$", terraform.workspace))
 
   runtime_networks = {
     for key, subnet in local.regional_subnets : key => {

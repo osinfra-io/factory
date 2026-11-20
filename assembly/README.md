@@ -44,11 +44,19 @@ has been configured.
 The host ID follows `factory-tfXXX-sb`: the team
 key is the prefix, and three random hexadecimal digits are assigned at apply
 time. The `us-east1-b` address allocations are reserved for when the Factory
-team requests GKE. The `us-east1` regional
-workspace is configured in Floor; register a separate workspace before requesting
-infrastructure in another region. Main applies only after manual approval of
-its exact plan. The regional workspace remains plan-only and needs the applied
-main outputs before it can plan.
+team requests GKE. Floor defines `us-east1` and `us-east4` regional workspaces
+for Sandbox, Non-Production, and Production. Only Sandbox is wired into the
+current Floor deployment. Include the matching
+[regional overlay](../floor/config/floors/assembly-regional/) when bringing up
+Non-Production or Production. Each overlay needs its own `bootstrap-<env>`
+namespace, runner credentials, `foundation-source`, and backend ConfigMaps.
+Its `assembly-<env>` dependency must publish `assembly-main-<env>` state
+under the `assembly` backend prefix.
+
+Main applies only after manual approval of its exact plan. Both regional
+workspaces remain plan-only and wait for their own environment's main Assembly
+outputs. Registering a regional workspace does not allocate addresses or
+request workloads.
 
 Run the mocked tests from the repository root without cloud credentials:
 

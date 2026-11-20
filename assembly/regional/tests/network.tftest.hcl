@@ -64,7 +64,15 @@ run "provides_the_runtime_network_and_private_database" {
 
   assert {
     condition = (
-      data.terraform_remote_state.assembly.workspace == "assembly-main-sandbox" &&
+      data.terraform_remote_state.assembly.workspace == replace(terraform.workspace, "/^us-east[14]-assembly-/", "assembly-main-") &&
+      data.terraform_remote_state.assembly.config.bucket == var.bucket &&
+      data.terraform_remote_state.assembly.config.prefix == "assembly"
+    )
+    error_message = "Regional workspaces must read the main Assembly state for their own environment."
+  }
+
+  assert {
+    condition = startswith(terraform.workspace, "us-east1-") ? (
       output.runtime_networks["factory-us-east1-b"].subnet == "factory-us-east1-b" &&
       output.runtime_networks["factory-us-east1-b"].enable_gke_hub_host &&
       output.runtime_networks["factory-us-east1-b"].private_endpoint_subnetwork == "factory-us-east1-b-master" &&
@@ -73,7 +81,11 @@ run "provides_the_runtime_network_and_private_database" {
       google_compute_subnetwork_iam_member.workloads["factory-us-east1-b/gke"].member == "serviceAccount:service-123456789012@container-engine-robot.iam.gserviceaccount.com" &&
       !contains(keys(output.cloud_sql_instances), "factory/other-region") &&
       output.cloud_sql_instances["factory/authentik"].host == "authentik.us-east1.sql.factory.private.sb.osinfra.io."
+      ) : (
+      length(output.runtime_networks) == 0 &&
+      !contains(keys(output.cloud_sql_instances), "factory/authentik") &&
+      output.cloud_sql_instances["factory/other-region"].host == "other-region.us-east4.sql.factory.private.sb.osinfra.io."
     )
-    error_message = "The regional workspace must create Runtime's subnet references and database DNS from Sandbox Assembly state."
+    error_message = "The regional workspace must only create Runtime subnet references and database DNS for its own region."
   }
 }
