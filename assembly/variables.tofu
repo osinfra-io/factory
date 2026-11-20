@@ -1,5 +1,5 @@
 variable "billing_account_id" {
-  description = "Existing billing account for Assembly-managed Sandbox projects"
+  description = "Existing billing account for Assembly-managed projects"
   type        = string
 
   validation {
@@ -18,14 +18,14 @@ variable "environment" {
   type        = string
 
   validation {
-    condition     = var.environment == "sandbox"
-    error_message = "The initial Assembly workspace supports only Sandbox."
+    condition     = contains(["non-production", "production", "sandbox"], var.environment)
+    error_message = "The environment must be sandbox, non-production, or production."
   }
 }
 
 variable "external_service_projects" {
   default     = []
-  description = "Existing project IDs explicitly approved by the platform to attach to the Sandbox Shared VPC"
+  description = "Existing project IDs explicitly approved by the platform to attach to the environment Shared VPC"
   type        = set(string)
 
   validation {

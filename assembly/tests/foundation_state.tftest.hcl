@@ -191,11 +191,21 @@ run "ports_the_shared_vpc_for_the_factory_locations" {
   }
 }
 
-run "rejects_production" {
+run "rejects_an_environment_that_differs_from_the_workspace" {
   command = plan
 
   variables {
     environment = "production"
+  }
+
+  expect_failures = [data.terraform_remote_state.foundation]
+}
+
+run "rejects_an_unknown_environment" {
+  command = plan
+
+  variables {
+    environment = "staging"
   }
 
   expect_failures = [var.environment]

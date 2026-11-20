@@ -11,6 +11,12 @@ locals {
     }
   ]...)
 
+  dns_domain = {
+    non-production = "nonprod.osinfra.io."
+    production     = "osinfra.io."
+    sandbox        = "sb.osinfra.io."
+  }[var.environment]
+
   dns_writers = merge({}, [
     for team, config in local.gke_teams : {
       for member in config.kubernetes_engine.dns_writers : "${team}/${member}" => { team = team, member = member }
@@ -18,6 +24,8 @@ locals {
   ]...)
 
   environment_root_folder_id = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
+
+  dns_zone_name = replace(trimsuffix(local.dns_domain, "."), ".", "-")
 
   github_workload_identity = length(local.github_publishers) == 0 ? {} : local.network_projects
 
@@ -158,7 +166,7 @@ locals {
   }
 
   team_dns = {
-    for team, config in local.gke_teams : team => "${coalesce(config.kubernetes_engine.dns_subdomain, team)}.sb.osinfra.io."
+    for team, config in local.gke_teams : team => "${coalesce(config.kubernetes_engine.dns_subdomain, team)}.${local.dns_domain}"
   }
 
   team_folder_ids = {

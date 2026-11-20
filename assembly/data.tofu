@@ -15,8 +15,8 @@ data "terraform_remote_state" "foundation" {
 
   lifecycle {
     precondition {
-      condition     = terraform.workspace == "assembly-main-sandbox"
-      error_message = "Use the assembly-main-sandbox workspace for Sandbox Assembly."
+      condition     = terraform.workspace == "assembly-main-${var.environment}"
+      error_message = "Use the assembly-main-${var.environment} workspace for this environment."
     }
   }
 }

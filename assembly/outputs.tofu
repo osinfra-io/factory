@@ -29,7 +29,7 @@ output "private_dns" {
 }
 
 output "public_dns" {
-  description = "Sandbox public DNS zone and nameservers for the separate parent delegation"
+  description = "Environment public DNS zone and nameservers for the separate parent delegation"
   value       = local.public_dns
 }
 
@@ -44,7 +44,7 @@ output "shared_vpc" {
 }
 
 output "team_dns" {
-  description = "Public DNS zones delegated to Sandbox teams"
+  description = "Public DNS zones delegated to teams"
   value = {
     for team, zone in module.google_network_team_dns : team => {
       dns_name = zone.dns_name

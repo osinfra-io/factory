@@ -1,7 +1,7 @@
-# Sandbox Assembly
+# Assembly
 
 Assembly takes over Corpus's infrastructure responsibilities. The main workspace
-reads the Sandbox Foundation state. It owns projects, the Shared VPC, DNS zones,
+reads its environment's Foundation state. It owns projects, the Shared VPC, DNS zones,
 registry, publishing identities, encrypted team state, and private services
 peering. The regional workspace owns subnet pairs, secondary IP ranges, NAT,
 subnet IAM, and private Cloud SQL and its DNS records. GKE belongs to Runtime,
@@ -25,7 +25,7 @@ Every onboarded team gets a versioned OpenTofu state bucket with a dedicated
 KMS key. Teams do not opt in or choose reader and writer grants. The platform
 provisions runner access separately, scoped to the team's backend.
 
-[Sandbox platform inputs](environments/sandbox.tfvars) own billing, budgets,
+[Platform inputs](environments/) per environment own billing, budgets,
 the Private Service Access CIDR, external Shared VPC attachments, trusted GitHub organization ID,
 Runtime project IAM, and the optional `gke_fleet_host` selection from among
 requested cluster locations. The Shared VPC reserves the CIDR and connects to
@@ -34,7 +34,7 @@ When configured, GitHub OIDC grants registry publishing
 for specific numeric repository IDs; it does not grant infrastructure
 deployment, billing, or backend access. Floor owns deployment. Team backend
 access does not grant access to Foundation or Assembly state. The Production parent zone
-still owns delegation of `sb.osinfra.io`; it can use the main `public_dns` output
+still owns delegation of `sb.osinfra.io` and `nonprod.osinfra.io`; it can use the main `public_dns` output
 after a reviewed Sandbox apply. Assembly does not adopt legacy resources.
 
 The Sandbox bootstrap created the shared host project and network and the
@@ -72,3 +72,7 @@ TF_WORKSPACE=assembly-main-sandbox tofu -chdir=assembly test \
   -var-file=environments/sandbox.tfvars -var-file=../foundation/teams/factory.tfvars
 TF_WORKSPACE=us-east1-assembly-sandbox tofu -chdir=assembly/regional test
 ```
+
+Environment DNS domains are `sb.osinfra.io`, `nonprod.osinfra.io`, and `osinfra.io`
+(Production, the parent zone). Non-Production and Production Assembly code and inputs
+exist, but their seed and Foundation are not yet bootstrapped.

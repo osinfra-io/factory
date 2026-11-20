@@ -8,8 +8,8 @@ module "google_network_environment_dns" {
   depends_on = [module.google_project_network]
   for_each   = local.network_projects
 
-  dns_name   = "sb.osinfra.io."
-  name       = "sb-osinfra-io"
+  dns_name   = local.dns_domain
+  name       = local.dns_zone_name
   project    = module.google_project_network[each.key].id
   visibility = "public"
 }
@@ -19,8 +19,8 @@ module "google_network_private_dns" {
 
   for_each = local.network_projects
 
-  dns_name                           = "private.sb.osinfra.io."
-  name                               = "private-sb-osinfra-io"
+  dns_name                           = "private.${local.dns_domain}"
+  name                               = "private-${local.dns_zone_name}"
   private_visibility_config_networks = [module.google_network_vpc[each.key].self_link]
   project                            = module.google_project_network[each.key].id
   visibility                         = "private"
@@ -33,7 +33,7 @@ module "google_network_team_dns" {
   for_each   = local.team_dns
 
   dns_name   = each.value
-  name       = "${each.key}-sb-osinfra-io"
+  name       = "${each.key}-${local.dns_zone_name}"
   project    = module.google_project_network[var.environment].id
   visibility = "public"
 }
