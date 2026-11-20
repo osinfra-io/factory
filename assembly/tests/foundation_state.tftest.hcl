@@ -181,13 +181,10 @@ run "ports_the_shared_vpc_for_the_factory_locations" {
       ])) == toset(["factory-us-east1-b"]) &&
       toset(keys(google_project_service_identity.multi_cluster)) == toset(["factory"]) &&
       output.team_dns["factory"].dns_name == "factory.sb.osinfra.io." &&
-      output.cloud_sql_instances["factory/authentik"].database_version == "POSTGRES_16" &&
-      output.cloud_sql_instances["factory/authentik"].machine_tier == "db-custom-1-3840" &&
-      output.cloud_sql_instances["factory/authentik"].regions == toset(["us-east1"]) &&
-      output.cloud_sql_instances["factory/authentik"].project_id == output.workload_projects["factory"].id &&
+      length(output.cloud_sql_instances) == 0 &&
       length(google_artifact_registry_repository.docker_standard) == 0
     )
-    error_message = "Factory's managed project must plan its DNS, six cluster networks, fleet host, and private authentik database without enabling a registry."
+    error_message = "Factory's workload project must plan DNS, six cluster networks, and a fleet host without enabling Cloud SQL or a registry."
   }
 }
 
@@ -272,6 +269,9 @@ run "ports_opt_in_corpus_services" {
   assert {
     condition = (
       output.cloud_sql_instances["factory/authentik"].project_id == output.workload_projects["factory"].id &&
+      output.cloud_sql_instances["factory/authentik"].database_version == "POSTGRES_16" &&
+      output.cloud_sql_instances["factory/authentik"].machine_tier == "db-custom-1-3840" &&
+      output.cloud_sql_instances["factory/authentik"].regions == toset(["us-east1"]) &&
       google_service_networking_connection.private_services["sandbox"].service == "servicenetworking.googleapis.com" &&
       google_compute_shared_vpc_service_project.external["approved-service-project"].host_project == output.shared_vpc.host_project_id &&
       google_project_iam_member.gke_host_agent["factory"].member == output.regional_subnets["us-east1"]["factory-us-east1-b"].gke_service_agent &&

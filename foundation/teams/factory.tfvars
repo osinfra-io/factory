@@ -125,13 +125,13 @@ teams = {
     }
 
     workload_project = {
-      cloud_sql = {
-        authentik = {
-          database_version = "POSTGRES_16"
-          machine_tier     = "db-custom-1-3840"
-          regions          = ["us-east1"]
-        }
-      }
+      # cloud_sql = {
+      #   authentik = {
+      #     database_version = "POSTGRES_16"
+      #     machine_tier     = "db-custom-1-3840"
+      #     regions          = ["us-east1"]
+      #   }
+      # }
 
       kubernetes_engine = {
         artifact_registry_groups_memberships = {

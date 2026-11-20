@@ -39,7 +39,7 @@ The Sandbox bootstrap created the shared host project and network and the
 Factory team's versioned, KMS-encrypted state bucket. The shared host and Factory
 workload projects belong under `Sandbox / Factory`. Factory's team tfvars
 now request Assembly networking in three zones each in `us-east1` and `us-east4`,
-using Pneuma's former CIDRs, and private Cloud SQL for authentik in `us-east1`.
+using Pneuma's former CIDRs. Private Cloud SQL for authentik is disabled for now.
 Sandbox selects Factory's `us-east1-b` cluster as the shared GKE fleet host.
 The registry group declarations do not provision groups or enable the registry pair.
 GKE itself is managed by Runtime, and Factory will request its registry pair
@@ -59,10 +59,9 @@ namespace, runner credentials, `foundation-source`, and backend ConfigMaps.
 Its `assembly-<env>` dependency must publish `assembly-main-<env>` state
 under the `assembly` backend prefix.
 
-Main applies only after manual approval of its exact plan. Both regional
-workspaces remain plan-only and wait for their own environment's main Assembly
-outputs. Registering a regional workspace does not allocate addresses or
-request workloads.
+Sandbox main and regional workspaces apply only after manual approval of their
+exact plans. Regional workspaces wait for their own environment's main Assembly
+outputs. The Non-Production and Production regional overlays remain plan-only.
 
 Run the mocked tests from the repository root without cloud credentials:
 
