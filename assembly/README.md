@@ -36,7 +36,8 @@ still owns delegation of `sb.osinfra.io`; it can use the main `public_dns` outpu
 after a reviewed Sandbox apply. Assembly does not adopt legacy resources.
 
 The Sandbox bootstrap created the shared host project and network and the
-Factory team's versioned, KMS-encrypted state bucket. Factory's team tfvars
+Factory team's versioned, KMS-encrypted state bucket. The shared host and Factory
+workload projects belong under `Sandbox / Factory`. Factory's team tfvars
 now request Assembly networking in three zones each in `us-east1` and `us-east4`,
 using Pneuma's former CIDRs, and private Cloud SQL for authentik in `us-east1`.
 Sandbox selects Factory's `us-east1-b` cluster as the shared GKE fleet host.

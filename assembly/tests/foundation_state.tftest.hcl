@@ -93,6 +93,7 @@ run "plans_the_shared_host_and_state_for_factory" {
     condition = (
       output.shared_vpc.host_project_id == "factory-tfabc-sb" &&
       output.shared_vpc.name == "standard-shared" &&
+      local.network_projects["sandbox"] == "123456789" &&
       output.public_dns.dns_name == "sb.osinfra.io." &&
       output.private_dns.dns_name == "private.sb.osinfra.io." &&
       length(output.workload_projects) == 0 &&
@@ -109,7 +110,7 @@ run "plans_the_shared_host_and_state_for_factory" {
       google_kms_crypto_key_iam_member.state_storage["factory"].role == "roles/cloudkms.cryptoKeyEncrypterDecrypter" &&
       length(google_service_account.registry_publishers) == 0
     )
-    error_message = "Factory must get encrypted state in the shared host without requesting registries or a workload project."
+    error_message = "The shared host must live in the Factory team folder while keeping the environment-scoped state bucket name."
   }
 }
 

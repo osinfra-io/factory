@@ -17,6 +17,8 @@ locals {
     }
   ]...)
 
+  environment_root_folder_id = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
+
   github_workload_identity = length(local.github_publishers) == 0 ? {} : local.network_projects
 
   foundation_workspace = "foundation-main-${var.environment}"
@@ -54,10 +56,8 @@ locals {
     if team == try(var.gke_fleet_host.team, null)
   }
 
-  network_folder_id = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
-
   network_projects = {
-    (var.environment) = local.network_folder_id
+    (var.environment) = trimprefix(local.team_folder_ids[var.host_project_team], "folders/")
   }
 
   network_services = concat(
@@ -154,7 +154,7 @@ locals {
   }
 
   state_bucket_names = {
-    for team in keys(var.teams) : team => "${team}-${local.network_folder_id}-state-${module.core_helpers.env}"
+    for team in keys(var.teams) : team => "${team}-${local.environment_root_folder_id}-state-${module.core_helpers.env}"
   }
 
   team_dns = {
