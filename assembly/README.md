@@ -26,9 +26,11 @@ KMS key. Teams do not opt in or choose reader and writer grants. The platform
 provisions runner access separately, scoped to the team's backend.
 
 [Sandbox platform inputs](environments/sandbox.tfvars) own billing, budgets,
-the private services CIDR, external Shared VPC attachments, trusted GitHub organization ID,
+the Private Service Access CIDR, external Shared VPC attachments, trusted GitHub organization ID,
 Runtime project IAM, and the optional `gke_fleet_host` selection from among
-requested cluster locations. When configured, GitHub OIDC grants registry publishing
+requested cluster locations. The Shared VPC reserves the CIDR and connects to
+Private Service Access whether or not a team requests Cloud SQL.
+When configured, GitHub OIDC grants registry publishing
 for specific numeric repository IDs; it does not grant infrastructure
 deployment, billing, or backend access. Floor owns deployment. Team backend
 access does not grant access to Foundation or Assembly state. The Production parent zone

@@ -70,7 +70,7 @@ locals {
     name     = module.google_network_private_dns[var.environment].name
   }
 
-  private_service_ranges = length(local.cloud_sql_instances) == 0 ? {} : {
+  private_service_ranges = {
     (var.environment) = {
       address       = cidrhost(var.private_service_range, 0)
       prefix_length = tonumber(split("/", var.private_service_range)[1])
