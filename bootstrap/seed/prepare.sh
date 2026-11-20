@@ -120,14 +120,14 @@ fi
 kubectl create secret generic floor-bootstrap-state-env \
   --namespace="${NAMESPACE}" --from-file="TF_ENCRYPTION=${ENCRYPTION_FILE}" \
   --dry-run=client --output=yaml |
-  kubectl apply --server-side --field-manager=environment-bootstrap --filename=- >/dev/null
+  kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
 
 # Only a short-lived access token enters Kubernetes, never the ADC refresh token.
 gcloud auth application-default print-access-token |
   tr --delete '\n' |
   kubectl create secret generic floor-bootstrap-auth --namespace="${NAMESPACE}" \
     --from-file=GOOGLE_OAUTH_ACCESS_TOKEN=/dev/stdin --dry-run=client --output=yaml |
-  kubectl apply --server-side --field-manager=environment-bootstrap --filename=- >/dev/null
+  kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
 
 seed_ready="$(kubectl get terraform "${STAGE}" --namespace="${NAMESPACE}" \
   --ignore-not-found --output=jsonpath='{.status.conditions[?(@.type=="Ready")].status}')"
@@ -162,13 +162,13 @@ HCL
   kubectl create secret generic floor-foundation-state-env \
     --namespace="${NAMESPACE}" --from-file="TF_ENCRYPTION=${FOUNDATION_ENCRYPTION_FILE}" \
     --dry-run=client --output=yaml |
-    kubectl apply --server-side --field-manager=environment-bootstrap --filename=- >/dev/null
+    kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
 fi
 
 kubectl create configmap "${STAGE}-config" --namespace=flux-system \
   --from-literal="FLOOR_CONFIG_BRANCH=${FLOOR_CONFIG_BRANCH}" \
   --dry-run=client --output=yaml |
-  kubectl apply --server-side --field-manager=environment-bootstrap --filename=- >/dev/null
+  kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
 
 kubectl apply --filename=- >/dev/null <<YAML
 apiVersion: source.toolkit.fluxcd.io/v1
