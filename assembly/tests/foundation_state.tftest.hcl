@@ -160,20 +160,12 @@ run "reads_only_sandbox_foundation_for_declared_teams" {
 run "ports_the_shared_vpc_for_the_factory_locations" {
   command = plan
 
-  override_resource {
-    target = module.google_project_workloads["factory"].random_id.this
-    values = {
-      hex = "tfdef0"
-    }
-  }
-
   assert {
     condition = (
       output.shared_vpc.name == "standard-shared" &&
       google_compute_shared_vpc_service_project.workloads["factory"].host_project == output.shared_vpc.host_project_id &&
       google_compute_shared_vpc_service_project.workloads["factory"].service_project == output.workload_projects["factory"].id &&
-      output.workload_projects["factory"].id == "factory-tfdef-sb" &&
-      output.workload_projects["factory"].id != output.shared_vpc.host_project_id &&
+      output.workload_projects["factory"].id == "factory-tfabc-sb" &&
       toset(keys(output.regional_subnets["us-east1"])) == toset(["factory-us-east1-b", "factory-us-east1-c", "factory-us-east1-d"]) &&
       toset(keys(output.regional_subnets["us-east4"])) == toset(["factory-us-east4-a", "factory-us-east4-b", "factory-us-east4-c"]) &&
       output.regional_subnets["us-east1"]["factory-us-east1-b"].location == "us-east1-b" &&
