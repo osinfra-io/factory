@@ -42,6 +42,7 @@ for _ in $(seq 1 90); do
     jq -r '.status.conditions[]? | select(.type == "Ready") | "\(.status)\t\(.message[0:200])"' | sed 's/\x1b\[[0-9;]*m//g')"
   case "${state}" in
     True*) echo "${OBJECT} applied: ${state#*$'\t'}"; exit 0 ;;
+    False*dependency*) ;;
     False*) echo "${OBJECT} failed: ${state#*$'\t'}" >&2; exit 1 ;;
   esac
   sleep 10
