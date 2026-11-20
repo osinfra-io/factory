@@ -201,10 +201,6 @@ locals {
     )
   }
 
-  workload_project_prefixes = {
-    for team in keys(local.workload_teams) : team => "${team}-work"
-  }
-
   workload_teams = {
     for team, config in var.teams : team => config.workload_project
     if config.workload_project != null

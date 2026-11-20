@@ -79,7 +79,7 @@ variable "random_project_id" {
 }
 
 variable "random_project_id_hex_length" {
-  default     = 2
+  default     = 3
   description = "Number of random hexadecimal digits after tf in a generated project ID"
   type        = number
 

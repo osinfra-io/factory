@@ -57,12 +57,11 @@ module "google_project_network" {
     google.budget = google.budget
   }
 
-  billing_account              = var.billing_account_id
-  folder_id                    = each.value
-  monthly_budget_amount        = var.monthly_project_budgets.host
-  prefix                       = var.host_project_team
-  random_project_id_hex_length = 3
-  services                     = local.network_services
+  billing_account       = var.billing_account_id
+  folder_id             = each.value
+  monthly_budget_amount = var.monthly_project_budgets.host
+  prefix                = var.host_project_team
+  services              = local.network_services
 }
 
 module "google_project_teams" {
@@ -97,10 +96,9 @@ module "google_project_workloads" {
   cis_2_2_logging_sink = {
     project_id = module.google_project_network[var.environment].id
   }
-  deletion_policy       = "DELETE"
   folder_id             = local.workload_folder_ids[each.key]
   monthly_budget_amount = var.monthly_project_budgets.workload
-  prefix                = local.workload_project_prefixes[each.key]
+  prefix                = each.key
   services              = local.workload_project_services[each.key]
 }
 

@@ -30,6 +30,11 @@ run "default" {
   variables {
     cis_2_2_logging_sink_project_id = "mock-logging-sink-project"
   }
+
+  assert {
+    condition     = can(regex("^mock-tf[0-9a-f]{3}-", module.google_project.id))
+    error_message = "Generated project IDs must default to three random hexadecimal digits after tf."
+  }
 }
 
 run "logging" {

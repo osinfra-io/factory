@@ -48,9 +48,9 @@ Foundation and Assembly still use the seed project's backend. Moving those
 states is a separate handoff after the destination exists and runner access
 has been configured.
 
-The host ID follows `factory-tfXXX-sb`: the team
-key is the prefix, and three random hexadecimal digits are assigned at apply
-time. Floor defines `us-east1` and `us-east4` regional workspaces
+The shared host and Factory workload project IDs both follow `factory-tfXXX-sb`:
+the team key is the prefix, and each project gets its own three random
+hexadecimal digits at apply time. Floor defines `us-east1` and `us-east4` regional workspaces
 for Sandbox, Non-Production, and Production. Only Sandbox is wired into the
 current Floor deployment. Include the matching
 [regional overlay](../floor/config/floors/assembly-regional/) when bringing up
