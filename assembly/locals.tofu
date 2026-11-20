@@ -51,7 +51,7 @@ locals {
 
   hub_teams = {
     for team, config in local.gke_teams : team => config
-    if anytrue([for location in values(config.kubernetes_engine.locations) : location.enable_gke_hub_host])
+    if team == try(var.gke_fleet_host.team, null)
   }
 
   network_folder_id = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
@@ -153,25 +153,9 @@ locals {
     name            = module.google_network_vpc[var.environment].name
   }
 
-  state_buckets = { for team, config in var.teams : team => config.opentofu_state if config.opentofu_state != null }
-
   state_bucket_names = {
-    for team in keys(local.state_buckets) : team => "${team}-${local.network_folder_id}-state-${module.core_helpers.env}"
+    for team in keys(var.teams) : team => "${team}-${local.network_folder_id}-state-${module.core_helpers.env}"
   }
-
-  state_key_rings = length(local.state_buckets) == 0 ? {} : local.network_projects
-
-  state_readers = merge({}, [
-    for team, config in local.state_buckets : {
-      for member in setsubtract(config.readers, config.writers) : "${team}/${member}" => { team = team, member = member }
-    }
-  ]...)
-
-  state_writers = merge({}, [
-    for team, config in local.state_buckets : {
-      for member in config.writers : "${team}/${member}" => { team = team, member = member }
-    }
-  ]...)
 
   team_dns = {
     for team, config in local.gke_teams : team => "${coalesce(config.kubernetes_engine.dns_subdomain, team)}.sb.osinfra.io."
@@ -190,11 +174,16 @@ locals {
   team_subnets = merge({}, [
     for team, config in local.gke_teams : {
       for location, cluster in config.kubernetes_engine.locations : "${team}-${location}" => {
-        enable_gke_hub_host = cluster.enable_gke_hub_host
+        enable_gke_hub_host = team == try(var.gke_fleet_host.team, null) && location == try(var.gke_fleet_host.location, null)
         location            = location
-        ranges              = var.cluster_subnets[team][location]
-        region              = substr(location, 0, length(location) - 2)
-        team                = team
+        ranges = {
+          control_plane = cluster.subnet.master_ipv4_cidr_block
+          nodes         = cluster.subnet.ip_cidr_range
+          pods          = cluster.subnet.pod_ip_cidr_range
+          services      = cluster.subnet.services_ip_cidr_range
+        }
+        region = substr(location, 0, length(location) - 2)
+        team   = team
       }
     }
   ]...)
@@ -217,7 +206,7 @@ locals {
   }
 
   workload_teams = {
-    for team, config in var.teams : team => config
-    if length(config.cloud_sql) > 0 || try(length(config.kubernetes_engine.locations) > 0, false)
+    for team, config in var.teams : team => config.workload_project
+    if config.workload_project != null
   }
 }

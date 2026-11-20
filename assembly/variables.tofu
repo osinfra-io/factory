@@ -13,25 +13,6 @@ variable "bucket" {
   type        = string
 }
 
-variable "cluster_subnets" {
-  description = "Platform-assigned IPv4 subnet ranges by team and cluster location"
-  type = map(map(object({
-    control_plane = string
-    nodes         = string
-    pods          = string
-    services      = string
-  })))
-
-  validation {
-    condition = alltrue(flatten([
-      for locations in values(var.cluster_subnets) : [
-        for ranges in values(locations) : [for cidr in values(ranges) : can(cidrnetmask(cidr))]
-      ]
-    ]))
-    error_message = "Cluster subnet allocations must be valid IPv4 CIDR ranges."
-  }
-}
-
 variable "environment" {
   description = "Environment managed by this Assembly workspace"
   type        = string
@@ -61,6 +42,20 @@ variable "github_repository_owner_id" {
   validation {
     condition     = var.github_repository_owner_id == null || can(regex("^[0-9]+$", var.github_repository_owner_id))
     error_message = "The GitHub repository owner ID must be numeric."
+  }
+}
+
+variable "gke_fleet_host" {
+  default     = null
+  description = "Platform-selected cluster that hosts the shared GKE fleet"
+  type = object({
+    location = string
+    team     = string
+  })
+
+  validation {
+    condition     = var.gke_fleet_host == null || can(var.teams[var.gke_fleet_host.team].workload_project.kubernetes_engine.locations[var.gke_fleet_host.location].subnet)
+    error_message = "The GKE fleet host must be a cluster location requested by the selected team."
   }
 }
 
@@ -133,44 +128,48 @@ variable "teams" {
       readers               = optional(set(string), [])
       writers               = optional(set(string), [])
     }))
-    cloud_sql = optional(map(object({
-      database_version = string
-      machine_tier     = string
-      regions          = set(string)
-    })), {})
     display_name = string
     google_project = optional(object({
       administrators = optional(set(string), [])
       services       = optional(set(string), [])
     }))
-    kubernetes_engine = optional(object({
-      dns_subdomain    = optional(string)
-      dns_writers      = optional(set(string), [])
-      registry_pullers = optional(set(string), [])
-      locations = map(object({
-        enable_gke_hub_host = optional(bool, false)
+    workload_project = optional(object({
+      cloud_sql = optional(map(object({
+        database_version = string
+        machine_tier     = string
+        regions          = set(string)
+      })), {})
+      kubernetes_engine = optional(object({
+        dns_subdomain    = optional(string)
+        dns_writers      = optional(set(string), [])
+        registry_pullers = optional(set(string), [])
+        locations = map(object({
+          subnet = object({
+            ip_cidr_range          = string
+            master_ipv4_cidr_block = string
+            pod_ip_cidr_range      = string
+            services_ip_cidr_range = string
+          })
+        }))
       }))
-    }))
-    opentofu_state = optional(object({
-      readers = optional(set(string), [])
-      writers = optional(set(string), [])
     }))
   }))
 
   validation {
     condition = alltrue(flatten([
-      for team, config in var.teams : [
-        for location in keys(config.kubernetes_engine.locations) :
-        can(regex("^(us-east1|us-east4)-[a-f]$", location)) && can(var.cluster_subnets[team][location])
-      ] if config.kubernetes_engine != null
+      for config in values(var.teams) : [
+        for location, cluster in try(config.workload_project.kubernetes_engine.locations, {}) :
+        can(regex("^(us-east1|us-east4)-[a-f]$", location)) &&
+        try(alltrue([for cidr in cluster.subnet : can(cidrnetmask(cidr))]), false)
+      ]
     ]))
-    error_message = "Every requested GKE location must be a zone with a subnet allocation for that team."
+    error_message = "Every requested GKE location must be a us-east1 or us-east4 zone with valid IPv4 subnet CIDRs."
   }
 
   validation {
     condition = alltrue(flatten([
       for config in values(var.teams) : [
-        for name, instance in config.cloud_sql :
+        for name, instance in try(config.workload_project.cloud_sql, {}) :
         can(regex("^[a-z]([a-z0-9-]{0,46}[a-z0-9])?$", name)) &&
         length(instance.regions) > 0 && length(setsubtract(instance.regions, ["us-east1", "us-east4"])) == 0
       ]
@@ -182,7 +181,7 @@ variable "teams" {
     condition = alltrue([
       for team, config in var.teams :
       can(regex("^[a-z][a-z0-9-]{0,16}[a-z0-9]$", team)) &&
-      can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", coalesce(try(config.kubernetes_engine.dns_subdomain, null), team)))
+      can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", coalesce(try(config.workload_project.kubernetes_engine.dns_subdomain, null), team)))
     ])
     error_message = "Team keys must be 2-18 character lowercase resource names and DNS subdomains must be valid labels."
   }

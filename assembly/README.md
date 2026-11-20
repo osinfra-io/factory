@@ -18,33 +18,38 @@ request does not provision that team capability.
 | Team field | Capability |
 | --- | --- |
 | `google_project` | Team-managed project with baseline services, central logging, a budget, optional extra APIs, and project-scoped editors. |
-| `kubernetes_engine` | Managed workload project, Shared VPC attachment, subnet pairs per requested zone, a delegated team zone, optional DNS record writers, and optional fleet host support. |
+| `workload_project` | Platform-managed workload project and Shared VPC attachment. Its optional `kubernetes_engine` block requests subnet pairs using each location's CIDRs and a delegated team DNS zone. Its `cloud_sql` map requests private instances with region-specific DNS names. |
 | `artifact_registry` | Request a standard push and virtual pull repository pair and configure access. Assembly wires the shared Docker Hub remote. A fleet host's virtual repository includes configured member-cluster pull principals. |
-| `cloud_sql` | Private SQL instances in the requested regions, with a region-specific DNS name for each instance. |
-| `opentofu_state` | Versioned GCS bucket with a dedicated KMS key and separate reader and writer grants. |
 
-[Sandbox platform inputs](environments/sandbox.tfvars) own billing, budgets, address
-allocations, external Shared VPC attachments, trusted GitHub organization ID,
-and Runtime project IAM. When configured, GitHub OIDC grants registry publishing
+Every onboarded team gets a versioned OpenTofu state bucket with a dedicated
+KMS key. Teams do not opt in or choose reader and writer grants. The platform
+provisions runner access separately, scoped to the team's backend.
+
+[Sandbox platform inputs](environments/sandbox.tfvars) own billing, budgets,
+the private services CIDR, external Shared VPC attachments, trusted GitHub organization ID,
+Runtime project IAM, and the optional `gke_fleet_host` selection from among
+requested cluster locations. When configured, GitHub OIDC grants registry publishing
 for specific numeric repository IDs; it does not grant infrastructure
-deployment, billing, or backend access. Floor owns deployment. Team state grants
-do not grant access to Foundation or Assembly state. The Production parent zone
+deployment, billing, or backend access. Floor owns deployment. Team backend
+access does not grant access to Foundation or Assembly state. The Production parent zone
 still owns delegation of `sb.osinfra.io`; it can use the main `public_dns` output
 after a reviewed Sandbox apply. Assembly does not adopt legacy resources.
 
-The first Sandbox plan proposes the shared host project and network and the
-Factory team's versioned, KMS-encrypted state bucket. Factory will request its
-registry pair when Runtime is onboarded. This plan does not create registries,
-a workload project, or GKE. Registry and state access grants
-require explicit principals. The seed remains on cluster-local state, and
+The Sandbox bootstrap created the shared host project and network and the
+Factory team's versioned, KMS-encrypted state bucket. Factory's team tfvars
+now request Assembly networking in three zones each in `us-east1` and `us-east4`,
+using Pneuma's former CIDRs, and private Cloud SQL for authentik in `us-east1`.
+Sandbox selects Factory's `us-east1-b` cluster as the shared GKE fleet host.
+The registry group declarations do not provision groups or enable the registry pair.
+GKE itself is managed by Runtime, and Factory will request its registry pair
+when Runtime is onboarded. The seed remains on cluster-local state, and
 Foundation and Assembly still use the seed project's backend. Moving those
 states is a separate handoff after the destination exists and runner access
 has been configured.
 
 The host ID follows `factory-tfXXX-sb`: the team
 key is the prefix, and three random hexadecimal digits are assigned at apply
-time. The `us-east1-b` address allocations are reserved for when the Factory
-team requests GKE. Floor defines `us-east1` and `us-east4` regional workspaces
+time. Floor defines `us-east1` and `us-east4` regional workspaces
 for Sandbox, Non-Production, and Production. Only Sandbox is wired into the
 current Floor deployment. Include the matching
 [regional overlay](../floor/config/floors/assembly-regional/) when bringing up

@@ -107,11 +107,11 @@ module "google_storage_bucket" {
   source = "../tofu/modules/google/storage-bucket"
 
   depends_on = [google_kms_crypto_key_iam_member.state_storage]
-  for_each   = local.state_buckets
+  for_each   = local.state_bucket_names
 
   default_kms_key_name = google_kms_crypto_key.team_state[each.key].id
   location             = "US"
-  name                 = local.state_bucket_names[each.key]
+  name                 = each.value
   project              = module.google_project_network[var.environment].id
 }
 
@@ -266,7 +266,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
 }
 
 resource "google_kms_crypto_key" "team_state" {
-  for_each = local.state_buckets
+  for_each = local.state_bucket_names
 
   lifecycle {
     prevent_destroy = true
@@ -277,33 +277,17 @@ resource "google_kms_crypto_key" "team_state" {
   rotation_period = "7776000s"
 }
 
-resource "google_kms_crypto_key_iam_member" "state_readers" {
-  for_each = local.state_readers
-
-  crypto_key_id = google_kms_crypto_key.team_state[each.value.team].id
-  member        = each.value.member
-  role          = "roles/cloudkms.cryptoKeyDecrypter"
-}
-
 resource "google_kms_crypto_key_iam_member" "state_storage" {
-  for_each = local.state_buckets
+  for_each = local.state_bucket_names
 
   crypto_key_id = google_kms_crypto_key.team_state[each.key].id
   member        = data.google_storage_project_service_account.state[var.environment].member
   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
 }
 
-resource "google_kms_crypto_key_iam_member" "state_writers" {
-  for_each = local.state_writers
-
-  crypto_key_id = google_kms_crypto_key.team_state[each.value.team].id
-  member        = each.value.member
-  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
-}
-
 resource "google_kms_key_ring" "team_state" {
   depends_on = [module.google_project_network]
-  for_each   = local.state_key_rings
+  for_each   = local.network_projects
 
   lifecycle {
     prevent_destroy = true
@@ -432,20 +416,4 @@ resource "google_service_networking_connection" "private_services" {
   network                 = module.google_network_vpc[each.key].self_link
   reserved_peering_ranges = [google_compute_global_address.private_services[each.key].name]
   service                 = "servicenetworking.googleapis.com"
-}
-
-resource "google_storage_bucket_iam_member" "state_readers" {
-  for_each = local.state_readers
-
-  bucket = module.google_storage_bucket[each.value.team].name
-  member = each.value.member
-  role   = "roles/storage.objectViewer"
-}
-
-resource "google_storage_bucket_iam_member" "state_writers" {
-  for_each = local.state_writers
-
-  bucket = module.google_storage_bucket[each.value.team].name
-  member = each.value.member
-  role   = "roles/storage.objectAdmin"
 }

@@ -80,6 +80,15 @@ variables {
 run "plans_the_shared_host_and_state_for_factory" {
   command = plan
 
+  variables {
+    gke_fleet_host = null
+    teams = {
+      factory = {
+        display_name = "Factory"
+      }
+    }
+  }
+
   assert {
     condition = (
       output.shared_vpc.host_project_id == "factory-tfabc-sb" &&
@@ -92,43 +101,44 @@ run "plans_the_shared_host_and_state_for_factory" {
       length(output.regional_subnets) == 0 &&
       length(google_compute_shared_vpc_service_project.workloads) == 0 &&
       length(google_project_iam_member.gke_host_agent) == 0 &&
+      length(google_project_service_identity.multi_cluster) == 0 &&
       length(google_artifact_registry_repository.docker_remote) == 0 &&
       length(google_artifact_registry_repository.docker_standard) == 0 &&
       length(google_artifact_registry_repository.docker_virtual) == 0 &&
       output.team_state["factory"].bucket == "factory-567188438944-state-sb" &&
       google_kms_crypto_key_iam_member.state_storage["factory"].role == "roles/cloudkms.cryptoKeyEncrypterDecrypter" &&
-      length(google_storage_bucket_iam_member.state_writers) == 0 &&
       length(google_service_account.registry_publishers) == 0
     )
-    error_message = "Factory must get encrypted state in the shared host without registries, a workload project, or unrequested access grants."
+    error_message = "Factory must get encrypted state in the shared host without requesting registries or a workload project."
   }
 }
 
-run "plans_separate_team_state_access" {
+run "provisions_state_for_every_onboarded_team" {
   command = plan
 
   variables {
+    gke_fleet_host = null
     teams = {
       factory = {
         display_name = "Factory"
-        opentofu_state = {
-          readers = ["group:state-readers@example.com", "group:state-writers@example.com"]
-          writers = ["group:state-writers@example.com"]
-        }
+      }
+      other = {
+        display_name = "Other"
       }
     }
   }
 
   assert {
     condition = (
-      google_storage_bucket_iam_member.state_readers["factory/group:state-readers@example.com"].role == "roles/storage.objectViewer" &&
-      google_kms_crypto_key_iam_member.state_readers["factory/group:state-readers@example.com"].role == "roles/cloudkms.cryptoKeyDecrypter" &&
-      google_storage_bucket_iam_member.state_writers["factory/group:state-writers@example.com"].role == "roles/storage.objectAdmin" &&
-      google_kms_crypto_key_iam_member.state_writers["factory/group:state-writers@example.com"].role == "roles/cloudkms.cryptoKeyEncrypterDecrypter" &&
-      !contains(keys(google_storage_bucket_iam_member.state_readers), "factory/group:state-writers@example.com") &&
-      output.team_state["factory"].bucket == "factory-567188438944-state-sb"
+      tomap({ for team, state in output.team_state : team => state.bucket }) == tomap({
+        factory = "factory-567188438944-state-sb"
+        other   = "other-567188438944-state-sb"
+      }) &&
+      toset(keys(google_kms_crypto_key.team_state)) == toset(["factory", "other"]) &&
+      toset(keys(google_kms_crypto_key_iam_member.state_storage)) == toset(["factory", "other"]) &&
+      length(output.workload_projects) == 0
     )
-    error_message = "Team state grants must distinguish read and write access to the team's encrypted bucket."
+    error_message = "Every onboarded team must get its own encrypted state bucket, even without a workload project."
   }
 }
 
@@ -146,19 +156,8 @@ run "reads_only_sandbox_foundation_for_declared_teams" {
   }
 }
 
-run "ports_the_shared_vpc_for_the_factory_location" {
+run "ports_the_shared_vpc_for_the_factory_locations" {
   command = plan
-
-  variables {
-    teams = {
-      factory = {
-        display_name = "Factory"
-        kubernetes_engine = {
-          locations = { us-east1-b = {} }
-        }
-      }
-    }
-  }
 
   assert {
     condition = (
@@ -166,11 +165,28 @@ run "ports_the_shared_vpc_for_the_factory_location" {
       google_compute_shared_vpc_service_project.workloads["factory"].host_project == output.shared_vpc.host_project_id &&
       google_compute_shared_vpc_service_project.workloads["factory"].service_project == output.workload_projects["factory"].id &&
       output.workload_projects["factory"].id == "factory-work-tfab-sb" &&
+      toset(keys(output.regional_subnets["us-east1"])) == toset(["factory-us-east1-b", "factory-us-east1-c", "factory-us-east1-d"]) &&
+      toset(keys(output.regional_subnets["us-east4"])) == toset(["factory-us-east4-a", "factory-us-east4-b", "factory-us-east4-c"]) &&
       output.regional_subnets["us-east1"]["factory-us-east1-b"].location == "us-east1-b" &&
+      output.regional_subnets["us-east1"]["factory-us-east1-b"].ranges == {
+        control_plane = "10.63.192.0/28"
+        nodes         = "10.60.0.0/20"
+        pods          = "10.0.0.0/15"
+        services      = "10.61.224.0/20"
+      } &&
       output.regional_subnets["us-east1"]["factory-us-east1-b"].service_project_number == "123456789012" &&
-      output.team_dns["factory"].dns_name == "factory.sb.osinfra.io."
+      toset(flatten([
+        for region in values(output.regional_subnets) : [for key, subnet in region : key if subnet.enable_gke_hub_host]
+      ])) == toset(["factory-us-east1-b"]) &&
+      toset(keys(google_project_service_identity.multi_cluster)) == toset(["factory"]) &&
+      output.team_dns["factory"].dns_name == "factory.sb.osinfra.io." &&
+      output.cloud_sql_instances["factory/authentik"].database_version == "POSTGRES_16" &&
+      output.cloud_sql_instances["factory/authentik"].machine_tier == "db-custom-1-3840" &&
+      output.cloud_sql_instances["factory/authentik"].regions == toset(["us-east1"]) &&
+      output.cloud_sql_instances["factory/authentik"].project_id == output.workload_projects["factory"].id &&
+      length(google_artifact_registry_repository.docker_standard) == 0
     )
-    error_message = "The Factory team's requested cluster must get a service project, Shared VPC attachment, subnet allocation, and team DNS."
+    error_message = "Factory's managed project must plan its DNS, six cluster networks, fleet host, and private authentik database without enabling a registry."
   }
 }
 
@@ -190,14 +206,14 @@ run "ports_opt_in_corpus_services" {
   variables {
     external_service_projects  = ["approved-service-project"]
     github_repository_owner_id = "12345"
+    gke_fleet_host = {
+      location = "us-east1-b"
+      team     = "factory"
+    }
     runtime_project_access = {
       factory = {
         "roles/container.admin" = ["serviceAccount:runtime@example.iam.gserviceaccount.com"]
       }
-    }
-    cluster_subnets = {
-      factory = var.cluster_subnets["factory"]
-      other   = { us-east1-b = { control_plane = "10.90.16.0/28", nodes = "10.90.0.0/20", pods = "10.91.0.0/16", services = "10.92.0.0/20" } }
     }
     teams = {
       factory = {
@@ -205,22 +221,26 @@ run "ports_opt_in_corpus_services" {
           github_repository_ids = ["67890"]
           readers               = ["group:registry-readers@example.com"]
         }
-        cloud_sql = {
-          authentik = {
-            database_version = "POSTGRES_16"
-            machine_tier     = "db-custom-1-3840"
-            regions          = ["us-east1"]
-          }
-        }
         display_name = "Factory"
         google_project = {
           administrators = ["group:project-editors@example.com"]
           services       = ["pubsub.googleapis.com"]
         }
-        kubernetes_engine = {
-          dns_writers = ["group:dns-writers@example.com"]
-          locations = {
-            us-east1-b = { enable_gke_hub_host = true }
+        workload_project = {
+          cloud_sql = {
+            authentik = {
+              database_version = "POSTGRES_16"
+              machine_tier     = "db-custom-1-3840"
+              regions          = ["us-east1"]
+            }
+          }
+          kubernetes_engine = {
+            dns_writers = ["group:dns-writers@example.com"]
+            locations = {
+              us-east1-b = {
+                subnet = var.teams["factory"].workload_project.kubernetes_engine.locations["us-east1-b"].subnet
+              }
+            }
           }
         }
       }
@@ -229,9 +249,20 @@ run "ports_opt_in_corpus_services" {
           readers = ["group:member-registry-readers@example.com"]
         }
         display_name = "Member"
-        kubernetes_engine = {
-          locations        = { us-east1-b = {} }
-          registry_pullers = ["group:member-node-pullers@example.com"]
+        workload_project = {
+          kubernetes_engine = {
+            registry_pullers = ["group:member-node-pullers@example.com"]
+            locations = {
+              us-east1-b = {
+                subnet = {
+                  ip_cidr_range          = "10.90.0.0/20"
+                  master_ipv4_cidr_block = "10.90.16.0/28"
+                  pod_ip_cidr_range      = "10.91.0.0/16"
+                  services_ip_cidr_range = "10.92.0.0/20"
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -246,6 +277,8 @@ run "ports_opt_in_corpus_services" {
       google_project_service_identity.gke["factory"].service == "container.googleapis.com" &&
       google_project_iam_member.runtime[jsonencode(["factory", "roles/container.admin", "serviceAccount:runtime@example.iam.gserviceaccount.com"])].role == "roles/container.admin" &&
       google_project_service_identity.multi_cluster["factory"].service == "multiclusterservicediscovery.googleapis.com" &&
+      output.regional_subnets["us-east1"]["factory-us-east1-b"].enable_gke_hub_host &&
+      !output.regional_subnets["us-east1"]["other-us-east1-b"].enable_gke_hub_host &&
       output.team_projects["factory"].id != output.workload_projects["factory"].id
     )
     error_message = "Cloud SQL and fleet integrations must use the workload project, not the separate team project."
@@ -266,16 +299,36 @@ run "ports_opt_in_corpus_services" {
   }
 }
 
-run "rejects_a_cluster_without_an_allocation" {
+run "rejects_a_fleet_host_without_a_requested_location" {
   command = plan
 
   variables {
-    cluster_subnets = {}
+    gke_fleet_host = {
+      location = "us-east1-a"
+      team     = "factory"
+    }
+  }
+
+  expect_failures = [var.gke_fleet_host]
+}
+
+run "rejects_a_cluster_with_an_invalid_subnet" {
+  command = plan
+
+  variables {
     teams = {
       factory = {
         display_name = "Factory"
-        kubernetes_engine = {
-          locations = { us-east1-b = {} }
+        workload_project = {
+          kubernetes_engine = {
+            locations = {
+              us-east1-b = {
+                subnet = merge(var.teams["factory"].workload_project.kubernetes_engine.locations["us-east1-b"].subnet, {
+                  pod_ip_cidr_range = "2001:db8::/64"
+                })
+              }
+            }
+          }
         }
       }
     }
