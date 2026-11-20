@@ -17,7 +17,6 @@ kube=(kubectl --context=docker-desktop --namespace="${NAMESPACE}")
 pending() {
   "${kube[@]}" get terraform "${OBJECT}" -o json | jq -er '
     if (.status.plan.pending // "") != "" and
-       .status.lastPlannedRevision == .status.lastAttemptedRevision and
        .status.lastPlannedGeneration == .metadata.generation
     then [.metadata.uid, .spec.workspace, .status.plan.pending, .status.lastPlannedRevision] | @tsv
     else error("No current pending plan") end' 2>/dev/null
@@ -49,6 +48,11 @@ plan="$("${kube[@]}" get secret "tfplan-${workspace}-${OBJECT}.json" -o json |
 printf 'Object: %s/%s\nWorkspace: %s\nRevision: %s\nPlan: %s\nPlan SHA-256: %s\n' \
   "${NAMESPACE}" "${OBJECT}" "${workspace}" "${revision}" "${plan_id}" \
   "$(printf '%s' "${plan}" | sha256sum | cut -d' ' -f1)"
+# tf-controller does not re-plan while a plan awaits approval, so the pending plan
+# can lag the latest pushed revision. Approving it applies this exact saved plan.
+latest="$("${kube[@]}" get terraform "${OBJECT}" -o jsonpath='{.status.lastAttemptedRevision}')"
+[ "${latest}" = "${revision}" ] ||
+  echo "NOTE: plan revision is behind the latest attempted revision (${latest##*@sha1:}); approving applies this saved plan." >&2
 jq -c '
   (.resource_changes[]? | select(.change.actions != ["no-op"]) | {
     address, actions: .change.actions,
