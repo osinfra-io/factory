@@ -27,3 +27,29 @@ module "istio" {
   ztunnel_cpu_requests                        = var.resources.ztunnel_cpu_requests
   ztunnel_memory_requests                     = var.resources.ztunnel_memory_requests
 }
+
+# Kubernetes Secret Resource
+# https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/secret_v1
+
+# Peer clusters read this cluster's API through the istio-reader service account, the same
+# credential istioctl create-remote-secret uses. The mesh stage turns it into a remote secret.
+resource "kubernetes_secret_v1" "istio_reader" {
+  depends_on = [
+    module.istio
+  ]
+
+  for_each = local.instances
+
+  metadata {
+    annotations = {
+      "kubernetes.io/service-account.name" = "istio-reader-service-account"
+    }
+
+    name      = "istio-reader-service-account-token"
+    namespace = "istio-system"
+  }
+
+  type = "kubernetes.io/service-account-token"
+
+  wait_for_service_account_token = true
+}

@@ -394,3 +394,95 @@ spec:
       name: runtime-sandbox-switch
       optional: true
   workspace: us-east4-a-istio-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: mesh-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+    - name: istio-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/mesh
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-mesh-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: mesh-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+    - name: istio-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/mesh
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-mesh-sandbox
