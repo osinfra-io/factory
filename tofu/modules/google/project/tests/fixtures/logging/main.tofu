@@ -18,6 +18,10 @@ terraform {
 module "google_project" {
   source = "../../../"
 
+  providers = {
+    google.budget = google
+  }
+
   billing_account = "000000-000000-000000"
   folder_id       = "0000000000000"
 

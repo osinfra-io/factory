@@ -5,3 +5,9 @@ variable "cis_2_2_logging_sink_project_id" {
   description = "The CIS 2.2 logging sink project ID"
   type        = string
 }
+
+variable "defer_logging_sink" {
+  default     = false
+  description = "Use an external project ID that is only known at apply time"
+  type        = bool
+}

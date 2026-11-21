@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: bootstrap-production
+  namespace: bootstrap-production
+spec:
+  interval: 1m
+  ref:
+    branch: ${FLOOR_CONFIG_BRANCH}
+  url: https://github.com/osinfra-io/factory

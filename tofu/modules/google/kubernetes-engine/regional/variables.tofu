@@ -1,6 +1,12 @@
 # Input Variables
 # https://opentofu.org/docs/language/values/variables
 
+variable "artifact_registry_repository" {
+  default     = null
+  description = "Artifact Registry repository ID (projects/<project>/locations/<location>/repositories/<name>) the node service account can pull from"
+  type        = string
+}
+
 variable "cluster_autoscaling" {
   default     = {}
   description = "Per-cluster configuration of node auto-provisioning with cluster autoscaler to automatically adjust the size of the cluster and create/delete node pools based on the current needs of the cluster's workload"

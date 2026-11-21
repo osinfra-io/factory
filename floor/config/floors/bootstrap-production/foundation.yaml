@@ -1,0 +1,43 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: foundation-source
+  namespace: bootstrap-production
+spec:
+  interval: 1m
+  ref:
+    branch: ${FLOOR_CONFIG_BRANCH}
+  url: https://github.com/osinfra-io/factory
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foundation-bootstrap-backend
+  namespace: bootstrap-production
+data:
+  bucket: bootstrap-1093631952702-prod-state
+  prefix: foundation
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foundation-bootstrap-inputs
+  namespace: bootstrap-production
+data:
+  environment: production
+  google_environment_root_folder_id: "1093631952702"
+  google_quota_project: bootstrap-1093631952702-prod
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  labels:
+    app.kubernetes.io/component: foundation
+  name: foundation-production
+  namespace: bootstrap-production
+spec:
+  dependsOn:
+    - name: bootstrap-production
+  tfVarsFiles:
+    - tofu/foundation/teams/factory.tfvars
+  workspace: foundation-main-production

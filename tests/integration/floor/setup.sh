@@ -4,7 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
-readonly FACTORY_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+FACTORY_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+readonly FACTORY_ROOT
 readonly WORK_DIR="${SCRIPT_DIR}/.work"
 readonly OWNER_NAME="local-gateway-stack-owner"
 readonly FIXTURE_NAMESPACE="floor-fixture"

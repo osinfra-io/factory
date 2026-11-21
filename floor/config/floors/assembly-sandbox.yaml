@@ -1,0 +1,15 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: assembly-sandbox
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: bootstrap-sandbox
+  interval: 1m
+  path: ./floor/config/floors/assembly-sandbox
+  prune: false
+  sourceRef:
+    kind: GitRepository
+    name: bootstrap-floor-config
+  wait: false

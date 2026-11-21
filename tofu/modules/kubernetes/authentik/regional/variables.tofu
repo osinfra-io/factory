@@ -140,6 +140,18 @@ variable "server_resources_requests_memory" {
   type        = string
 }
 
+variable "web_base_url" {
+  default     = null
+  description = "The public scheme and host for Authentik's system Base URL, used for generated links and the Admin UI configuration warning"
+  nullable    = true
+  type        = string
+
+  validation {
+    condition     = var.web_base_url == null || can(regex("^https://[^/]+$", var.web_base_url))
+    error_message = "The web_base_url must be an HTTPS origin without a path or trailing slash."
+  }
+}
+
 variable "worker_replicas" {
   default     = 1
   description = "The number of Authentik worker replicas to run"

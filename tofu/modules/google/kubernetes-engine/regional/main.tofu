@@ -1,14 +1,16 @@
-# Google Cloud Identity Group Membership
-# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/cloud_identity_group_membership
+# Artifact Registry Repository IAM Member Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/artifact_registry_repository_iam
 
-resource "google_cloud_identity_group_membership" "registry_readers" {
-  group = data.google_cloud_identity_group_lookup.registry_readers.name
-
-  preferred_member_key {
-    id = google_service_account.default_node.email
+resource "google_artifact_registry_repository_iam_member" "default_node" {
+  lifecycle {
+    enabled = var.artifact_registry_repository != null
   }
 
-  roles { name = "MEMBER" }
+  location   = local.artifact_registry.location
+  member     = local.default_node_member
+  project    = local.artifact_registry.project
+  repository = local.artifact_registry.repository
+  role       = "roles/artifactregistry.reader"
 }
 
 # Google Container Cluster Resource
@@ -23,10 +25,6 @@ resource "google_container_cluster" "this" {
 
       min_master_version,
     ]
-  }
-
-  authenticator_groups_config {
-    security_group = "gke-security-groups@osinfra.io"
   }
 
   cluster_autoscaling {

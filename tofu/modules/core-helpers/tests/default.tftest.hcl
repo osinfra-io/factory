@@ -156,6 +156,23 @@ run "main_production" {
   }
 }
 
+run "bootstrap_sandbox" {
+  command = plan
+
+  module {
+    source = "./tests/fixtures/default"
+  }
+
+  variables {
+    workspace = "bootstrap-sandbox"
+  }
+
+  assert {
+    condition     = output.env == "sb" && output.labels.env == "sandbox"
+    error_message = "The bootstrap workspace must set the Sandbox project suffix and labels."
+  }
+}
+
 run "main_sandbox" {
   command = apply
 
