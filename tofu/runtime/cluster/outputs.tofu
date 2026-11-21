@@ -5,6 +5,8 @@ output "clusters" {
       ca_certificate = cluster.container_cluster_ca_certificate
       endpoint       = cluster.container_cluster_endpoint
       name           = cluster.container_cluster_name
+      project_id     = local.clusters[key].project_id
+      team           = local.clusters[key].team
     }
   }
 }
