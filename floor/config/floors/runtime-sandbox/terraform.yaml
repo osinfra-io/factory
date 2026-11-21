@@ -27,7 +27,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./tofu/runtime
+  path: ./tofu/runtime/cluster
   planOnly: false
   runnerPodTemplate:
     spec:
@@ -46,6 +46,9 @@ spec:
       name: foundation-bootstrap-backend
       varsKeys:
         - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
   workspace: us-east1-b-runtime-sandbox
 ---
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
@@ -69,7 +72,7 @@ spec:
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
-  path: ./tofu/runtime
+  path: ./tofu/runtime/cluster
   planOnly: false
   runnerPodTemplate:
     spec:
@@ -88,4 +91,7 @@ spec:
       name: foundation-bootstrap-backend
       varsKeys:
         - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
   workspace: us-east4-a-runtime-sandbox

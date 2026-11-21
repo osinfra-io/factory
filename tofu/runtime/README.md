@@ -1,14 +1,36 @@
 # Runtime
 
-Creates the GKE clusters for each team location requested in the team tfvars. Each
-workspace owns one zone, named `<zone>-runtime-<environment>` (for example
-`us-east1-b-runtime-sandbox`), and reads that region's Assembly `runtime_networks`
-output. The Sandbox fleet host cluster is selected by Assembly's `gke_fleet_host`.
+Runtime is disposable. It is split into two stages per zone, each with its own Floor object
+and state:
 
-Sandbox workspaces exist for `us-east1-b` and `us-east4-a` and apply only after manual
-approval of their exact plans. Cluster services (cert-manager, Istio, OPA Gatekeeper) and
-workload routes are not yet managed here.
+| Stage | Path | Workspace | Purpose |
+| --- | --- | --- | --- |
+| `cluster` | `tofu/runtime/cluster` | `<zone>-runtime-<environment>` | GKE cluster for the zone |
+| `workloads` | `tofu/runtime/workloads` | `<zone>-workloads-<environment>` | Kubernetes ecosystem running on the cluster |
+
+Both stages read their zone's Assembly `runtime_networks` output. Sandbox runs `us-east1-b`
+and `us-east4-a`. Every plan is reviewed and approved through Floor.
+
+## Tear down and recreate
+
+`runtime_enabled` (default `true`) controls whether the stages declare anything. Set it to
+`false` to destroy Runtime so it stops costing money, and back to `true` to recreate it.
+Assembly (projects, network, DNS) is never touched.
 
 ```shell
-TF_WORKSPACE=us-east1-b-runtime-sandbox tofu -chdir=runtime test
+bootstrap/seed/runtime.sh down sandbox
+bootstrap/seed/runtime.sh up sandbox
+bootstrap/seed/runtime.sh status sandbox
+```
+
+Destroying removes in-cluster data, so rebuild OpenBao and authentik state from code after
+`up`. Scale-to-zero while idle is tracked in
+[#3](https://github.com/osinfra-io/factory/issues/3).
+
+## Tests
+
+Run the mocked tests from the repository root:
+
+```shell
+TF_WORKSPACE=us-east1-b-runtime-sandbox tofu -chdir=tofu/runtime/cluster test
 ```

@@ -5,7 +5,7 @@ locals {
 
   clusters = {
     for key, network in local.assembly.runtime_networks : key => network
-    if network.location == "${module.core_helpers.region}-${module.core_helpers.zone}"
+    if var.runtime_enabled && network.location == "${module.core_helpers.region}-${module.core_helpers.zone}"
   }
 
   workspace_valid = can(regex("^us-east[14]-[a-f]-runtime-(sandbox|non-production|production)$", terraform.workspace))

@@ -52,3 +52,16 @@ run "creates_only_the_workspace_zone_cluster" {
     error_message = "A zonal Runtime workspace must create only its own cluster."
   }
 }
+
+run "destroys_the_cluster_when_runtime_is_disabled" {
+  command = plan
+
+  variables {
+    runtime_enabled = false
+  }
+
+  assert {
+    condition     = length(local.clusters) == 0
+    error_message = "A disabled Runtime workspace must not declare any clusters."
+  }
+}

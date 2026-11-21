@@ -24,3 +24,9 @@ variable "node_pool" {
     node_count     = number
   })
 }
+
+variable "runtime_enabled" {
+  default     = true
+  description = "Whether this workspace's cluster exists; set to false to destroy it"
+  type        = bool
+}
