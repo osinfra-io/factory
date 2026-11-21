@@ -116,13 +116,16 @@ module "google_storage_bucket" {
 
 resource "google_artifact_registry_repository" "docker_remote" {
   depends_on = [module.google_project_network]
-  for_each   = length(local.artifact_registries) == 0 ? {} : local.network_projects
+
+  lifecycle {
+    enabled = length(local.artifact_registries) > 0
+  }
 
   description   = "Docker Hub upstream"
   format        = "DOCKER"
   location      = "us"
   mode          = "REMOTE_REPOSITORY"
-  project       = module.google_project_network[each.key].id
+  project       = module.google_project_network[var.environment].id
   repository_id = "docker-remote"
 
   remote_repository_config {
@@ -163,7 +166,7 @@ resource "google_artifact_registry_repository" "docker_virtual" {
     upstream_policies {
       id         = "docker"
       priority   = 10
-      repository = google_artifact_registry_repository.docker_remote[var.environment].id
+      repository = google_artifact_registry_repository.docker_remote.id
     }
   }
 }

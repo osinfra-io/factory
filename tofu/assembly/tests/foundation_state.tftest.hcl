@@ -103,7 +103,7 @@ run "plans_the_shared_host_and_state_for_factory" {
       length(google_compute_shared_vpc_service_project.workloads) == 0 &&
       length(google_project_iam_member.gke_host_agent) == 0 &&
       length(google_project_service_identity.multi_cluster) == 0 &&
-      length(google_artifact_registry_repository.docker_remote) == 0 &&
+      google_artifact_registry_repository.docker_remote == null &&
       length(google_artifact_registry_repository.docker_standard) == 0 &&
       length(google_artifact_registry_repository.docker_virtual) == 0 &&
       output.team_state["factory"].bucket == "factory-567188438944-state-sb" &&
