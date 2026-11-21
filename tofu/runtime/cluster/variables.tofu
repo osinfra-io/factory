@@ -25,6 +25,12 @@ variable "node_pool" {
   })
 }
 
+variable "regions" {
+  default     = ["us-east1", "us-east4"]
+  description = "Regions whose clusters the fleet host cluster registers as fleet members"
+  type        = list(string)
+}
+
 variable "runtime_enabled" {
   default     = true
   description = "Whether this workspace's cluster exists; set to false to destroy it"

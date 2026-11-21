@@ -24,6 +24,8 @@ spec:
       name: runtime-sandbox-backend
   dependsOn:
     - name: assembly-us-east1-sandbox
+    - name: assembly-us-east4-sandbox
+    - name: runtime-us-east4-a-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
