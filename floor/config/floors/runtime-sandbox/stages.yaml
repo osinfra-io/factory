@@ -1,7 +1,7 @@
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-trust-sandbox
+  name: trust-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -36,7 +36,7 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-onboarding-us-east1-b-sandbox
+  name: onboarding-us-east1-b-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -81,7 +81,7 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-onboarding-us-east4-a-sandbox
+  name: onboarding-us-east4-a-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -126,7 +126,7 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-cert-manager-us-east1-b-sandbox
+  name: cert-manager-us-east1-b-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -140,7 +140,7 @@ spec:
     - kind: ConfigMap
       name: runtime-sandbox-backend
   dependsOn:
-    - name: runtime-onboarding-us-east1-b-sandbox
+    - name: onboarding-us-east1-b-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
@@ -171,7 +171,7 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-cert-manager-us-east4-a-sandbox
+  name: cert-manager-us-east4-a-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -185,7 +185,7 @@ spec:
     - kind: ConfigMap
       name: runtime-sandbox-backend
   dependsOn:
-    - name: runtime-onboarding-us-east4-a-sandbox
+    - name: onboarding-us-east4-a-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
@@ -216,7 +216,7 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-cert-manager-istio-csr-us-east1-b-sandbox
+  name: cert-manager-istio-csr-us-east1-b-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -230,8 +230,8 @@ spec:
     - kind: ConfigMap
       name: runtime-sandbox-backend
   dependsOn:
-    - name: runtime-cert-manager-us-east1-b-sandbox
-    - name: runtime-trust-sandbox
+    - name: cert-manager-us-east1-b-sandbox
+    - name: trust-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
@@ -262,7 +262,7 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: runtime-cert-manager-istio-csr-us-east4-a-sandbox
+  name: cert-manager-istio-csr-us-east4-a-sandbox
   namespace: bootstrap-sandbox
 spec:
   backendConfig:
@@ -276,8 +276,8 @@ spec:
     - kind: ConfigMap
       name: runtime-sandbox-backend
   dependsOn:
-    - name: runtime-cert-manager-us-east4-a-sandbox
-    - name: runtime-trust-sandbox
+    - name: cert-manager-us-east4-a-sandbox
+    - name: trust-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
