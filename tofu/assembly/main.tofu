@@ -158,15 +158,15 @@ resource "google_artifact_registry_repository" "docker_virtual" {
 
   virtual_repository_config {
     upstream_policies {
-      id         = each.key
-      priority   = 20
-      repository = google_artifact_registry_repository.docker_standard[each.key].id
-    }
-
-    upstream_policies {
       id         = "docker"
       priority   = 10
       repository = google_artifact_registry_repository.docker_remote.id
+    }
+
+    upstream_policies {
+      id         = each.key
+      priority   = 20
+      repository = google_artifact_registry_repository.docker_standard[each.key].id
     }
   }
 }
