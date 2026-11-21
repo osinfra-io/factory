@@ -1,1 +1,3 @@
-../shared/backend.tofu
+terraform {
+  backend "gcs" {}
+}
