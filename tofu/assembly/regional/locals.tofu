@@ -31,15 +31,16 @@ locals {
 
   runtime_networks = {
     for key, subnet in local.regional_subnets : key => {
-      enable_gke_hub_host         = subnet.enable_gke_hub_host
-      host_project_id             = local.main.shared_vpc.host_project_id
-      location                    = subnet.location
-      network                     = local.main.shared_vpc.name
-      private_endpoint_subnetwork = module.google_network_master_subnets[key].name
-      project_id                  = subnet.service_project_id
-      region                      = module.core_helpers.region
-      subnet                      = module.google_network_subnets[key].name
-      team                        = subnet.team
+      artifact_registry_repository = try(local.main.artifact_registries[subnet.team].virtual, null)
+      enable_gke_hub_host          = subnet.enable_gke_hub_host
+      host_project_id              = local.main.shared_vpc.host_project_id
+      location                     = subnet.location
+      network                      = local.main.shared_vpc.name
+      private_endpoint_subnetwork  = module.google_network_master_subnets[key].name
+      project_id                   = subnet.service_project_id
+      region                       = module.core_helpers.region
+      subnet                       = module.google_network_subnets[key].name
+      team                         = subnet.team
     }
   }
 }

@@ -185,9 +185,9 @@ run "ports_the_shared_vpc_for_the_factory_locations" {
       google_compute_global_address.private_services["sandbox"].address == "172.16.0.0" &&
       google_compute_global_address.private_services["sandbox"].prefix_length == 16 &&
       google_service_networking_connection.private_services["sandbox"].reserved_peering_ranges == tolist([google_compute_global_address.private_services["sandbox"].name]) &&
-      length(google_artifact_registry_repository.docker_standard) == 0
+      toset(keys(google_artifact_registry_repository.docker_standard)) == toset(["factory"])
     )
-    error_message = "Factory's workload must plan DNS, six cluster networks, and a fleet host without enabling Cloud SQL or a registry; the shared Private Service Access range must remain."
+    error_message = "Factory's workload must plan DNS, six cluster networks, a fleet host and a registry for its clusters without enabling Cloud SQL; the shared Private Service Access range must remain."
   }
 }
 

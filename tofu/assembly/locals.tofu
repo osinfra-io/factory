@@ -1,5 +1,8 @@
 locals {
-  artifact_registries = { for team, config in var.teams : team => config.artifact_registry if config.artifact_registry != null }
+  artifact_registries = {
+    for team, config in var.teams : team => coalesce(config.artifact_registry, { github_repository_ids = toset([]), readers = toset([]), writers = toset([]) })
+    if config.artifact_registry != null || contains(keys(local.gke_teams), team)
+  }
 
   cloud_sql_instances = merge({}, [
     for team, config in local.workload_teams : {

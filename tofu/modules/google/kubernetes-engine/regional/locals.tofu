@@ -2,6 +2,7 @@
 # https://opentofu.org/docs/language/values/locals
 
 locals {
+  artifact_registry = var.artifact_registry_repository == null ? null : regex("^projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/repositories/(?P<repository>[^/]+)$", var.artifact_registry_repository)
 
   # To provide a simple interface for cluster autoscaling, we use this local to provide
   # clarity to the user on what resources are available for autoscaling. You can only have a

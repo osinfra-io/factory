@@ -1,3 +1,18 @@
+# Artifact Registry Repository IAM Member Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/artifact_registry_repository_iam
+
+resource "google_artifact_registry_repository_iam_member" "default_node" {
+  lifecycle {
+    enabled = var.artifact_registry_repository != null
+  }
+
+  location   = local.artifact_registry.location
+  member     = local.default_node_member
+  project    = local.artifact_registry.project
+  repository = local.artifact_registry.repository
+  role       = "roles/artifactregistry.reader"
+}
+
 # Google Container Cluster Resource
 # https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/container_cluster
 

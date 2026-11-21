@@ -13,26 +13,28 @@ mock_provider "terraform" {
       outputs = {
         runtime_networks = {
           factory-us-east1-b = {
-            enable_gke_hub_host         = true
-            host_project_id             = "factory-tfabc-sb"
-            location                    = "us-east1-b"
-            network                     = "standard-shared"
-            private_endpoint_subnetwork = "factory-us-east1-b-master"
-            project_id                  = "factory-tfdef-sb"
-            region                      = "us-east1"
-            subnet                      = "factory-us-east1-b"
-            team                        = "factory"
+            artifact_registry_repository = "projects/factory-tfabc-sb/locations/us/repositories/factory-virtual"
+            enable_gke_hub_host          = true
+            host_project_id              = "factory-tfabc-sb"
+            location                     = "us-east1-b"
+            network                      = "standard-shared"
+            private_endpoint_subnetwork  = "factory-us-east1-b-master"
+            project_id                   = "factory-tfdef-sb"
+            region                       = "us-east1"
+            subnet                       = "factory-us-east1-b"
+            team                         = "factory"
           }
           factory-us-east1-c = {
-            enable_gke_hub_host         = false
-            host_project_id             = "factory-tfabc-sb"
-            location                    = "us-east1-c"
-            network                     = "standard-shared"
-            private_endpoint_subnetwork = "factory-us-east1-c-master"
-            project_id                  = "factory-tfdef-sb"
-            region                      = "us-east1"
-            subnet                      = "factory-us-east1-c"
-            team                        = "factory"
+            artifact_registry_repository = "projects/factory-tfabc-sb/locations/us/repositories/factory-virtual"
+            enable_gke_hub_host          = false
+            host_project_id              = "factory-tfabc-sb"
+            location                     = "us-east1-c"
+            network                      = "standard-shared"
+            private_endpoint_subnetwork  = "factory-us-east1-c-master"
+            project_id                   = "factory-tfdef-sb"
+            region                       = "us-east1"
+            subnet                       = "factory-us-east1-c"
+            team                         = "factory"
           }
         }
       }
