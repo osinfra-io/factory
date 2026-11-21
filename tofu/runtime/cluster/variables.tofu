@@ -3,6 +3,12 @@ variable "bucket" {
   type        = string
 }
 
+variable "locations" {
+  default     = ["us-east1-b", "us-east4-a"]
+  description = "Zones that run a Runtime cluster in this environment; the fleet host registers those in other regions"
+  type        = list(string)
+}
+
 variable "node_pool" {
   default = {
     disk_size_gb   = 100
@@ -23,12 +29,6 @@ variable "node_pool" {
     min_node_count = number
     node_count     = number
   })
-}
-
-variable "regions" {
-  default     = ["us-east1", "us-east4"]
-  description = "Regions whose clusters the fleet host cluster registers as fleet members"
-  type        = list(string)
 }
 
 variable "runtime_enabled" {
