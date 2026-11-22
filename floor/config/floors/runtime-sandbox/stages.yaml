@@ -1424,6 +1424,9 @@ spec:
             name: floor-bootstrap-auth
         - secretRef:
             name: floor-foundation-state-env
+        - secretRef:
+            name: floor-authentik-google-oauth
+            optional: true
   serviceAccountName: tf-bootstrap
   sourceRef:
     kind: GitRepository
