@@ -61,7 +61,7 @@ dns_records = [
   },
   {
     name    = "sb"
-    rrdatas = ["ns-cloud-e1.googledomains.com.", "ns-cloud-e2.googledomains.com.", "ns-cloud-e3.googledomains.com.", "ns-cloud-e4.googledomains.com."]
+    rrdatas = ["ns-cloud-b1.googledomains.com.", "ns-cloud-b2.googledomains.com.", "ns-cloud-b3.googledomains.com.", "ns-cloud-b4.googledomains.com."]
     ttl     = 300
     type    = "NS"
   },
