@@ -36,6 +36,46 @@ spec:
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
+  name: istio-global-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio-global
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+  workspace: istio-global-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
   name: onboarding-us-east1-b-sandbox
   namespace: bootstrap-sandbox
 spec:
@@ -323,6 +363,7 @@ spec:
       name: runtime-sandbox-backend
   dependsOn:
     - name: cert-manager-istio-csr-us-east1-b-sandbox
+    - name: istio-global-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
@@ -368,6 +409,7 @@ spec:
       name: runtime-sandbox-backend
   dependsOn:
     - name: cert-manager-istio-csr-us-east4-a-sandbox
+    - name: istio-global-sandbox
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m

@@ -15,6 +15,10 @@ module "istio" {
   east_west_gateway_cpu_requests              = var.resources.east_west_gateway_cpu_requests
   east_west_gateway_memory_limits             = var.resources.east_west_gateway_memory_limits
   east_west_gateway_memory_requests           = var.resources.east_west_gateway_memory_requests
+  enable_istio_gateway                        = true
+  gateway_dns                                 = local.gateway_dns
+  gateway_mci_global_address                  = data.terraform_remote_state.global.outputs.gateway_mci_global_address
+  gateway_mci_ssl_certificate_names           = data.terraform_remote_state.global.outputs.gateway_mci_ssl_certificate_names
   mesh_config_extension_providers             = [module.gateway_auth.extension_provider]
   pilot_autoscale_max                         = var.resources.pilot_autoscale_max
   pilot_cpu_limits                            = var.resources.pilot_cpu_limits
