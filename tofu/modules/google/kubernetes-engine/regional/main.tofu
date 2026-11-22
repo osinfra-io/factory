@@ -207,6 +207,11 @@ resource "google_container_cluster" "this" {
 resource "google_container_node_pool" "this" {
   for_each = var.node_pools
 
+  lifecycle {
+    # The autoscaler changes the node count, and a different initial count would force replacing the pool.
+    ignore_changes = [initial_node_count]
+  }
+
   autoscaling {
     max_node_count = each.value.max_node_count
     min_node_count = each.value.min_node_count
