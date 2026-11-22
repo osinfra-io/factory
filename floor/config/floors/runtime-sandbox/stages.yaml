@@ -888,3 +888,95 @@ spec:
       name: runtime-sandbox-switch
       optional: true
   workspace: us-east4-a-agentgateway-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: openbao-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east1-b-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/openbao
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-openbao-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: openbao-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east4-a-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/openbao
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-openbao-sandbox

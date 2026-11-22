@@ -235,9 +235,21 @@ locals {
 
   openbao_hostname = "openbao.${local.environment_domain}"
 
+  openbao_kms_member = "serviceAccount:${google_service_account.openbao_kms.email}"
+
+  # Seal settings the regional openbao stage renders into the gcpckms seal stanza.
+  openbao_kms_seal = {
+    crypto_key = google_kms_crypto_key.openbao_unseal.name
+    key_ring   = google_kms_key_ring.openbao_unseal.name
+    project    = google_kms_key_ring.openbao_unseal.project
+    region     = google_kms_key_ring.openbao_unseal.location
+  }
+
   # KV secret values can legitimately contain shell commands that trigger RCE signature 932100.
   # Exempt only that signature for KV writes; OpenBao still validates the token and enforces ACLs.
   openbao_kv_waf_exception_expression = "has(request.headers['host']) && request.headers['host'] == '${local.openbao_hostname}' && request.path.startsWith('/v1/kv2/data/') && request.method.matches('^POST$|^PUT$') && has(request.headers['x-vault-token']) && request.headers['x-vault-token'] != ''"
+
+  openbao_workload_identity_member = "serviceAccount:${local.assembly.workload_projects[var.team].id}.svc.id.goog[openbao/openbao]"
 
   shared_ingress_policy_name = "shared-ingress"
 }
