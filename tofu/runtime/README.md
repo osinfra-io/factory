@@ -17,10 +17,12 @@ and `us-east4-a`. Every plan is reviewed and approved through Floor.
 `false` to destroy Runtime so it stops costing money, and back to `true` to recreate it.
 Assembly (projects, network, DNS) is never touched.
 
+There is no automated up/down. Flip the switch in the environment tfvars, push, then review and
+approve each stage's plan with `bootstrap/seed/review.sh` and `approve.sh` (workloads first on
+destroy, cluster first on create). List stages and pending plans with:
+
 ```shell
-bootstrap/seed/runtime.sh down sandbox
-bootstrap/seed/runtime.sh up sandbox
-bootstrap/seed/runtime.sh status sandbox
+bootstrap/seed/runtime.sh sandbox status
 ```
 
 Destroying removes in-cluster data, so rebuild OpenBao and authentik state from code after
@@ -34,3 +36,8 @@ Run the mocked tests from the repository root:
 ```shell
 TF_WORKSPACE=us-east1-b-runtime-sandbox tofu -chdir=tofu/runtime/cluster test
 ```
+
+## Future work
+
+kagent and agent-substrate have Factory modules and local integration fixtures only. They are
+not deployed to Sandbox because pneuma has no equivalent.
