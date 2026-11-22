@@ -17,16 +17,20 @@ Use prefix-free Factory-owned names. Foundation, Assembly, and Runtime are not t
 
 ## Resume here
 
-Open the next session from the Factory repository root on `bootstrap-sandbox-branch-source`. Read and use the [Sandbox bootstrap skill](.github/skills/bootstrap-sandbox/SKILL.md). Preparation and Floor namespace access are already in place. Resume at **Review and approve stages**, not at setup. Do not reset Docker Desktop Kubernetes: the in-progress bootstrap depends on cluster-local state.
+Work from the Factory repository root on `bootstrap-sandbox-branch-source`. Do not reset Docker Desktop Kubernetes: the bootstrap depends on cluster-local state. List the Floor objects and pending plans with `bootstrap/seed/runtime.sh sandbox status`, then review with `bootstrap/seed/review.sh` and approve with `bootstrap/seed/approve.sh` using a plan-hash prefix. Approval triggers a cloud apply; review every plan first.
 
-As of 2026-11-18, the branch was pushed at `2b3b987`, and the bootstrap Flux sources had fetched that revision. On the `docker-desktop` context, in namespace `bootstrap-sandbox`:
+Sandbox status as of 2026-11-22: the seed, Foundation, Assembly and the Runtime stages are applied on both clusters (`us-east1-b` and `us-east4-a`), including cert-manager, istio-csr, multi-region Istio and mesh, OPA Gatekeeper templates, authentik, agentgateway, openbao, `authentik-config` (Google sign-in, groups, applications) and `openbao-config` (OIDC, `kv2`, team policies). See [Runtime](tofu/runtime/README.md) and [STATE-GRAPH.md](STATE-GRAPH.md).
 
-| Terraform object | OpenTofu workspace | Observed state |
-| --- | --- | --- |
-| `bootstrap-sandbox` | `bootstrap-sandbox` | Seed plan `plan-bootstrap-sandbox-branch-source-2b3b987403` pending; no revision applied. |
-| `foundation-sandbox` | `foundation-main-sandbox` | Waiting for the seed (`DependencyNotReady`); no plan or applied revision. |
+Open items:
 
-These are snapshot values, **not approval**. Fetch the live seed status and review its exact current readable plan using the skill. Present the revision, plan ID, and planned changes, then stop for explicit human approval. Before approving, confirm the revision, plan ID, and readable plan hash are unchanged. Approval triggers a cloud apply. Wait for the seed to become Ready before checking Foundation; follow the skill's seed-Ready guidance to refresh credentials and prepare Foundation's KMS-backed state encryption as needed. Review and approve Foundation separately.
+- **Unapproved by design:** `opa-gatekeeper-constraints-us-east1-b-sandbox` and `-us-east4-a-sandbox`. Run them last.
+- `authentik-config-sandbox` has a pending drift-only plan (group membership added by sign-ins); no resource changes.
+- Verify authentik and openbao OIDC sign-in end to end and run an istio-test failover check across regions.
+- Local integration applies separate copies of the stage config, so it does not test the real stages ([#6](https://github.com/osinfra-io/factory/issues/6)). This is also why some Sandbox applications lack icons.
+- Rename Non-Production to Development ([#5](https://github.com/osinfra-io/factory/issues/5)); not started.
+- Scale Runtime to zero while idle ([#3](https://github.com/osinfra-io/factory/issues/3)). There is no automated up/down; see the Runtime README.
+- kagent and agent-substrate exist only as modules and local fixtures; pneuma has no equivalent, so they are future work.
+- Credentials: the openbao init keys are in `~/secrets/openbao-init-*.json`. The Google OAuth secret lives in the `floor-authentik-google-oauth` secret and the client ID in `tofu/runtime/authentik-config/google.auto.tfvars`. The live Production DNS NS records for `sb` and `nonprod` were corrected and are also committed in `production.tfvars`.
 
 ## Work to date
 
@@ -52,13 +56,13 @@ These are snapshot values, **not approval**. Fetch the live seed status and revi
 
 ## Ordered goals
 
-Steps 1–3 are the current bootstrap scope. Steps 4–8 are the roadmap, not approval to deploy anything.
+Steps 1–5 are done for Sandbox. Steps 6–8 are the roadmap, not approval to deploy anything.
 
 1. **Start from the local Floor — done.** Bring up the local Factory stack and publish the bootstrap branch. Stage the seed and Foundation objects and expose the bootstrap namespace through Floor. No CLI extension is required.
-2. **Bootstrap the Sandbox seed — next.** Review the live seed plan, obtain explicit human approval for that exact plan, and verify the seed is Ready before using its outputs. No GKE, networking, or workload projects belong in the seed.
-3. **Establish Sandbox Foundation.** Once the seed is Ready, prepare the Foundation runner's encrypted backend configuration, review and approve the separate Foundation plan, and verify the Factory folder and metadata. **Stop here for the current bootstrap.**
-4. **Build Sandbox Assembly.** Use the Sandbox Foundation outputs and encrypted backend to bring over Corpus's project, networking, DNS, registry, identity, team state, and database capabilities. Review main first: the regional workspace cannot plan against its outputs until main has applied. See [Assembly](tofu/assembly/README.md) for the team contract and ownership boundaries.
-5. **Build Sandbox Runtime.** Once Assembly is verified, use its outputs to provision the Sandbox GKE and workload platform. Validate the runtime's identity, permissions, and readiness; local integration only proves local behavior, not GCP networking or workload identity.
+2. **Bootstrap the Sandbox seed — done.** Review the live seed plan, obtain explicit human approval for that exact plan, and verify the seed is Ready before using its outputs. No GKE, networking, or workload projects belong in the seed.
+3. **Establish Sandbox Foundation.** Once the seed is Ready, prepare the Foundation runner's encrypted backend configuration, review and approve the separate Foundation plan, and verify the Factory folder and metadata. Done.
+4. **Build Sandbox Assembly — done.** Use the Sandbox Foundation outputs and encrypted backend to bring over Corpus's project, networking, DNS, registry, identity, team state, and database capabilities. Review main first: the regional workspace cannot plan against its outputs until main has applied. See [Assembly](tofu/assembly/README.md) for the team contract and ownership boundaries.
+5. **Build Sandbox Runtime — done except the final verification and the constraints stage.** Once Assembly is verified, use its outputs to provision the Sandbox GKE and workload platform. Validate the runtime's identity, permissions, and readiness; local integration only proves local behavior, not GCP networking or workload identity.
 6. **Hand Sandbox reconciliation over to Sandbox.** Establish the in-environment Flux execution and verify it can plan and reconcile its own configuration with scoped credentials. Decide deliberate ownership and state handoff for anything still operated by the local seed. Avoid concurrent ownership; do not assume seed state has migrated.
 7. **Repeat for Non-Production, then Production.** Use the proven Sandbox pattern with separate execution, credentials, state, and approvals for each environment. Define the Flux promotion flow and confirm which organization-wide resources are shared rather than duplicated.
 8. **Complete cross-environment integration and governance.** Sandbox can create `sb.osinfra.io` without Production. Public DNS delegation is a separate operation owned by the Production `osinfra.io` parent zone; compare the assigned Sandbox and Non-Production nameservers before updating delegation rather than copying old values. Choose concrete organization policies and any exceptions explicitly, then add them under the agreed ownership model.
