@@ -13,21 +13,24 @@ and `us-east4-a`. Every plan is reviewed and approved through Floor.
 
 ## Tear down and recreate
 
-`runtime_enabled` (default `true`) controls whether the stages declare anything. Set it to
-`false` to destroy Runtime so it stops costing money, and back to `true` to recreate it.
-Assembly (projects, network, DNS) is never touched.
-
-There is no automated up/down. Flip the switch in the environment tfvars, push, then review and
-approve each stage's plan with `bootstrap/seed/review.sh` and `approve.sh` (workloads first on
-destroy, cluster first on create). List stages and pending plans with:
+`bootstrap/seed/runtime.sh` drives teardown and rebuild through the Floor. It orders the zonal
+Runtime objects by their `dependsOn` graph, sets the controller's `spec.destroy` flag tier by
+tier, and shows each plan. A plan is approved only when you type its hash prefix back, so every
+destroy is still reviewed.
 
 ```shell
-bootstrap/seed/runtime.sh sandbox status
+bootstrap/seed/runtime.sh sandbox status   # objects, pending plans, destroy/suspend flags
+bootstrap/seed/runtime.sh sandbox down     # dependents first, clusters last
+bootstrap/seed/runtime.sh sandbox up       # dependencies first, then authentik-config
+bootstrap/seed/runtime.sh sandbox config   # openbao-config, after openbao is initialised
 ```
 
-Destroying removes in-cluster data, so rebuild OpenBao and authentik state from code after
-`up`. Scale-to-zero while idle is tracked in
-[#3](https://github.com/osinfra-io/factory/issues/3).
+`down` suspends `authentik-config` and `openbao-config` while the clusters are gone. Assembly,
+the global stages and Cloud SQL are untouched, so authentik's data survives; OpenBao data does
+not, so initialise and unseal it after `up`, refresh the `floor-openbao-auth` secret, then run
+`config`. Stopping Cloud SQL while idle and scale-to-zero are tracked in
+[#3](https://github.com/osinfra-io/factory/issues/3). The `runtime_enabled` variable remains
+available to disable a stage through its tfvars.
 
 ## Tests
 
