@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
 # Tear down or rebuild the Runtime for an environment through the Floor, one reviewed plan at a time.
-# Usage: runtime.sh <environment> <status|down|up|config>
+# Usage: runtime.sh <environment> <status|down|destroy|up|config>
 #
 #   status  list Runtime objects, pending plans, and destroy/suspend flags
-#   down    destroy every zonal Runtime object, dependents first, ending with the clusters
-#   up      recreate them in dependency order, then reconcile authentik-config
+#   down    fast: suspend the zonal objects, delete the clusters, stop Cloud SQL, drop their state
+#   destroy graceful: destroy every zonal Runtime object through reviewed plans, dependents first
+#   up      start Cloud SQL, then recreate the objects in dependency order
 #   config  reconcile openbao-config; run after openbao is initialised and unsealed
 #
+# `down` skips per-stage destroys because deleting the clusters removes everything inside them.
 # Every plan is shown and approved only when its hash prefix is typed back; nothing is approved
 # automatically. The in-cluster stages are destroyed through the controller's `spec.destroy`
 # flag, and the two configuration stages are suspended while the clusters are gone, so
@@ -16,11 +18,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENVIRONMENT="${1:?usage: runtime.sh <environment> <status|down|up|config>}"
-COMMAND="${2:?usage: runtime.sh <environment> <status|down|up|config>}"
+ENVIRONMENT="${1:?usage: runtime.sh <environment> <status|down|destroy|up|config>}"
+COMMAND="${2:?usage: runtime.sh <environment> <status|down|destroy|up|config>}"
 NAMESPACE="bootstrap-${ENVIRONMENT}"
 OPENBAO_CONFIG="openbao-config-${ENVIRONMENT}"
 CONFIG_OBJECTS=("authentik-config-${ENVIRONMENT}" "${OPENBAO_CONFIG}")
+PROJECT_SUFFIX="${ENVIRONMENT/sandbox/sb}"
 kube=(kubectl --context=docker-desktop --namespace="${NAMESPACE}")
 
 is_config() {
@@ -90,7 +93,7 @@ run_tier() {
     elif [ "${direction}" = down ]; then
       patch "${object}" '{"spec":{"destroy":true}}'
     else
-      patch "${object}" '{"spec":{"destroy":false}}'
+      patch "${object}" '{"spec":{"destroy":false,"suspend":false}}'
     fi
   done
   for object in "$@"; do
@@ -103,7 +106,43 @@ run_tier() {
   done
 }
 
+is_zonal() {
+  ! is_config "$1" && [[ "$1" =~ -us-[a-z]+[0-9]-[a-z]-"${ENVIRONMENT}"$ ]]
+}
+
+state_bucket() {
+  "${kube[@]}" get configmap foundation-bootstrap-backend -o jsonpath='{.data.bucket}'
+}
+
+runtime_project() {
+  gcloud projects list --format='value(projectId)' | grep -E "^factory-.*-${PROJECT_SUFFIX}$" | head -1
+}
+
 case "${COMMAND}" in
+  down)
+    project="$(runtime_project)"
+    [ -n "${project}" ] || { echo "Runtime project not found." >&2; exit 1; }
+    bucket="$(state_bucket)"
+    mapfile -t objects < <("${kube[@]}" get terraform -o name | sed 's|.*/||' | grep -E -- "-${ENVIRONMENT}$")
+    echo "Suspending Runtime objects."
+    for object in "${objects[@]}"; do
+      if is_config "${object}" || is_zonal "${object}"; then
+        patch "${object}" '{"spec":{"destroy":false,"suspend":true}}'
+      fi
+    done
+    echo "Stopping Cloud SQL and deleting clusters in ${project}."
+    gcloud sql instances list --project "${project}" --format='value(name)' |
+      xargs -r -I{} gcloud sql instances patch {} --project "${project}" --activation-policy=NEVER --quiet
+    gcloud container clusters list --project "${project}" --format='value(name,location)' |
+      while read -r name location; do
+        gcloud container clusters delete "${name}" --location "${location}" --project "${project}" --quiet &
+      done
+    wait
+    echo "Dropping state for the zonal stages."
+    gcloud storage ls "gs://${bucket}/runtime/" | grep -E -- "/us-[a-z]+[0-9]-[a-z]-.*-${ENVIRONMENT}\.tfstate$" |
+      xargs -r gcloud storage rm
+    echo "Runtime is down. Assembly and the global stages are untouched. Rebuild with: runtime.sh ${ENVIRONMENT} up"
+    ;;
   status)
     "${kube[@]}" get terraform -o json |
       jq -r --arg suffix "-${ENVIRONMENT}" '
@@ -115,7 +154,7 @@ case "${COMMAND}" in
          (if .spec.suspend == true then "SUSPENDED" else "-" end)] | @tsv' |
       sort | column -t
     ;;
-  down)
+  destroy)
     mapfile -t ordered < <(tiers | tac)
     for tier in "${ordered[@]}"; do
       read -r -a objects <<<"${tier}"
@@ -124,6 +163,9 @@ case "${COMMAND}" in
     echo "Runtime is down. Cloud SQL and the global stages are untouched. Rebuild with: runtime.sh ${ENVIRONMENT} up"
     ;;
   up)
+    project="$(runtime_project)"
+    gcloud sql instances list --project "${project}" --format='value(name)' |
+      xargs -r -I{} gcloud sql instances patch {} --project "${project}" --activation-policy=ALWAYS --quiet
     mapfile -t ordered < <(tiers)
     for tier in "${ordered[@]}"; do
       read -r -a objects <<<"${tier}"
@@ -136,7 +178,7 @@ case "${COMMAND}" in
     process "${OPENBAO_CONFIG}"
     ;;
   *)
-    echo "usage: runtime.sh <environment> <status|down|up|config>" >&2
+    echo "usage: runtime.sh <environment> <status|down|destroy|up|config>" >&2
     exit 2
     ;;
 esac

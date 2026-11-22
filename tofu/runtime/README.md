@@ -13,22 +13,23 @@ and `us-east4-a`. Every plan is reviewed and approved through Floor.
 
 ## Tear down and recreate
 
-`bootstrap/seed/runtime.sh` drives teardown and rebuild through the Floor. It orders the zonal
-Runtime objects by their `dependsOn` graph, sets the controller's `spec.destroy` flag tier by
-tier, and shows each plan. A plan is approved only when you type its hash prefix back, so every
-destroy is still reviewed.
+`bootstrap/seed/runtime.sh` tears down and rebuilds the Runtime through the Floor.
 
 ```shell
-bootstrap/seed/runtime.sh sandbox status   # objects, pending plans, destroy/suspend flags
-bootstrap/seed/runtime.sh sandbox down     # dependents first, clusters last
-bootstrap/seed/runtime.sh sandbox up       # dependencies first, then authentik-config
-bootstrap/seed/runtime.sh sandbox config   # openbao-config, after openbao is initialised
+bootstrap/seed/runtime.sh sandbox status    # objects, pending plans, destroy/suspend flags
+bootstrap/seed/runtime.sh sandbox down      # fast: delete clusters, stop Cloud SQL, drop zonal state
+bootstrap/seed/runtime.sh sandbox destroy   # graceful: reviewed destroy plans, dependents first
+bootstrap/seed/runtime.sh sandbox up        # start Cloud SQL, recreate in dependency order
+bootstrap/seed/runtime.sh sandbox config    # openbao-config, after openbao is initialised
 ```
 
-`down` suspends `authentik-config` and `openbao-config` while the clusters are gone. Assembly,
-the global stages and Cloud SQL are untouched, so authentik's data survives; OpenBao data does
-not, so initialise and unseal it after `up`, refresh the `floor-openbao-auth` secret, then run
-`config`. Stopping Cloud SQL while idle and scale-to-zero are tracked in
+`down` suspends the zonal objects and both configuration stages, deletes the clusters (which
+removes everything inside them), stops Cloud SQL and deletes the zonal state, so `up` creates
+from scratch; each plan on `up` is shown and approved only when you type its hash prefix back.
+`destroy` is the slow path that reviews every destroy plan. Assembly and the global stages are
+untouched, and authentik's data survives in Cloud SQL; OpenBao data does not, so initialise and
+unseal it after `up`, refresh the `floor-openbao-auth` secret, then run
+`config`. Scale-to-zero is tracked in
 [#3](https://github.com/osinfra-io/factory/issues/3). The `runtime_enabled` variable remains
 available to disable a stage through its tfvars.
 
