@@ -1424,9 +1424,6 @@ spec:
             name: floor-bootstrap-auth
         - secretRef:
             name: floor-foundation-state-env
-        - secretRef:
-            name: floor-authentik-google-oauth
-            optional: true
   serviceAccountName: tf-bootstrap
   sourceRef:
     kind: GitRepository
@@ -1437,6 +1434,10 @@ spec:
       name: foundation-bootstrap-backend
       varsKeys:
         - bucket
+    - kind: Secret
+      name: floor-authentik-google-oauth
+      varsKeys:
+        - google_oauth_client_secret
   workspace: authentik-config-sandbox
 ---
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
