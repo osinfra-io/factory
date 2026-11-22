@@ -17,3 +17,9 @@ variable "resources" {
   description = "Istio data and control plane sizing; the defaults suit a single e2-standard-4 node per cluster"
   type        = map(any)
 }
+
+variable "locations" {
+  default     = ["us-east1-b", "us-east4-a"]
+  description = "Zones that run a Runtime cluster in this environment; the gateway serves traffic from each"
+  type        = list(string)
+}

@@ -20,6 +20,7 @@ module "istio" {
   gateway_mci_global_address                  = data.terraform_remote_state.global.outputs.gateway_mci_global_address
   gateway_mci_ssl_certificate_names           = data.terraform_remote_state.global.outputs.gateway_mci_ssl_certificate_names
   mesh_config_extension_providers             = [module.gateway_auth.extension_provider]
+  multi_cluster_service_clusters              = local.multi_cluster_service_clusters
   pilot_autoscale_max                         = var.resources.pilot_autoscale_max
   pilot_cpu_limits                            = var.resources.pilot_cpu_limits
   pilot_cpu_requests                          = var.resources.pilot_cpu_requests
