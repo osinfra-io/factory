@@ -51,7 +51,7 @@ locals {
 
   flow_title = module.core_helpers.environment == "production" ? "Welcome to osinfra.io!" : "Welcome to osinfra.io ${module.core_helpers.environment}!"
 
-  google_oauth_enabled = var.google_oauth_client_id != "" && var.google_oauth_client_secret != ""
+  google_oauth_enabled = var.google_oauth_client_id != "" && nonsensitive(var.google_oauth_client_secret != "")
 
   istio_global = data.terraform_remote_state.istio_global.outputs
 
