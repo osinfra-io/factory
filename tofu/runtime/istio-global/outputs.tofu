@@ -1,3 +1,13 @@
+output "agentgateway_hostname" {
+  description = "Shared public hostname of the agentgateway admin interface"
+  value       = "agentgateway.${local.environment_domain}"
+}
+
+output "authentik_hostname" {
+  description = "Shared public hostname of authentik"
+  value       = local.authentik_hostname
+}
+
 output "gateway_dns" {
   description = "Public hosts served by the Istio gateway and the zones that hold their records"
   value       = local.gateway_dns
@@ -51,4 +61,9 @@ output "shared_ingress_policy_name" {
 output "shared_vpc_host_project_id" {
   description = "Project that hosts the shared VPC and the public DNS zones"
   value       = local.assembly.shared_vpc.host_project_id
+}
+
+output "team_hostname" {
+  description = "Public hostname of the team zone, which serves the test workload"
+  value       = trimsuffix(local.assembly.team_dns[var.team].dns_name, ".")
 }

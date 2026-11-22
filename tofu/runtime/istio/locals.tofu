@@ -5,6 +5,18 @@ locals {
     "${local.location}.${host}" => record
   }
 
+  # authentik's database is shared, but its servers stay cluster-local so the outpost ext_authz call
+  # never waits on an authentik server in another region. The external load balancer handles failover.
+  mesh_config_service_settings = [
+    {
+      hosts = ["*.authentik.svc.cluster.local"]
+
+      settings = {
+        clusterLocal = true
+      }
+    }
+  ]
+
   # Fleet membership links of every cluster that backs the gateway's MultiClusterService.
   multi_cluster_service_clusters = [
     for location in var.locations : {
