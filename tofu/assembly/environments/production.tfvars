@@ -55,7 +55,7 @@ dns_records = [
   },
   {
     name    = "nonprod"
-    rrdatas = ["ns-cloud-b1.googledomains.com.", "ns-cloud-b2.googledomains.com.", "ns-cloud-b3.googledomains.com.", "ns-cloud-b4.googledomains.com."]
+    rrdatas = ["ns-cloud-d1.googledomains.com.", "ns-cloud-d2.googledomains.com.", "ns-cloud-d3.googledomains.com.", "ns-cloud-d4.googledomains.com."]
     ttl     = 300
     type    = "NS"
   },
