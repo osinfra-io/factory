@@ -67,8 +67,8 @@ locals {
       path_prefix    = "/api/v3/"
     },
     {
-      hostname       = local.openbao_hostname
-      hostname_regex = ""
+      hostname       = ""
+      hostname_regex = local.openbao_gateway_hostname_regex
       methods        = ["DELETE", "LIST", "PATCH", "PUT"]
       path_prefix    = "/v1/"
     },
@@ -233,6 +233,9 @@ locals {
     }
   }
 
+  # The apex and the regional hosts all front openbao, and automation targets one regional instance.
+  openbao_gateway_hostname_regex = "^(?:[a-z0-9-]+\\.)?${replace(local.openbao_hostname, ".", "\\.")}$"
+
   openbao_hostname = "openbao.${local.environment_domain}"
 
   openbao_kms_member = "serviceAccount:${google_service_account.openbao_kms.email}"
@@ -247,7 +250,7 @@ locals {
 
   # KV secret values can legitimately contain shell commands that trigger RCE signature 932100.
   # Exempt only that signature for KV writes; OpenBao still validates the token and enforces ACLs.
-  openbao_kv_waf_exception_expression = "has(request.headers['host']) && request.headers['host'] == '${local.openbao_hostname}' && request.path.startsWith('/v1/kv2/data/') && request.method.matches('^POST$|^PUT$') && has(request.headers['x-vault-token']) && request.headers['x-vault-token'] != ''"
+  openbao_kv_waf_exception_expression = "has(request.headers['host']) && request.headers['host'].matches(${jsonencode(local.openbao_gateway_hostname_regex)}) && request.path.startsWith('/v1/kv2/data/') && request.method.matches('^POST$|^PUT$') && has(request.headers['x-vault-token']) && request.headers['x-vault-token'] != ''"
 
   openbao_workload_identity_member = "serviceAccount:${local.assembly.workload_projects[var.team].id}.svc.id.goog[openbao/openbao]"
 
