@@ -1,9 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bootstrap-sandbox-backend
+  namespace: bootstrap-sandbox
+data:
+  bucket: bootstrap-567188438944-sb-state
+  prefix: bootstrap
+---
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
   name: bootstrap-sandbox
   namespace: bootstrap-sandbox
 spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: bootstrap-sandbox-backend
   destroyResourcesOnDeletion: false
   disableDriftDetection: true
   interval: 10m
@@ -14,7 +29,7 @@ spec:
         - secretRef:
             name: floor-bootstrap-auth
         - secretRef:
-            name: floor-bootstrap-state-env
+            name: floor-foundation-state-env
   serviceAccountName: tf-bootstrap
   sourceRef:
     kind: GitRepository

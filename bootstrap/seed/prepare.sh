@@ -129,12 +129,9 @@ gcloud auth application-default print-access-token |
     --from-file=GOOGLE_OAUTH_ACCESS_TOKEN=/dev/stdin --dry-run=client --output=yaml |
   kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
 
-seed_ready="$(kubectl get terraform "${STAGE}" --namespace="${NAMESPACE}" \
-  --ignore-not-found --output=jsonpath='{.status.conditions[?(@.type=="Ready")].status}')"
-if [ "${seed_ready}" = "True" ]; then
-  kms_key="$(gcloud kms keys describe default --keyring=state-encryption --location=us \
-    --project="${SEED_PROJECT}" --format='value(name)')"
-  [ -n "${kms_key}" ] || fail "the applied seed KMS key could not be resolved"
+kms_key="$(gcloud kms keys describe default --keyring=state-encryption --location=us \
+  --project="${SEED_PROJECT}" --format='value(name)' 2>/dev/null || true)"
+if [ -n "${kms_key}" ]; then
 
   cat >"${FOUNDATION_ENCRYPTION_FILE}" <<HCL
 key_provider "gcp_kms" "default" {
