@@ -1,0 +1,50 @@
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0 0 1rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.link {
+  margin-top: auto;
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--ifm-color-primary-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}

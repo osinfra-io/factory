@@ -1,0 +1,155 @@
+.viewer {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  font-size: 0.875rem;
+  background: #1e1e1e;
+}
+
+.title {
+  padding: 0.5rem 1rem;
+  background: #303030;
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 600;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+  background: #242424;
+}
+
+.search {
+  flex: 1 1 16rem;
+  max-width: 28rem;
+}
+
+.empty {
+  margin: 0;
+  padding: 1rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+.viewer > .property:nth-child(2n) {
+  background: #242424;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ifm-heading-color);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.controlLabel {
+  overflow: visible;
+  padding-block: 0;
+}
+
+.control {
+  padding: 0.7rem 1rem 0;
+}
+
+.chevron {
+  margin-inline: 0 0.6rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+.type {
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 500;
+}
+
+.mapKey,
+.required,
+.optional {
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.mapKey,
+.optional {
+  color: var(--ifm-color-content-secondary);
+}
+
+.required {
+  color: var(--mantine-color-green-3);
+}
+
+.leaf {
+  padding: 0.7rem 1rem 0.7rem 2.5rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.leaf:last-child {
+  border-bottom: 0;
+}
+
+.details {
+  padding: 0 1rem 0.7rem 2.5rem;
+}
+
+.leaf .details {
+  padding: 0;
+}
+
+.description {
+  margin: 0.3rem 0 0;
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.description code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.content {
+  padding: 0 0 0 1rem;
+}
+
+.children {
+  border-left: 1px solid var(--ifm-color-emphasis-300);
+  background: #292929;
+}
+
+.children .children {
+  background: #303030;
+}
+
+.children .children .children {
+  background: #373737;
+}
+
+.children > .property + .property {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding-inline: 0.25rem;
+  }
+}

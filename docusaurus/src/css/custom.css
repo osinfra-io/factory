@@ -1,0 +1,109 @@
+:root {
+  --ifm-color-primary: #ffb400;
+  --ifm-color-primary-dark: #e6a200;
+  --ifm-color-primary-darker: #d99900;
+  --ifm-color-primary-darkest: #b37e00;
+  --ifm-color-primary-light: #ffc233;
+  --ifm-color-primary-lighter: #ffc840;
+  --ifm-color-primary-lightest: #ffd873;
+  --ifm-background-color: #1e1e1e;
+  --ifm-background-surface-color: #232323;
+  --ifm-navbar-background-color: #1e1e1e;
+  --ifm-footer-background-color: #1e1e1e;
+  --ifm-toc-border-color: #353535;
+  --ifm-color-emphasis-300: #353535;
+  --ifm-font-color-base: #e0e0e0;
+  --ifm-heading-color: #ffffff;
+  --ifm-link-color: #ffb400;
+  --ifm-breadcrumb-border-radius: 4px;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 180, 0, 0.2);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #ffb400;
+  --ifm-color-primary-dark: #e6a200;
+  --ifm-color-primary-darker: #d99900;
+  --ifm-color-primary-darkest: #b37e00;
+  --ifm-color-primary-light: #ffc233;
+  --ifm-color-primary-lighter: #ffc840;
+  --ifm-color-primary-lightest: #ffd873;
+  --ifm-background-color: #1e1e1e;
+  --ifm-background-surface-color: #232323;
+  --ifm-navbar-background-color: #1e1e1e;
+  --ifm-footer-background-color: #1e1e1e;
+  --ifm-toc-border-color: #353535;
+  --ifm-color-emphasis-300: #353535;
+  --ifm-font-color-base: #e0e0e0;
+  --ifm-heading-color: #ffffff;
+  --ifm-link-color: #ffb400;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 180, 0, 0.2);
+}
+
+/* DocCard overrides (team index pages) */
+.theme-doc-card-container {
+  background-color: #232323;
+  border: none !important;
+  box-shadow: none !important;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+a:has(.theme-doc-card-container) {
+  text-decoration: none !important;
+}
+
+.theme-doc-card-container:hover {
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* Sponsor button in navbar */
+.header-sponsor-link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  background-color: #ffb400;
+  color: #1e1e1e !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background-color 0.2s;
+}
+
+.header-sponsor-link::before {
+  content: '♥';
+  font-size: 0.85rem;
+}
+
+.header-sponsor-link:hover {
+  background-color: #e6a200;
+  color: #1e1e1e !important;
+}
+
+.navbar__search-input {
+  border-radius: 4px !important;
+}
+
+/* Keep descenders such as "g" inside the sidebar line box. */
+.menu__link {
+  line-height: 1.5;
+}
+
+/* Override Docusaurus alert--info blue tint applied to all <details> elements.
+   Use details.alert--info (specificity 0-1-1) to beat .alert--info (0-1-0)
+   since CSS custom properties do not support !important. */
+details.alert--info {
+  --docusaurus-details-decoration-color: var(--ifm-color-emphasis-500);
+  --ifm-alert-background-color: var(--ifm-background-surface-color);
+  --ifm-alert-background-color-highlight: rgba(255, 255, 255, 0.05);
+  --ifm-alert-border-color: var(--ifm-color-emphasis-300);
+  --ifm-alert-foreground-color: var(--ifm-font-color-base);
+  background-color: var(--ifm-background-surface-color) !important;
+  border-color: var(--ifm-color-emphasis-300) !important;
+}
+
+details.alert--info summary {
+  color: var(--ifm-font-color-base);
+}

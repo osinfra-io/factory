@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -350,5 +351,83 @@ func TestApproveRejectsPlanNotReflectingSpec(t *testing.T) {
 	err := c.Approve(context.Background(), name, "plan-main-49203ac458", false)
 	if !errors.Is(err, ErrPlanStale) {
 		t.Fatalf("Approve() error = %v, want ErrPlanStale", err)
+	}
+}
+
+func TestListMarksApprovedPendingPlan(t *testing.T) {
+	status := map[string]any{"plan": map[string]any{"pending": "plan-main-aaaaaaaaaa"}}
+	approved := newTerraform("approved", "floor-fixture", map[string]any{"approvePlan": "plan-main-aaaaaaaaaa"}, status, nil, nil)
+	waiting := newTerraform("waiting", "floor-fixture", map[string]any{"approvePlan": "plan-main-bbbbbbbbbb"}, status, nil, nil)
+
+	c := NewClient(fake.NewClientBuilder().WithScheme(newScheme()).WithObjects(approved, waiting).Build(), "floor-fixture")
+
+	workspaces, err := c.List(context.Background())
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+
+	got := map[string]bool{}
+	for _, ws := range workspaces {
+		got[ws.Name] = ws.Approved
+	}
+
+	if !got["approved"] || got["waiting"] {
+		t.Errorf("Approved = %v, want approved=true waiting=false", got)
+	}
+}
+
+func TestListMapsDependsOn(t *testing.T) {
+	spec := map[string]any{"dependsOn": []any{
+		map[string]any{"name": "foundation", "namespace": "other"},
+		map[string]any{"name": "sibling"},
+	}}
+	obj := newTerraform("assembly", "floor-fixture", spec, map[string]any{}, nil, nil)
+
+	c := NewClient(fake.NewClientBuilder().WithScheme(newScheme()).WithObjects(obj).Build(), "floor-fixture")
+
+	workspaces, err := c.List(context.Background())
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+
+	want := []string{"other/foundation", "floor-fixture/sibling"}
+	if got := workspaces[0].DependsOn; len(got) != 2 || got[0] != want[0] || got[1] != want[1] {
+		t.Errorf("DependsOn = %v, want %v", got, want)
+	}
+}
+
+func TestRecordApprovalIsReportedOnTheWorkspace(t *testing.T) {
+	obj := newTerraform("main-sandbox", "floor-fixture", map[string]any{}, map[string]any{}, nil, nil)
+	c := NewClient(fake.NewClientBuilder().WithScheme(newScheme()).WithObjects(obj).Build(), "floor-fixture")
+
+	at := time.Date(2026, 1, 2, 15, 4, 5, 0, time.UTC)
+	if err := c.RecordApproval(context.Background(), "main-sandbox", "brett@osinfra.io", "plan-main-aaaaaaaaaa", at); err != nil {
+		t.Fatalf("RecordApproval() error = %v", err)
+	}
+
+	ws, err := c.Get(context.Background(), "main-sandbox")
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+
+	if ws.ApprovedBy != "brett@osinfra.io" || ws.ApprovedAt != "2026-01-02T15:04:05Z" || ws.ApprovedPlan != "plan-main-aaaaaaaaaa" {
+		t.Errorf("approval = %q %q %q", ws.ApprovedBy, ws.ApprovedAt, ws.ApprovedPlan)
+	}
+}
+
+func TestListExposesReadyMessage(t *testing.T) {
+	status := map[string]any{"conditions": []any{map[string]any{
+		"type": "Ready", "status": "False", "reason": "TFExecPlanFailed", "message": "Error: 401 invalid credentials",
+	}}}
+	obj := newTerraform("broken", "floor-fixture", map[string]any{}, status, nil, nil)
+	c := NewClient(fake.NewClientBuilder().WithScheme(newScheme()).WithObjects(obj).Build(), "floor-fixture")
+
+	workspaces, err := c.List(context.Background())
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+
+	if got := workspaces[0].Message; got != "Error: 401 invalid credentials" {
+		t.Errorf("Message = %q", got)
 	}
 }

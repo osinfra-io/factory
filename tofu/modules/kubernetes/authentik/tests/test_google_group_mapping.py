@@ -23,7 +23,12 @@ class GoogleGroupMappingTest(unittest.TestCase):
                 "name": "runtime: agentgateway Admins",
                 "members": ["member@example.com"],
                 "description": "UI access",
-            }
+            },
+            "sandbox-agentgateway-admins": {
+                "name": "runtime: agentgateway Admins",
+                "members": ["member@example.com"],
+                "description": "Same group name from another key",
+            },
         }
         expression = textwrap.dedent(match.group(1)).replace(
             "${jsonencode(jsonencode(var.application_groups))}",
@@ -39,6 +44,12 @@ class GoogleGroupMappingTest(unittest.TestCase):
         )
         self.assertEqual(result["groups"], ["runtime: agentgateway Admins"])
         self.assertEqual(result["attributes"]["osinfra_google_email"], "member@example.com")
+
+    def test_duplicate_group_names_are_returned_once(self):
+        result = self.mapping(
+            {"email": "member@example.com", "email_verified": True}
+        )
+        self.assertEqual(len(result["groups"]), len(set(result["groups"])))
 
     def test_normalized_member(self):
         result = self.mapping(

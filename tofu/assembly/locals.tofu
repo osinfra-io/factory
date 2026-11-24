@@ -35,8 +35,6 @@ locals {
     }
   ]...)
 
-  environment_root_folder_id = data.terraform_remote_state.foundation.outputs.environment_root_folder_id
-
   dns_zone_name = replace(trimsuffix(local.dns_domain, "."), ".", "-")
 
   github_workload_identity = length(local.github_publishers) == 0 ? {} : local.network_projects
@@ -174,7 +172,7 @@ locals {
   }
 
   state_bucket_names = {
-    for team in keys(var.teams) : team => "${team}-${local.environment_root_folder_id}-state-${module.core_helpers.env}"
+    for team, folder_id in local.team_folder_ids : team => "${team}-${trimprefix(folder_id, "folders/")}-state-${module.core_helpers.env}"
   }
 
   team_dns = {

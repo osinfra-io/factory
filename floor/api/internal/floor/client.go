@@ -2,11 +2,13 @@ package floor
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -165,6 +167,29 @@ func (c *Client) Approve(ctx context.Context, name, planID string, acknowledgeDe
 	return c.mergePatch(ctx, name, patch)
 }
 
+// Annotations floor-api sets on a Terraform object to remember its last
+// approval; the Event carries the same facts but is not readable without
+// broader RBAC.
+const (
+	AnnotationApprovedAt   = "floor.osinfra.io/approved-at"
+	AnnotationApprovedBy   = "floor.osinfra.io/approved-by"
+	AnnotationApprovedPlan = "floor.osinfra.io/approved-plan"
+)
+
+// RecordApproval remembers who approved planID and when.
+func (c *Client) RecordApproval(ctx context.Context, name, user, planID string, at time.Time) error {
+	patch, err := json.Marshal(map[string]any{"metadata": map[string]any{"annotations": map[string]string{
+		AnnotationApprovedAt:   at.UTC().Format(time.RFC3339),
+		AnnotationApprovedBy:   user,
+		AnnotationApprovedPlan: planID,
+	}}})
+	if err != nil {
+		return err
+	}
+
+	return c.mergePatch(ctx, name, string(patch))
+}
+
 // Hold disables reconciliation by setting spec.approvePlan to "disable".
 func (c *Client) Hold(ctx context.Context, name string) error {
 	return c.SetApprovePlan(ctx, name, "disable")
@@ -229,9 +254,34 @@ func (c *Client) toWorkspace(ctx context.Context, obj *unstructured.Unstructured
 	ws.PlanOnly, _, _ = unstructured.NestedBool(obj.Object, "spec", "planOnly")
 
 	ws.PendingPlan, _, _ = unstructured.NestedString(obj.Object, "status", "plan", "pending")
+	approved, _, _ := unstructured.NestedString(obj.Object, "spec", "approvePlan")
+	ws.Approved = ws.PendingPlan != "" && approved == ws.PendingPlan
+
+	annotations := obj.GetAnnotations()
+	ws.ApprovedAt = annotations[AnnotationApprovedAt]
+	ws.ApprovedBy = annotations[AnnotationApprovedBy]
+	ws.ApprovedPlan = annotations[AnnotationApprovedPlan]
+
+	deps, _, _ := unstructured.NestedSlice(obj.Object, "spec", "dependsOn")
+	for _, d := range deps {
+		dep, _ := d.(map[string]any)
+		name, _ := dep["name"].(string)
+
+		if name == "" {
+			continue
+		}
+
+		ns, _ := dep["namespace"].(string)
+		if ns == "" {
+			ns = obj.GetNamespace()
+		}
+
+		ws.DependsOn = append(ws.DependsOn, ns+"/"+name)
+	}
+
 	ws.LastAppliedRevision, _, _ = unstructured.NestedString(obj.Object, "status", "lastAppliedRevision")
 
-	ws.Phase = readyReason(obj)
+	ws.Phase, ws.Message = readyDetails(obj)
 
 	labels := obj.GetLabels()
 	if pr, err := strconv.Atoi(labels[labelPullRequestID]); err == nil {
@@ -277,10 +327,21 @@ func (c *Client) sourceBranch(ctx context.Context, name, namespace string) (stri
 
 // readyReason returns the reason of the status.conditions entry with
 // type == "Ready", or "" if absent.
+// maxMessage bounds the condition message exposed to callers; tofu errors can
+// be very long.
+const maxMessage = 2000
+
 func readyReason(obj *unstructured.Unstructured) string {
+	reason, _ := readyDetails(obj)
+
+	return reason
+}
+
+// readyDetails returns the reason and message of the Ready condition.
+func readyDetails(obj *unstructured.Unstructured) (string, string) {
 	conditions, found, err := unstructured.NestedSlice(obj.Object, "status", "conditions")
 	if err != nil || !found {
-		return ""
+		return "", ""
 	}
 
 	for _, c := range conditions {
@@ -294,9 +355,14 @@ func readyReason(obj *unstructured.Unstructured) string {
 		}
 
 		reason, _ := condition["reason"].(string)
+		message, _ := condition["message"].(string)
 
-		return reason
+		if len(message) > maxMessage {
+			message = message[:maxMessage]
+		}
+
+		return reason, message
 	}
 
-	return ""
+	return "", ""
 }

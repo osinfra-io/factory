@@ -15,6 +15,16 @@ output "authentication" {
   }
 }
 
+output "cli_exchange_client_ids" {
+  description = "Local proxy provider client IDs that accept Factory CLI tokens"
+  value       = module.authentik_config.cli_exchange_client_ids
+}
+
+output "cli_issuer_url" {
+  description = "Local Factory CLI OIDC issuer URL"
+  value       = module.authentik_config.cli_issuer_url
+}
+
 output "openbao_client_id" {
   description = "Local OpenBao OIDC client ID"
   value       = module.authentik_config.openbao_client_id

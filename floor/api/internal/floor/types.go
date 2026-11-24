@@ -30,12 +30,23 @@ const (
 // Workspace is the flattened, typed view of a Terraform object that
 // floor-api exposes to callers.
 type Workspace struct {
-	Name                string `json:"name"`
-	Namespace           string `json:"namespace"`
-	Path                string `json:"path"`
-	SourceBranch        string `json:"sourceBranch"`
-	Phase               string `json:"phase"`
-	PendingPlan         string `json:"pendingPlan"`
+	Name         string `json:"name"`
+	Namespace    string `json:"namespace"`
+	Path         string `json:"path"`
+	SourceBranch string `json:"sourceBranch"`
+	Phase        string `json:"phase"`
+	// Message is the controller message behind Phase, such as a plan error.
+	Message     string `json:"message,omitempty"`
+	PendingPlan string `json:"pendingPlan"`
+	// Approved is true once the pending plan has been approved but not yet applied.
+	Approved bool `json:"approved"`
+	// DependsOn lists the namespace/name of Terraform objects this one waits on.
+	DependsOn []string `json:"dependsOn,omitempty"`
+	// ApprovedBy, ApprovedAt and ApprovedPlan describe the last approval
+	// recorded through floor-api.
+	ApprovedBy          string `json:"approvedBy,omitempty"`
+	ApprovedAt          string `json:"approvedAt,omitempty"`
+	ApprovedPlan        string `json:"approvedPlan,omitempty"`
 	LastAppliedRevision string `json:"lastAppliedRevision"`
 	Review              string `json:"review"`
 	Destroy             bool   `json:"destroy"`

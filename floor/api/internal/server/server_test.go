@@ -25,7 +25,7 @@ import (
 const (
 	testNamespace     = "floor-fixture"
 	testGitRepository = "fixture"
-	testApproverGroup = "factory: floor Approvers"
+	testApproverGroup = "factory: Floor Approvers"
 	testPlanID        = "plan-main-49203ac458"
 )
 

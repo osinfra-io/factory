@@ -1,6 +1,6 @@
 # Factory
 
-Factory is an open-source, AI-powered Infrastructure as Code factory maintained as a monorepo.
+Factory is an open-source Infrastructure as Code factory maintained as a monorepo.
 
 Its three layers are:
 
@@ -10,4 +10,4 @@ Its three layers are:
 
 **Floor** is the local execution and orchestration environment for Factory, operating across these layers.
 
-Follow `.github/instructions/factory.instructions.md` for repository-wide conventions and `.github/instructions/tofu-module.instructions.md` for OpenTofu modules. Repository-owned Copilot skills live under `.github/skills/`.
+Follow `.github/instructions/factory.instructions.md` for repository-wide conventions, `.github/instructions/tofu-module.instructions.md` for OpenTofu modules, and `.github/instructions/docusaurus.instructions.md` for the `docusaurus/` site. Repository-owned Copilot skills live under `.github/skills/`.

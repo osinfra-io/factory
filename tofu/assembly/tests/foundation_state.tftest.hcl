@@ -1,7 +1,7 @@
 mock_provider "google" {
-  mock_data "google_logging_project_cmek_settings" {
+  mock_data "google_logging_project_settings" {
     defaults = {
-      service_account_id = "service-123456789012@gcp-sa-logging.iam.gserviceaccount.com"
+      kms_service_account_id = "service-123456789012@gcp-sa-logging.iam.gserviceaccount.com"
     }
   }
 
@@ -61,7 +61,6 @@ mock_provider "terraform" {
   mock_data "terraform_remote_state" {
     defaults = {
       outputs = {
-        environment_root_folder_id = "567188438944"
         teams = {
           factory = { team_folder_id = "folders/123456789" }
           other   = { team_folder_id = "folders/987654321" }
@@ -106,11 +105,11 @@ run "plans_the_shared_host_and_state_for_factory" {
       google_artifact_registry_repository.docker_remote == null &&
       length(google_artifact_registry_repository.docker_standard) == 0 &&
       length(google_artifact_registry_repository.docker_virtual) == 0 &&
-      output.team_state["factory"].bucket == "factory-567188438944-state-sb" &&
+      output.team_state["factory"].bucket == "factory-123456789-state-sb" &&
       google_kms_crypto_key_iam_member.state_storage["factory"].role == "roles/cloudkms.cryptoKeyEncrypterDecrypter" &&
       length(google_service_account.registry_publishers) == 0
     )
-    error_message = "The shared host must live in the Factory team folder while keeping the environment-scoped state bucket name."
+    error_message = "The shared host and Factory state bucket name must use the Factory team folder."
   }
 }
 
@@ -132,8 +131,8 @@ run "provisions_state_for_every_onboarded_team" {
   assert {
     condition = (
       tomap({ for team, state in output.team_state : team => state.bucket }) == tomap({
-        factory = "factory-567188438944-state-sb"
-        other   = "other-567188438944-state-sb"
+        factory = "factory-123456789-state-sb"
+        other   = "other-987654321-state-sb"
       }) &&
       toset(keys(google_kms_crypto_key.team_state)) == toset(["factory", "other"]) &&
       toset(keys(google_kms_crypto_key_iam_member.state_storage)) == toset(["factory", "other"]) &&

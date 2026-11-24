@@ -233,6 +233,14 @@ locals {
   # the pre-existing object into authentik_stage_identification.default_authentication (same
   # pattern as the embedded outpost import), so this module only adds Google to its "sources"
   # list without touching any of its other live settings.
+  cli_exchange_client_ids = {
+    for key in var.cli_oidc_browser_keys : key => authentik_provider_proxy.browser[key].client_id
+  }
+
+  cli_issuer_url = local.cli_oidc_enabled ? "${local.authentik_base_url}/application/o/factory-cli/" : null
+
+  cli_oidc_enabled = length(var.cli_oidc_browser_keys) > 0
+
   default_authentication_identification_stage_name = "default-authentication-identification"
 
   default_authentication_source_uuids = local.default_authentication_stage_managed ? nonsensitive(authentik_stage_identification.default_authentication.sources) : []
@@ -259,7 +267,7 @@ locals {
     return {
         "email": email,
         "attributes": {"osinfra_google_email": email},
-        "groups": [group["name"] for group in memberships.values() if email in group["members"]],
+        "groups": sorted({group["name"] for group in memberships.values() if email in group["members"]}),
     }
   EOT
 

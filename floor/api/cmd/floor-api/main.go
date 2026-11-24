@@ -93,6 +93,10 @@ func run() error {
 		return fmt.Errorf("reading the in-cluster configuration: %w", err)
 	}
 
+	// The defaults (5 requests/s) throttle a workspace list, which reads one
+	// GitRepository per Terraform object.
+	cfg.QPS, cfg.Burst = 50, 100
+
 	s := newScheme()
 
 	k, err := client.New(cfg, client.Options{Scheme: s})

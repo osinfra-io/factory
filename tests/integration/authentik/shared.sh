@@ -4,6 +4,7 @@ set -euo pipefail
 
 LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly LOCAL_DIR
+readonly FACTORY_TEAM_VARS="${LOCAL_DIR}/../../../tofu/foundation/teams/factory.tfvars"
 readonly WORK_DIR="${LOCAL_DIR}/.work"
 readonly KUBE_CONTEXT="docker-desktop"
 
@@ -35,7 +36,8 @@ local_tofu() {
 apply_local_config() {
   local_tofu config apply -input=false -auto-approve \
     -state="${WORK_DIR}/config/terraform.tfstate" \
-    -var-file="${LOCAL_DIR}/teams.tfvars" \
+    -var-file="${FACTORY_TEAM_VARS}" \
+    -var=environment=sandbox \
     -var-file="${WORK_DIR}/config/bootstrap.tfvars.json" "$@"
 }
 

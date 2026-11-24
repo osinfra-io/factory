@@ -2,7 +2,8 @@
 # https://search.opentofu.org/provider/goauthentik/authentik/latest/docs/resources/group
 
 resource "authentik_group" "floor_approvers" {
-  name = var.approver_group
+  name  = var.approver_group
+  users = local.approver_user_ids
 }
 
 # Authentik Token

@@ -1,0 +1,1107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://osinfra.io/schemas/team.schema.json",
+  "title": "Team",
+  "description": "A pt-logos team specification. The schema is the single source of truth for team configuration; the renderer produces tfvars matching this shape exactly.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authentik_groups",
+    "team_key",
+    "datadog_team_memberships",
+    "display_name",
+    "display_name_comment",
+    "github_child_teams_memberships",
+    "github_parent_team_memberships",
+    "google_basic_groups_env_memberships",
+    "team_type"
+  ],
+  "properties": {
+    "authentik_groups": {
+      "description": "Team-owned Authentik groups, keyed by stable RFC 1123 identifiers. Every team must declare OpenBao Admins, Readers, and Writers. Only pt-pneuma may declare agentgateway Admins or Authentik Admins; Authentik Admins grants global administrator privileges. Membership is explicit per environment and does not inherit team membership.",
+      "type": "object",
+      "required": [
+        "openbao-secret-admins",
+        "openbao-secret-readers",
+        "openbao-secret-writers"
+      ],
+      "propertyNames": {
+        "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+      },
+      "properties": {
+        "openbao-secret-admins": {
+          "$ref": "#/$defs/openbaoSecretAdminGroup",
+          "description": "OpenBao secret administrator group. Its label and description are fixed by Logos. Membership must include at least one member in each deployment environment."
+        },
+        "openbao-secret-readers": {
+          "$ref": "#/$defs/openbaoSecretMemberGroup",
+          "description": "OpenBao secret reader group. Grants read access to secret values and list access to paths under the team's prefix; it grants no write access. Its label and description are fixed by Logos. Membership may be empty in every environment."
+        },
+        "openbao-secret-writers": {
+          "$ref": "#/$defs/openbaoSecretMemberGroup",
+          "description": "OpenBao secret writer group. Grants create and update access to secrets under the team's prefix, but not delete, undelete, destroy, or metadata deletion. Its label and description are fixed by Logos. Membership may be empty in every environment."
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/openbaoMemberGroup",
+        "description": "Additional team-owned application-access group. Defines the group's purpose, a unique human-readable label, and optional explicit membership by environment."
+      }
+    },
+    "team_key": {
+      "description": "Team key. Must match the team_type prefix scheme: pt- (platform), st- (stream-aligned), ct- (complicated-subsystem), et- (enabling).",
+      "type": "string",
+      "pattern": "^(pt|st|ct|et)-[a-z][a-z0-9-]*[a-z0-9]$"
+    },
+    "datadog_team_memberships": {
+      "description": "Datadog team memberships. At least one team admin is required; admins manage the team. Ordinary members have read-only access and may be empty.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admins",
+        "members"
+      ],
+      "properties": {
+        "admins": {
+          "description": "Datadog team admins; at least one admin is required for every team.",
+          "minItems": 1,
+          "$ref": "#/$defs/emailList"
+        },
+        "members": {
+          "$ref": "#/$defs/emailList"
+        }
+      }
+    },
+    "display_name": {
+      "description": "Team display name. Title Case; spaces and the lowercase word \"and\" are allowed.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z]*( (and|[A-Z][A-Za-z]*))*$"
+    },
+    "display_name_comment": {
+      "description": "Inline comment rendered after display_name in the tfvars file. Used for the team etymology blurb. Also used as the `description` frontmatter on the team's docs index page; render_team_docs_index and open_team_docs_pr require this field to be non-empty \u2014 an empty string will produce a docs_input_invalid error.",
+      "type": "string",
+      "minLength": 1
+    },
+    "enable_google_project": {
+      "description": "Enable a Google Cloud project for this team in the team's environment folder via pt-corpus. Default: false.",
+      "type": "boolean"
+    },
+    "enable_opentofu_state_management": {
+      "description": "Enable OpenTofu state management. Requires enable_workflows = true. When true, creates a GCS state storage bucket and grants the GitHub Actions service account Storage Object Admin and Cloud KMS CryptoKey Encrypter/Decrypter IAM roles.",
+      "type": "boolean"
+    },
+    "enable_workflows": {
+      "description": "Enable GitHub Actions CI/CD integration. When true, creates a GCP service account for GitHub Actions, Workload Identity Federation bindings (one per repository with enable_google_wif_service_account = true), and group memberships for console browse access, billing account viewer, and Artifact Registry write access.",
+      "type": "boolean"
+    },
+    "github_child_teams_memberships": {
+      "description": "GitHub child team memberships. The four standard teams are required for every team, and every standard or custom child team must have at least one maintainer.",
+      "type": "object",
+      "required": [
+        "non-production-approvers",
+        "production-approvers",
+        "repository-administrators",
+        "sandbox-approvers"
+      ],
+      "additionalProperties": {
+        "$ref": "#/$defs/githubMembership"
+      }
+    },
+    "github_parent_team_memberships": {
+      "description": "GitHub parent team memberships. All team members should be listed here. Use GitHub usernames (NOT email addresses).",
+      "$ref": "#/$defs/githubMembership"
+    },
+    "github_repositories": {
+      "description": "GitHub repositories owned by this team. Key is the repository name. Each repository is provisioned with squash-only merges, a branch ruleset (signed commits, linear history, PR reviews), Datadog webhook, and standard repository files.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/githubRepository"
+      }
+    },
+    "github_repository_labels": {
+      "description": "Per-team GitHub issue labels applied to all repositories owned by this team. Key is the label name.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/githubRepositoryLabel"
+      }
+    },
+    "google_basic_groups_env_memberships": {
+      "description": "Per-environment Google Cloud Identity basic groups: admin, reader, writer. Every role/environment group requires at least one owner. Binds each role directly to environment folders \u2014 no team-folder binding, no inheritance.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admin",
+        "reader",
+        "writer"
+      ],
+      "properties": {
+        "admin": {
+          "$ref": "#/$defs/envScopedGoogleGroupsWithOwner"
+        },
+        "reader": {
+          "$ref": "#/$defs/envScopedGoogleGroupsWithOwner"
+        },
+        "writer": {
+          "$ref": "#/$defs/envScopedGoogleGroupsWithOwner"
+        }
+      }
+    },
+    "google_browser_groups_memberships": {
+      "description": "pt-corpus only. Per-environment console browse access for pt-corpus service accounts.",
+      "$ref": "#/$defs/envScopedGoogleGroups"
+    },
+    "google_project_creator_groups_memberships": {
+      "description": "pt-corpus only. Per-environment project creator access for pt-corpus service accounts.",
+      "$ref": "#/$defs/envScopedGoogleGroups"
+    },
+    "google_project_services": {
+      "description": "Additional GCP API services to enable in the team project.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+\\.googleapis\\.com$"
+      }
+    },
+    "google_xpn_admin_groups_memberships": {
+      "description": "pt-corpus only. Per-environment shared VPC (XPN) admin access for pt-corpus service accounts.",
+      "$ref": "#/$defs/envScopedGoogleGroups"
+    },
+    "platform_managed_project": {
+      "description": "Platform-managed project configuration. Presence of this block drives creation of a shared GCP project in pt-corpus that hosts GKE clusters or managed data services (Cloud SQL). The project is provisioned in the team's environment folder using the Arche modules. Omit entirely if the team needs neither.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cloud_sql": {
+          "description": "Cloud SQL instances keyed by team-chosen instance name (e.g. authentik). A team may declare multiple instances.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/cloudSQL"
+          }
+        },
+        "kubernetes_engine": {
+          "$ref": "#/$defs/kubernetesEngine"
+        }
+      }
+    },
+    "team_type": {
+      "description": "Team Topologies type. Must match the team_key prefix.",
+      "type": "string",
+      "enum": [
+        "platform-team",
+        "stream-aligned-team",
+        "complicated-subsystem-team",
+        "enabling-team"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "team_type": {
+            "const": "platform-team"
+          }
+        },
+        "required": [
+          "team_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "team_key": {
+            "pattern": "^pt-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "team_type": {
+            "const": "stream-aligned-team"
+          }
+        },
+        "required": [
+          "team_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "team_key": {
+            "pattern": "^st-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "team_type": {
+            "const": "complicated-subsystem-team"
+          }
+        },
+        "required": [
+          "team_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "team_key": {
+            "pattern": "^ct-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "team_type": {
+            "const": "enabling-team"
+          }
+        },
+        "required": [
+          "team_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "team_key": {
+            "pattern": "^et-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "team_key": {
+            "const": "pt-pneuma"
+          }
+        },
+        "required": [
+          "team_key"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authentik_groups": {
+            "required": [
+              "agentgateway-admins",
+              "authentik-admins"
+            ],
+            "properties": {
+              "authentik-admins": {
+                "$ref": "#/$defs/requiredAuthentikAdminGroup"
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "authentik_groups": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "agentgateway-admins"
+                  ]
+                },
+                {
+                  "required": [
+                    "authentik-admins"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "platform_managed_project": {
+            "properties": {
+              "kubernetes_engine": {
+                "properties": {
+                  "locations": {
+                    "minProperties": 1
+                  }
+                },
+                "required": [
+                  "locations"
+                ]
+              }
+            },
+            "required": [
+              "kubernetes_engine"
+            ]
+          }
+        },
+        "required": [
+          "platform_managed_project"
+        ]
+      },
+      "then": {
+        "properties": {
+          "platform_managed_project": {
+            "properties": {
+              "kubernetes_engine": {
+                "required": [
+                  "artifact_registry_groups_memberships"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "authentikMemberList": {
+      "description": "Unique lowercase Google identity email addresses explicitly granted application access.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(\\.[a-z0-9-]+)+$"
+      }
+    },
+    "authentikAdminMemberList": {
+      "description": "At least one unique lowercase Google identity email address explicitly granted administrative access.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(\\.[a-z0-9-]+)+$"
+      }
+    },
+    "openbaoAdminGroup": {
+      "description": "OpenBao secret administrator group with at least one member in each deployment environment.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "label",
+        "members"
+      ],
+      "properties": {
+        "description": {
+          "description": "Purpose of the group and the administrative access it grants; must not be blank.",
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "label": {
+          "description": "Human-readable application and role label. Preserve application branding; labels must be unique within the owning team.",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]*( [A-Za-z0-9]+)*$"
+        },
+        "members": {
+          "description": "Explicit member emails for each deployment environment. Every environment is required and must have at least one member.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "non-production",
+            "production",
+            "sandbox"
+          ],
+          "properties": {
+            "non-production": {
+              "$ref": "#/$defs/authentikAdminMemberList"
+            },
+            "production": {
+              "$ref": "#/$defs/authentikAdminMemberList"
+            },
+            "sandbox": {
+              "$ref": "#/$defs/authentikAdminMemberList"
+            }
+          }
+        }
+      }
+    },
+    "openbaoSecretAdminGroup": {
+      "description": "OpenBao Secret Admins membership. Logos supplies its fixed label and description.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members"
+      ],
+      "properties": {
+        "members": {
+          "description": "Explicit member emails for each deployment environment. Every environment is required and must have at least one member.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "non-production",
+            "production",
+            "sandbox"
+          ],
+          "properties": {
+            "non-production": {
+              "$ref": "#/$defs/authentikAdminMemberList"
+            },
+            "production": {
+              "$ref": "#/$defs/authentikAdminMemberList"
+            },
+            "sandbox": {
+              "$ref": "#/$defs/authentikAdminMemberList"
+            }
+          }
+        }
+      }
+    },
+    "openbaoSecretMemberGroup": {
+      "description": "OpenBao reader or writer membership. Logos supplies the group's fixed label and description.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "members": {
+          "description": "Explicit member emails by deployment environment. Omit an environment or leave its list empty to grant no access there.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "non-production": {
+              "$ref": "#/$defs/authentikMemberList"
+            },
+            "production": {
+              "$ref": "#/$defs/authentikMemberList"
+            },
+            "sandbox": {
+              "$ref": "#/$defs/authentikMemberList"
+            }
+          }
+        }
+      }
+    },
+    "openbaoMemberGroup": {
+      "description": "Team-owned application-access group with optional explicit membership by deployment environment.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "label"
+      ],
+      "properties": {
+        "description": {
+          "description": "Purpose of the group and the access it grants; must not be blank.",
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "label": {
+          "description": "Human-readable application and role label. Preserve application branding; labels must be unique within the owning team.",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]*( [A-Za-z0-9]+)*$"
+        },
+        "members": {
+          "description": "Explicit member emails by deployment environment. Omit an environment or leave its list empty to grant no access there.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "non-production": {"$ref": "#/$defs/authentikMemberList"},
+            "production": {"$ref": "#/$defs/authentikMemberList"},
+            "sandbox": {"$ref": "#/$defs/authentikMemberList"}
+          }
+        }
+      }
+    },
+    "requiredAuthentikAdminGroup": {
+      "description": "Pneuma's Authentik-wide administrator group. brett@osinfra.io must be a member in every deployment environment.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/openbaoAdminGroup"
+        },
+        {
+          "properties": {
+            "members": {
+              "properties": {
+                "non-production": {
+                  "contains": {
+                    "const": "brett@osinfra.io"
+                  }
+                },
+                "production": {
+                  "contains": {
+                    "const": "brett@osinfra.io"
+                  }
+                },
+                "sandbox": {
+                  "contains": {
+                    "const": "brett@osinfra.io"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "emailList": {
+      "description": "List of email addresses.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "email",
+        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+      }
+    },
+    "usernameList": {
+      "description": "List of GitHub usernames.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+      }
+    },
+    "maintainerList": {
+      "description": "At least one GitHub username that can manage the team.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+      }
+    },
+    "githubMembership": {
+      "description": "GitHub team membership. maintainers have admin rights on the team; members have read access.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maintainers",
+        "members"
+      ],
+      "properties": {
+        "maintainers": {
+          "$ref": "#/$defs/maintainerList"
+        },
+        "members": {
+          "$ref": "#/$defs/usernameList"
+        }
+      }
+    },
+    "googleGroup": {
+      "description": "Google Cloud Identity group membership. owners have full group management rights; managers can add and remove members; members have read access.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "managers",
+        "members",
+        "owners"
+      ],
+      "properties": {
+        "managers": {
+          "$ref": "#/$defs/emailOrServiceAccountList"
+        },
+        "members": {
+          "$ref": "#/$defs/emailOrServiceAccountList"
+        },
+        "owners": {
+          "$ref": "#/$defs/emailOrServiceAccountList"
+        }
+      }
+    },
+    "googleGroupWithOwner": {
+      "description": "Google Cloud Identity group membership that requires at least one owner.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/googleGroup"
+        },
+        {
+          "properties": {
+            "owners": {
+              "$ref": "#/$defs/nonEmptyEmailOrServiceAccountList"
+            }
+          }
+        }
+      ]
+    },
+    "emailOrServiceAccountList": {
+      "description": "List of email addresses or GCP service account emails (e.g. sa-name@project-id.iam.gserviceaccount.com).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+      }
+    },
+    "nonEmptyEmailOrServiceAccountList": {
+      "description": "At least one email address or GCP service account email.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+      }
+    },
+    "envScopedGoogleGroupsWithOwner": {
+      "description": "Required sandbox, non-production, and production Google groups, each with at least one owner.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "non-production",
+        "production",
+        "sandbox"
+      ],
+      "properties": {
+        "sandbox": {
+          "$ref": "#/$defs/googleGroupWithOwner"
+        },
+        "non-production": {
+          "$ref": "#/$defs/googleGroupWithOwner"
+        },
+        "production": {
+          "$ref": "#/$defs/googleGroupWithOwner"
+        }
+      }
+    },
+    "envScopedGoogleGroups": {
+      "description": "Google Cloud Identity group memberships scoped to deployment environments. Each present key (sandbox, non-production, production) configures the group membership for that environment. Omit an environment key if no group membership is needed for it.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sandbox": {
+          "$ref": "#/$defs/googleGroup"
+        },
+        "non-production": {
+          "$ref": "#/$defs/googleGroup"
+        },
+        "production": {
+          "$ref": "#/$defs/googleGroup"
+        }
+      }
+    },
+    "githubRepository": {
+      "description": "GitHub repository configuration. Each repository is provisioned with squash-only merges, a branch ruleset (signed commits, linear history, PR reviews), Datadog webhook, and standard repository files.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "topics"
+      ],
+      "properties": {
+        "description": {
+          "description": "Repository description shown on the homepage.",
+          "type": "string"
+        },
+        "enable_datadog_secrets": {
+          "description": "Adds DD_API_KEY and DD_APP_KEY to repository secrets using the team's per-team Datadog service account credentials. Enable only when the repository's own workflows call the Datadog API, for example to define Datadog monitors, dashboards, or synthetic tests with OpenTofu, or to upload sourcemaps or run static analysis in CI. Default: false.",
+          "type": "boolean"
+        },
+        "enable_google_wif_service_account": {
+          "description": "Creates a Workload Identity Federation IAM binding so this repository's GitHub Actions workflows can authenticate to GCP via OIDC using the team's service account. Set true only for repositories that deploy infrastructure or push images to GCP.",
+          "type": "boolean"
+        },
+        "enable_ruleset": {
+          "description": "Enforces linear history, signed commits, pull request reviews, and code owner approval on the default branch via a branch ruleset. Default: true. Set false only for repositories that manage their own branch protection or do not need it (e.g., documentation-only or archive repos).",
+          "type": "boolean"
+        },
+        "environments": {
+          "description": "GitHub deployment environments for this repository. Key is the environment name. Each environment can require manual approval from specified teams before a workflow job may deploy to it.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/githubEnvironment"
+          }
+        },
+        "pages": {
+          "$ref": "#/$defs/githubPages"
+        },
+        "topics": {
+          "description": "Repository topics for GitHub categorization and discovery. The first two entries must always be the team key (e.g. \"pt-logos\") and the team type (e.g. \"platform-team\"). Additional technology topics follow (e.g. \"opentofu\", \"kubernetes\").",
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          }
+        }
+      }
+    },
+    "githubEnvironment": {
+      "description": "GitHub deployment environment configuration. Environments gate workflow jobs behind required reviewers and optional branch policies.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "reviewers"
+      ],
+      "properties": {
+        "deployment_branch_policy": {
+          "description": "Restricts which branches may deploy to this environment. Omit to allow any branch to deploy.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "custom_branch_policies",
+            "protected_branches"
+          ],
+          "properties": {
+            "custom_branch_policies": {
+              "description": "Allow deployments from branches matching custom name patterns defined in the repository. Mutually exclusive with protected_branches.",
+              "type": "boolean"
+            },
+            "protected_branches": {
+              "description": "Restrict deployments to branches that have a matching branch protection rule. Mutually exclusive with custom_branch_policies.",
+              "type": "boolean"
+            }
+          }
+        },
+        "name": {
+          "description": "Display name of the environment as shown in the GitHub Actions UI (e.g. production, non-production).",
+          "type": "string"
+        },
+        "reviewers": {
+          "description": "Required reviewers that must approve a workflow job before it may deploy to this environment.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "teams"
+          ],
+          "properties": {
+            "teams": {
+              "description": "GitHub team slugs required to approve deployments to this environment (e.g. pt-logos-production-approvers).",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "githubPages": {
+      "description": "GitHub Pages configuration for this repository. Omit if the repository does not publish a Pages site.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "build_type": {
+          "description": "How Pages content is built. Use workflow to publish via a GitHub Actions workflow (recommended); use legacy for classic branch-based deploys.",
+          "type": "string",
+          "enum": [
+            "legacy",
+            "workflow"
+          ]
+        },
+        "cname": {
+          "description": "Custom domain (CNAME) for the Pages site (e.g. docs.example.com). Requires a matching DNS CNAME record pointing to <org>.github.io.",
+          "type": "string"
+        },
+        "source": {
+          "description": "Source branch and directory for legacy Pages builds. Required when build_type is legacy.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "branch"
+          ],
+          "properties": {
+            "branch": {
+              "description": "Branch from which Pages content is served (e.g. gh-pages or main).",
+              "type": "string"
+            },
+            "path": {
+              "description": "Directory within the branch to serve as the Pages root. Use / for the repository root or /docs for a docs subdirectory.",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "cloudSQL": {
+      "description": "Cloud SQL instance configuration. pt-corpus provisions one instance per declared region using the pt-arche-google-cloud-sql module. The instance name is the map key under cloud_sql. Each instance receives a private IP address through the Shared VPC peering connection managed by pt-corpus.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "database_version",
+        "machine_tier",
+        "regions"
+      ],
+      "properties": {
+        "database_version": {
+          "description": "Cloud SQL database version (e.g. POSTGRES_16, MYSQL_8_0).",
+          "type": "string"
+        },
+        "machine_tier": {
+          "description": "Cloud SQL machine tier (e.g. db-g1-small, db-n1-standard-1).",
+          "type": "string"
+        },
+        "regions": {
+          "description": "GCP regions in which to provision a Cloud SQL instance. At least one region is required.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "us-east1",
+              "us-east4"
+            ]
+          }
+        }
+      }
+    },
+    "kubernetesEngine": {
+      "description": "GKE cluster configuration for the team's platform-managed project. Defines cluster locations (zones), node pools, subnet CIDRs, Artifact Registry access.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locations"
+      ],
+      "properties": {
+        "artifact_registry_groups_memberships": {
+          "description": "Required for teams with a Kubernetes cluster. Artifact Registry reader and writer groups each require at least one owner.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "readers",
+            "writers"
+          ],
+          "properties": {
+            "readers": {
+              "$ref": "#/$defs/googleGroupWithOwner"
+            },
+            "writers": {
+              "$ref": "#/$defs/googleGroupWithOwner"
+            }
+          }
+        },
+        "dns_subdomain": {
+          "description": "DNS subdomain assigned to this team's GKE workloads under the platform's base domain. Must be lowercase letters, digits, and hyphens, starting with a letter.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "locations": {
+          "description": "Map of GCP zones to GKE cluster configurations. Each entry provisions one cluster in the specified zone. At least one zone is required.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/gkeLocation"
+          }
+        },
+        "namespaces": {
+          "description": "Kubernetes namespaces to provision in this team's GKE clusters. Pneuma creates each namespace and its Workload Identity bindings on the next pipeline run.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/gkeNamespaceEntry"
+          }
+        }
+      }
+    },
+    "gkeLocation": {
+      "description": "GKE cluster configuration for a specific GCP zone. Cluster names are derived automatically as {team-key}-{zone} (e.g. pt-pneuma-us-east1-b). The control plane is always regional; specifying a zone pins node pools to that zone to avoid Istio cross-zone hotspots.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_pools",
+        "subnet"
+      ],
+      "properties": {
+        "enable_gke_hub_host": {
+          "description": "Set true for exactly ONE cluster across ALL teams to designate it as the GKE fleet host. The fleet host manages multi-cluster service discovery (MCS), cross-cluster ingress, and fleet-wide policies. All other clusters register to this host. Default: false.",
+          "type": "boolean"
+        },
+        "node_pools": {
+          "description": "Map of node pool names to configurations. At least one node pool is required per cluster. Each pool defines the machine type and autoscaling bounds.",
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "description": "Node pool configuration defining machine type and autoscaling bounds.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "machine_type",
+              "max_node_count",
+              "min_node_count"
+            ],
+            "properties": {
+              "machine_type": {
+                "description": "GCE machine type for nodes in this pool (e.g. e2-standard-4).",
+                "type": "string"
+              },
+              "max_node_count": {
+                "description": "Maximum number of nodes the autoscaler may provision in this pool.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "min_node_count": {
+                "description": "Minimum number of nodes the autoscaler must keep running in this pool.",
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "subnet": {
+          "description": "VPC subnet CIDRs for this cluster. All four ranges are required and must not overlap with other clusters or subnets in the shared VPC.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ip_cidr_range",
+            "master_ipv4_cidr_block",
+            "pod_ip_cidr_range",
+            "services_ip_cidr_range"
+          ],
+          "properties": {
+            "ip_cidr_range": {
+              "description": "Primary node subnet CIDR (e.g. 10.0.0.0/24).",
+              "type": "string",
+              "format": "ipv4-cidr"
+            },
+            "master_ipv4_cidr_block": {
+              "description": "Control plane (master) private CIDR \u2014 must be a /28 (e.g. 172.16.0.0/28). Each cluster requires a unique block.",
+              "type": "string",
+              "format": "ipv4-cidr"
+            },
+            "pod_ip_cidr_range": {
+              "description": "Secondary CIDR for pod IPs (alias IP range). Must be large enough for the expected pod density (e.g. /16).",
+              "type": "string",
+              "format": "ipv4-cidr"
+            },
+            "services_ip_cidr_range": {
+              "description": "Secondary CIDR for Kubernetes Service VIPs (e.g. 10.1.0.0/20).",
+              "type": "string",
+              "format": "ipv4-cidr"
+            }
+          }
+        }
+      }
+    },
+    "gkeNamespaceEntry": {
+      "description": "Configuration for a single Kubernetes namespace provisioned in this team's GKE clusters.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mesh_enabled": {
+          "description": "Whether this namespace is enrolled in the ambient Istio mesh. Defaults to disabled.",
+          "type": "boolean",
+          "default": false
+        },
+        "route_auth_policies": {
+          "description": "Gateway auth policy intent for namespace routes, keyed by an existing route name. Pneuma renders each entry as gateway authentication and authorization policy for the matching route. Policies may only be declared on mesh-enabled namespaces (mesh_enabled = true). Because browser routes for a team share one host-scoped Authentik application, every browser policy across the team's namespaces must declare identical required_groups and required_roles.",
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/gkeRouteAuthPolicy"
+          },
+          "default": {}
+        },
+        "routes": {
+          "description": "HTTP route intent for this namespace, keyed by route name. Pneuma renders each entry as a Gateway API HTTPRoute on the shared Istio gateway, serving the team's <subdomain>.osinfra.io host at the route's path prefix from the named Service. Routes may only be declared on mesh-enabled namespaces (mesh_enabled = true).",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/gkeRoute"
+          }
+        }
+      }
+    },
+    "gkeRoute": {
+      "description": "HTTP route intent rendered by pneuma as a Gateway API HTTPRoute on the shared Istio gateway.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "service"
+      ],
+      "properties": {
+        "path": {
+          "description": "URL path prefix to match for this route (PathPrefix). Defaults to \"/\" (match all paths under the host).",
+          "type": "string",
+          "default": "/"
+        },
+        "port": {
+          "description": "Port on the backend Service to route matched traffic to.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "service": {
+          "description": "Name of the backend Kubernetes Service in this namespace to route matched traffic to.",
+          "type": "string"
+        }
+      }
+    },
+    "gkeRouteAuthPolicy": {
+      "description": "Gateway authentication and authorization policy intent for a namespace route.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "audiences": {
+          "description": "JWT audiences accepted for this route. Values must be non-empty and must not contain whitespace.",
+          "type": "array",
+          "uniqueItems": true,
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^\\S+$"
+          }
+        },
+        "mode": {
+          "description": "Gateway auth mode for this route. Defaults to browser.",
+          "type": "string",
+          "enum": [
+            "public",
+            "browser",
+            "api-jwt"
+          ],
+          "default": "browser"
+        },
+        "public_paths": {
+          "description": "Unauthenticated URL paths under the route path prefix. Each path must start with /, must not be /, and must not contain whitespace.",
+          "type": "array",
+          "uniqueItems": true,
+          "default": [],
+          "items": {
+            "type": "string",
+            "pattern": "^/\\S+$",
+            "not": {
+              "const": "/"
+            }
+          }
+        },
+        "required_groups": {
+          "description": "Identity groups allowed to access the route. Names may contain single internal spaces, for example pt-pneuma: agentgateway Admins, but must not contain leading/trailing whitespace, control characters, comma or pipe delimiters.",
+          "type": "array",
+          "uniqueItems": true,
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[!-+\\--{}~]+( [!-+\\--{}~]+)*$"
+          }
+        },
+        "required_roles": {
+          "description": "Application roles allowed to access the route. Names may contain single internal spaces but must not contain leading/trailing whitespace, control characters, comma or pipe delimiters.",
+          "type": "array",
+          "uniqueItems": true,
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[!-+\\--{}~]+( [!-+\\--{}~]+)*$"
+          }
+        }
+      }
+    },
+    "githubRepositoryLabel": {
+      "description": "A single GitHub issue label with a hex color and short description.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "description"
+      ],
+      "properties": {
+        "color": {
+          "description": "Six-digit hex color code without a leading #.",
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]{6}$"
+        },
+        "description": {
+          "description": "Short description of the label.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

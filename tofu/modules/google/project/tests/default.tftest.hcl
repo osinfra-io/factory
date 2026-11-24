@@ -1,7 +1,8 @@
 mock_provider "google" {
-  mock_data "google_logging_project_cmek_settings" {
+  mock_data "google_logging_project_settings" {
     defaults = {
-      service_account_id = "service-mock@gcp-sa-logging.iam.gserviceaccount.com"
+      kms_service_account_id     = "kms-mock@gcp-sa-logging.iam.gserviceaccount.com"
+      logging_service_account_id = "service-mock@gcp-sa-logging.iam.gserviceaccount.com"
     }
   }
 
@@ -47,6 +48,27 @@ run "logging" {
   assert {
     condition     = output.cis_2_2_logging_bucket_locked
     error_message = "The CIS 2.2 logging bucket must be locked by default"
+  }
+}
+
+run "grants_key_access_to_logging_cmek_identity" {
+  command = apply
+
+  providers = {
+    google        = google
+    google.budget = google
+    google-beta   = google-beta
+  }
+
+  variables {
+    billing_account   = "000000-000000-000000"
+    folder_id         = "0000000000000"
+    random_project_id = false
+  }
+
+  assert {
+    condition     = google_kms_crypto_key_iam_member.cis_2_2_logging_sink.member == "serviceAccount:kms-mock@gcp-sa-logging.iam.gserviceaccount.com"
+    error_message = "The logging bucket key must be granted to the CMEK service account returned by project settings."
   }
 }
 

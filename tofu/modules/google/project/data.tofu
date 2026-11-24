@@ -1,4 +1,5 @@
-data "google_logging_project_cmek_settings" "this" {
+# GetSettings provisions the project's CMEK identity for log buckets.
+data "google_logging_project_settings" "this" {
   depends_on = [google_project_service.this]
 
   lifecycle {

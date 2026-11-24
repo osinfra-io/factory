@@ -6,7 +6,7 @@ applyTo: "**"
 
 ## Architecture
 
-Factory is an open-source, AI-powered Infrastructure as Code factory. Its three layers are:
+Factory is an open-source Infrastructure as Code factory. Its three layers are:
 
 - **Foundation** establishes organizational foundations, identity, integrations, and governance.
 - **Assembly** composes and provisions cloud infrastructure, projects, environments, and resources.
@@ -28,6 +28,12 @@ Factory is an open-source, AI-powered Infrastructure as Code factory. Its three 
 - Make focused changes and avoid speculative abstractions.
 - Do not add Datadog integrations to Factory.
 - Use lowercase `authentik` and `agentgateway` in prose, headings, comments, and user-facing messages. Preserve exact casing in API names, code identifiers, and configured names.
+
+## Team Configuration
+
+- Use team tfvars as the source of truth for team-owned configuration across Foundation, Assembly, and Runtime.
+- Local integration tests must use the same team declarations and deployment code as the target environment. Do not copy team configuration into fixtures. Override only local execution details and disposable test identities.
+- Keep secrets and environment bootstrap inputs separate from team tfvars.
 
 ## OpenTofu Conventions
 

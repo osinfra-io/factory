@@ -23,7 +23,7 @@ variable "additional_namespaces" {
 variable "approver_group" {
   description = "Authentik group whose members may approve plans through floor-api"
   type        = string
-  default     = "factory: floor Test Approvers"
+  default     = "fixture: Floor Verification Approvers"
 }
 
 variable "authentik_http_port" {

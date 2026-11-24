@@ -4,7 +4,13 @@
 variable "approver_group" {
   description = "Authentik group whose members may approve plans through floor-api"
   type        = string
-  default     = "factory: floor Test Approvers"
+  default     = "fixture: Floor Verification Approvers"
+}
+
+variable "approver_emails" {
+  description = "Email addresses of signed-in users who are added to the approver group for local testing"
+  type        = list(string)
+  default     = []
 }
 
 variable "authentik_token" {

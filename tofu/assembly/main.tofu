@@ -96,6 +96,7 @@ module "google_project_workloads" {
   cis_2_2_logging_sink = {
     project_id = module.google_project_network[var.environment].id
   }
+  deletion_policy       = "DELETE"
   folder_id             = local.workload_folder_ids[each.key]
   monthly_budget_amount = var.monthly_project_budgets.workload
   prefix                = each.key

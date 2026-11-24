@@ -37,33 +37,32 @@ access does not grant access to Foundation or Assembly state. The Production par
 still owns delegation of `sb.osinfra.io` and `nonprod.osinfra.io`; it can use the main `public_dns` output
 after a reviewed Sandbox apply. Assembly does not adopt legacy resources.
 
-The Sandbox bootstrap created the shared host project and network and the
+The Sandbox configuration defines the shared host project and network and the
 Factory team's versioned, KMS-encrypted state bucket. The shared host and Factory
 workload projects belong under `Sandbox / Factory`. Factory's team tfvars
-now request Assembly networking in three zones each in `us-east1` and `us-east4`,
-using Pneuma's former CIDRs. Private Cloud SQL for authentik is disabled for now.
+request Assembly networking in three zones each in `us-east1` and `us-east4`.
+Private Cloud SQL for authentik is disabled in the team input.
 Sandbox selects Factory's `us-east1-b` cluster as the shared GKE fleet host.
 The registry group declarations do not provision groups or enable the registry pair.
-GKE itself is managed by Runtime, and Factory will request its registry pair
-when Runtime is onboarded. The seed remains on cluster-local state, and
-Foundation and Assembly still use the seed project's backend. Moving those
-states is a separate handoff after the destination exists and runner access
-has been configured.
+GKE itself is managed by Runtime. The seed initially uses cluster-local state,
+and Foundation and Assembly are configured to use the seed project's backend.
+Moving those states is a separate handoff after the destination exists and
+runner access has been configured.
 
 The shared host and Factory workload project IDs both follow `factory-tfXXX-sb`:
 the team key is the prefix, and each project gets its own three random
 hexadecimal digits at apply time. Floor defines `us-east1` and `us-east4` regional workspaces
-for Sandbox, Non-Production, and Production. Only Sandbox is wired into the
-current Floor deployment. Include the matching
+for Sandbox, Non-Production, and Production. Include the matching
 [regional overlay](../../floor/config/floors/assembly-regional/) when bringing up
 Non-Production or Production. Each overlay needs its own `bootstrap-<env>`
 namespace, runner credentials, `foundation-source`, and backend ConfigMaps.
 Its `assembly-<env>` dependency must publish `assembly-main-<env>` state
 under the `assembly` backend prefix.
 
-Sandbox main and regional workspaces apply only after manual approval of their
-exact plans. Regional workspaces wait for their own environment's main Assembly
-outputs. The Non-Production and Production regional overlays remain plan-only.
+Main and regional workspaces apply only after manual approval of their exact
+plans. Regional workspaces wait for their own environment's main Assembly
+outputs. The Non-Production and Production regional overlays also enable
+applies after approval.
 
 Run the mocked tests from the repository root without cloud credentials:
 
@@ -74,5 +73,5 @@ TF_WORKSPACE=us-east1-assembly-sandbox tofu -chdir=tofu/assembly/regional test
 ```
 
 Environment DNS domains are `sb.osinfra.io`, `nonprod.osinfra.io`, and `osinfra.io`
-(Production, the parent zone). Non-Production and Production Assembly code and inputs
-exist, but their seed and Foundation are not yet bootstrapped.
+(Production, the parent zone). Environment configuration does not establish
+whether any particular plan has been approved or applied.

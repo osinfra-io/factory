@@ -1,0 +1,124 @@
+// @ts-check
+import {themes as prismThemes} from 'prism-react-renderer';
+
+/** @type {import('@docusaurus/types').Config} */
+const config = {
+  title: 'osinfra.io',
+  tagline: 'Secure, reliable infrastructure. From request to production.',
+  favicon: 'img/mirko-transparent.png',
+
+  url: 'https://docs.osinfra.io',
+  baseUrl: '/',
+
+  organizationName: 'osinfra-io',
+  projectName: 'factory',
+
+  trailingSlash: false,
+
+  onBrokenLinks: 'throw',
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+    mermaid: true,
+  },
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      /** @type {import('@docusaurus/preset-classic').Options} */
+      ({
+        docs: {
+          routeBasePath: '/',
+          sidebarPath: './sidebars.js',
+          editUrl: 'https://github.com/osinfra-io/factory/tree/main/docusaurus/',
+        },
+        blog: false,
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+      }),
+    ],
+  ],
+
+  themes: [
+    '@docusaurus/theme-mermaid',
+    [
+      '@easyops-cn/docusaurus-search-local',
+      /** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
+      ({
+        hashed: true,
+        docsRouteBasePath: '/',
+        highlightSearchTermsOnTargetPage: true,
+        indexBlog: false,
+      }),
+    ],
+  ],
+
+  themeConfig:
+    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    ({
+      image: 'img/osinfra-logo-full.png',
+      colorMode: {
+        defaultMode: 'dark',
+        disableSwitch: true,
+        respectPrefersColorScheme: false,
+      },
+      navbar: {
+        title: 'osinfra.io',
+        logo: {
+          alt: 'osinfra.io logo',
+          src: 'img/logo.png',
+        },
+        items: [
+          {
+            to: '/explore',
+            label: 'Explore',
+            position: 'left',
+          },
+          {
+            to: '/run',
+            label: 'Run',
+            position: 'left',
+          },
+          {
+            to: '/use',
+            label: 'Use',
+            position: 'left',
+          },
+          {
+            to: '/ecosystem',
+            label: 'Ecosystem',
+            position: 'left',
+          },
+          {
+            href: 'https://github.com/sponsors/osinfra-io?frequency=one-time',
+            position: 'right',
+            className: 'header-sponsor-link',
+            'aria-label': 'Sponsor osinfra.io',
+            label: 'Sponsor',
+          },
+        ],
+      },
+      footer: {
+      },
+      prism: {
+        darkTheme: {
+          ...prismThemes.vsDark,
+          plain: {
+            color: '#e0e0e0',
+            backgroundColor: '#232323',
+          },
+        },
+        additionalLanguages: ['hcl', 'bash'],
+      },
+    }),
+};
+
+export default config;

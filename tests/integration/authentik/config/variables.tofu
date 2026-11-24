@@ -12,6 +12,16 @@ variable "embedded_outpost_id" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment whose Factory access policy the local fixture exercises"
+  type        = string
+
+  validation {
+    condition     = var.environment == "sandbox"
+    error_message = "The local integration fixture must exercise the Sandbox access policy."
+  }
+}
+
 variable "google_oauth_client_id" {
   description = "Google web OAuth client with the registered localhost callback"
   sensitive   = true
@@ -54,10 +64,10 @@ variable "revoke_application_access" {
 }
 
 variable "teams" {
-  description = "Local integration team and application-group declarations."
+  description = "Factory team access declarations shared with the environment configuration"
   type = map(object({
-    authentik_groups = optional(map(object({
-      description = optional(string)
+    authentik_groups = map(object({
+      description = string
       label       = optional(string)
       name        = optional(string)
       members = optional(object({
@@ -65,6 +75,6 @@ variable "teams" {
         production     = optional(list(string), [])
         sandbox        = optional(list(string), [])
       }), {})
-    })), {})
+    }))
   }))
 }

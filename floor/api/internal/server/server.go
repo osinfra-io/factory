@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	corev1 "k8s.io/api/core/v1"
@@ -266,6 +267,10 @@ func (t *tools) approve(ctx context.Context, _ *mcp.CallToolRequest, in approveI
 	// Event is telemetry, so a failure to record it is logged, not returned.
 	if err := t.event(ctx, applied, "Approved", "%s approved %s", identity.User, approvedPlan); err != nil {
 		log.Printf("recording Approved event for %q: %v", applied, err)
+	}
+
+	if err := t.floor.RecordApproval(ctx, applied, identity.User, approvedPlan, time.Now()); err != nil {
+		log.Printf("recording approval on %q: %v", applied, err)
 	}
 
 	return nil, approveOutput{

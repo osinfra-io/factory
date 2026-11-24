@@ -15,42 +15,9 @@ module "authentik_config" {
     title      = "osinfra.io | Development"
   }
 
-  browser_group_policy_bindings = {
-    agentgateway = {
-      groups      = ["factory: agentgateway Admins"]
-      host        = "https://agentgateway.localhost"
-      icon        = "https://docs.osinfra.io/img/authentik/applications/agentgateway.svg"
-      launch_url  = "https://agentgateway.localhost/ui/"
-      name        = "agentgateway"
-      policy_name = "agentgateway-browser-access"
-    }
-    development = {
-      groups      = ["all"]
-      host        = "https://dev.localhost"
-      icon        = "https://docs.osinfra.io/img/authentik/applications/istio.svg"
-      launch_url  = "https://dev.localhost/istio-test/auth"
-      name        = "Istio"
-      policy_name = "local-development-browser-access"
-    }
-    floor = {
-      groups      = ["all"]
-      hidden      = true
-      host        = "https://floor.localhost"
-      name        = "floor"
-      policy_name = "floor-browser-access"
-    }
-    kagent = {
-      groups      = ["factory: kagent Admins"]
-      host        = "https://kagent.localhost"
-      icon        = "https://docs.osinfra.io/img/authentik/applications/kagent.svg"
-      launch_url  = "https://kagent.localhost/"
-      name        = "kagent"
-      policy_name = "kagent-browser-access"
-    }
-  }
-
-  client_id = "development"
-
+  browser_group_policy_bindings       = local.browser_group_policy_bindings
+  cli_oidc_browser_keys               = ["floor"]
+  client_id                           = "development"
   gateway_oidc_enabled                = false
   google_internal_domains             = ["osinfra.io"]
   google_oauth_client_id              = var.google_oauth_client_id
@@ -58,7 +25,7 @@ module "authentik_config" {
   manage_default_authentication_stage = true
   openbao_application_icon            = "https://docs.osinfra.io/img/authentik/applications/openbao.svg"
   openbao_hostname                    = "openbao.localhost"
-  superuser_group_keys                = ["factory/authentik-admins"]
+  superuser_group_keys                = local.superuser_group_keys
 
   redirect_uris = [
     {
@@ -82,6 +49,6 @@ module "authentik_regional_config" {
 module "team_access" {
   source = "../../../../tofu/modules/kubernetes/authentik/config/team-access"
 
-  environment = "sandbox"
+  environment = var.environment
   teams       = local.team_access_teams
 }
