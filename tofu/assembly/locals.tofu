@@ -132,6 +132,15 @@ locals {
     }
   }
 
+  registry_reader_members = merge([
+    for team, members in local.registry_readers : {
+      for member in members : "${team}:${member}" => {
+        member = member
+        team   = team
+      }
+    }
+  ]...)
+
   registry_readers = {
     for team, registry in local.artifact_registries : team => setunion(
       registry.readers,

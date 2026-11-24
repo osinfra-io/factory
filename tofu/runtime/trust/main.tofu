@@ -2,6 +2,10 @@
 # per-zone stages so the CA survives Runtime teardown and all clusters share it.
 
 resource "tls_private_key" "cert_manager_ca" {
+  lifecycle {
+    prevent_destroy = true
+  }
+
   algorithm   = "ECDSA"
   ecdsa_curve = "P256"
 }

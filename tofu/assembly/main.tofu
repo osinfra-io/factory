@@ -172,13 +172,13 @@ resource "google_artifact_registry_repository" "docker_virtual" {
   }
 }
 
-resource "google_artifact_registry_repository_iam_binding" "readers" {
-  for_each = { for team, members in local.registry_readers : team => members if length(members) > 0 }
+resource "google_artifact_registry_repository_iam_member" "readers" {
+  for_each = local.registry_reader_members
 
-  location   = google_artifact_registry_repository.docker_virtual[each.key].location
-  members    = each.value
-  project    = google_artifact_registry_repository.docker_virtual[each.key].project
-  repository = google_artifact_registry_repository.docker_virtual[each.key].name
+  location   = google_artifact_registry_repository.docker_virtual[each.value.team].location
+  member     = each.value.member
+  project    = google_artifact_registry_repository.docker_virtual[each.value.team].project
+  repository = google_artifact_registry_repository.docker_virtual[each.value.team].name
   role       = "roles/artifactregistry.reader"
 }
 
