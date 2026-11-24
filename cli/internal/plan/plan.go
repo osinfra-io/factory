@@ -352,7 +352,7 @@ func diff(before, after, unknown, beforeSensitive, afterSensitive any) []Attr {
 	b := flatten("", before, beforeSensitive, nil)
 	a := flatten("", after, afterSensitive, unknown)
 
-	names := make([]string, 0, len(a)+len(b))
+	var names []string
 	seen := map[string]bool{}
 
 	for _, m := range []map[string]string{b, a} {

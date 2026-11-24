@@ -7,7 +7,7 @@ data "terraform_remote_state" "foundation" {
   backend = "gcs"
 
   config = {
-    bucket = "foundation-state-prod"
+    bucket = local.foundation_production_bucket
     prefix = "foundation"
   }
 

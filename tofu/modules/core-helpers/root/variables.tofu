@@ -21,6 +21,18 @@ variable "data_classification" {
   }
 }
 
+variable "foundation_environment_state_bucket" {
+  description = "State bucket holding the current environment's Foundation workspaces. Defaults to foundation-state-<env> when null."
+  type        = string
+  default     = null
+}
+
+variable "foundation_production_state_bucket" {
+  description = "State bucket holding the production Foundation workspaces. Defaults to foundation-state-prod when null."
+  type        = string
+  default     = null
+}
+
 variable "foundation_workspaces" {
   description = "List of production Foundation workspace names used for shared team metadata and environment-specific data lookup. Workspace names for the current environment are derived from these names. When provided, enables team data lookup, project naming, and environment folder IDs."
   type        = list(string)

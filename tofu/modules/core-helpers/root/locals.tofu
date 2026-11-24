@@ -46,13 +46,15 @@ locals {
 
   environment_root_folder_id = local.team_data != null ? try(local.team_data.environment_root_folder_id, null) : null
 
-  foundation_environment_bucket = local.env != null ? "foundation-state-${local.env}" : null
+  foundation_environment_bucket = var.foundation_environment_state_bucket != null ? var.foundation_environment_state_bucket : (local.env != null ? "foundation-state-${local.env}" : null)
 
   # Environment workspace names mirror the production workspace names supplied by consumers.
   foundation_environment_workspaces = var.foundation_workspaces != null && local.environment != "production" ? toset([
     for workspace_name in var.foundation_workspaces :
     "${trimsuffix(workspace_name, "-main-production")}-main-${local.environment}"
   ]) : toset([])
+
+  foundation_production_bucket = var.foundation_production_state_bucket != null ? var.foundation_production_state_bucket : "foundation-state-prod"
 
   foundation_workspaces = var.foundation_workspaces != null ? toset(var.foundation_workspaces) : toset([])
 

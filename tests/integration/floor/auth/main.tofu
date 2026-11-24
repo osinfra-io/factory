@@ -32,6 +32,11 @@ resource "authentik_user" "floor_verify" {
   groups   = local.verify_group_ids
   name     = "floor verification"
   username = var.username
+
+  # The approver group owns this user's membership in that group.
+  lifecycle {
+    ignore_changes = [groups]
+  }
 }
 
 # The visitor authenticates but holds no approver group, so floor-api must refuse its mutations.
