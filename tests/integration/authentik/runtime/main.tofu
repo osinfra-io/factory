@@ -10,6 +10,7 @@ module "authentik" {
   external_database_host = "postgresql.authentik.svc.cluster.local"
   namespace              = "authentik"
   server_replicas        = 1
+  web_base_url           = "https://authentik.localhost"
 }
 
 # Kubernetes Secret

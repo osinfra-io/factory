@@ -4,7 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
-readonly FACTORY_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+FACTORY_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+readonly FACTORY_ROOT
 readonly WORK_DIR="${SCRIPT_DIR}/.work"
 readonly OWNER_NAME="local-gateway-stack-owner"
 readonly FIXTURE_NAMESPACE="floor-fixture"
@@ -193,7 +194,11 @@ chmod 700 "${WORK_DIR}/auth"
 start_authentik_forward
 
 tofu_stage auth init -reconfigure -backend-config="path=${WORK_DIR}/auth.tfstate" -input=false
+# The developer's own Google account approves plans from the factory CLI.
+approver_email="$(git -C "${SCRIPT_DIR}" config user.email || true)"
+
 tofu_stage auth apply -auto-approve -input=false \
+  -var="approver_emails=$(jq --null-input --compact-output --arg email "${approver_email}" '[$email | select(length > 0)]')" \
   -var="authentik_url=https://127.0.0.1:${AUTHENTIK_PORT}" \
   -var="token_file=${VERIFY_TOKEN_FILE}" \
   -var="visitor_token_file=${VISITOR_TOKEN_FILE}"

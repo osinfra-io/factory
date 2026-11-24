@@ -1,0 +1,229 @@
+.productGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  border-color: var(--ifm-color-emphasis-200);
+  background: color-mix(in srgb, var(--ifm-background-surface-color) 60%, transparent);
+}
+
+.productHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  margin-bottom: 0.25rem;
+}
+
+.productDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.productLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ifm-color-content-secondary);
+}
+
+.builder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem;
+  margin: 1.5rem 0;
+  align-items: start;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.form :global(.mantine-Switch-labelWrapper) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ifm-color-content-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.required {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.72rem;
+  color: var(--ifm-color-primary);
+}
+
+.optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--ifm-color-content-secondary);
+  margin: 0 0 0.15rem;
+  line-height: 1.5;
+}
+
+.fieldInput {
+  min-width: 0;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.fieldError {
+  font-size: 0.73rem;
+  margin: 0.1rem 0 0;
+  line-height: 1.4;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-left: 2px solid var(--ifm-color-emphasis-300);
+  background: color-mix(in srgb, var(--ifm-color-emphasis-100) 40%, transparent);
+  border-radius: 0 4px 4px 0;
+}
+
+.apiWrap {
+  position: relative;
+  min-width: 0;
+}
+
+.apiHint {
+  font-size: 0.72rem;
+  color: var(--ifm-color-content-secondary);
+  margin: 0.2rem 0 0;
+}
+
+.apiDrop {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.apiOpt {
+  padding: 0.4rem 0.65rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.apiOpt:last-child {
+  border-bottom: none;
+}
+
+.apiOpt:hover,
+.apiOptActive {
+  background: color-mix(in srgb, var(--ifm-color-primary) 12%, transparent);
+  color: var(--ifm-color-primary);
+}
+
+.preview {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 1rem);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1c1c1c;
+  box-shadow: 0 0 0 1px #2f2e2d, 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #2f2e2d;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.previewTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #a0a0a0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.copyBtn {
+  flex-shrink: 0;
+}
+
+.copyAlert {
+  margin: 0 1rem 1rem;
+}
+
+.previewBody {
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+  color: #d0d0d0;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: transparent;
+  border: none;
+}
+
+@media (max-width: 996px) {
+  .builder {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preview {
+    position: static;
+  }
+}

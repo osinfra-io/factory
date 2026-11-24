@@ -147,6 +147,17 @@ variable "branding" {
   }
 }
 
+variable "cli_oidc_browser_keys" {
+  default     = []
+  description = "Keys of browser_group_policy_bindings whose proxy providers accept bearer tokens from the Factory CLI OIDC provider. The provider and application are created only when this is not empty."
+  type        = set(string)
+
+  validation {
+    condition     = alltrue([for key in var.cli_oidc_browser_keys : contains(keys(var.browser_group_policy_bindings), key)])
+    error_message = "Every cli_oidc_browser_keys entry must be a key of browser_group_policy_bindings."
+  }
+}
+
 variable "client_id" {
   default     = "gateway"
   description = "The OAuth2 client ID for the gateway OIDC provider"

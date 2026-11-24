@@ -21,14 +21,26 @@ variable "data_classification" {
   }
 }
 
-variable "logos_workspaces" {
-  description = "List of production Logos workspace names used for shared team metadata and environment-specific data lookup. Workspace names for the current environment are derived from these names. When provided, enables team data lookup, project naming, and environment folder IDs. Example: ['pt-corpus-main-production', 'pt-logos-main-production']"
+variable "foundation_environment_state_bucket" {
+  description = "State bucket holding the current environment's Foundation workspaces. Defaults to foundation-state-<env> when null."
+  type        = string
+  default     = null
+}
+
+variable "foundation_production_state_bucket" {
+  description = "State bucket holding the production Foundation workspaces. Defaults to foundation-state-prod when null."
+  type        = string
+  default     = null
+}
+
+variable "foundation_workspaces" {
+  description = "List of production Foundation workspace names used for shared team metadata and environment-specific data lookup. Workspace names for the current environment are derived from these names. When provided, enables team data lookup, project naming, and environment folder IDs."
   type        = list(string)
   default     = null
 
   validation {
-    condition     = var.logos_workspaces == null || alltrue([for workspace_name in var.logos_workspaces : endswith(workspace_name, "-main-production")])
-    error_message = "Logos workspace names must end with -main-production so environment workspace names can be derived."
+    condition     = var.foundation_workspaces == null || alltrue([for workspace_name in var.foundation_workspaces : endswith(workspace_name, "-main-production")])
+    error_message = "Foundation workspace names must end with -main-production so environment workspace names can be derived."
   }
 }
 
@@ -50,4 +62,10 @@ variable "team" {
     condition     = can(regex("^[a-z0-9-]+$", var.team))
     error_message = "The team name should contain only lowercase alphanumeric characters and hyphens"
   }
+}
+
+variable "workspace" {
+  description = "Overrides the OpenTofu workspace name for tests."
+  type        = string
+  default     = null
 }

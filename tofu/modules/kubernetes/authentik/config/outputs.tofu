@@ -36,6 +36,16 @@ output "browser_policy_bindings" {
   value       = authentik_policy_binding.browser_access
 }
 
+output "cli_exchange_client_ids" {
+  description = "Client IDs of the proxy providers that accept Factory CLI tokens, keyed by browser binding key; the CLI exchanges its login token for one issued to the client"
+  value       = local.cli_exchange_client_ids
+}
+
+output "cli_issuer_url" {
+  description = "OIDC issuer URL of the Factory CLI provider, or null when the CLI provider is not enabled"
+  value       = local.cli_issuer_url
+}
+
 output "default_authentication_identification_stage_name" {
   description = "The name of the built-in default authentication flow's identification stage, used by the root module's import block to bring it under management"
   value       = local.default_authentication_identification_stage_name

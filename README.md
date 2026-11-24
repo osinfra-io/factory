@@ -1,6 +1,7 @@
 # Factory
 
-An open-source, AI-powered Infrastructure as Code factory.
+An open-source reference implementation for building and running your own
+infrastructure platform.
 
 ## Architecture
 

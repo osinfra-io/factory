@@ -19,6 +19,16 @@ resource "authentik_application" "browser" {
   slug               = local.browser_application_slugs[each.key]
 }
 
+resource "authentik_application" "cli" {
+  lifecycle {
+    enabled = local.cli_oidc_enabled
+  }
+
+  name              = "Factory CLI"
+  protocol_provider = authentik_provider_oauth2.cli.id
+  slug              = "factory-cli"
+}
+
 resource "authentik_application" "gateway" {
   lifecycle {
     enabled = var.gateway_oidc_enabled
@@ -301,6 +311,41 @@ resource "authentik_property_mapping_source_oauth" "google_username" {
 # Authentik OAuth2 Provider
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/resources/provider_oauth2
 
+# The Factory CLI signs users in with the OAuth2 authorization code flow with PKCE on a loopback redirect, so it holds no secret. Its access
+# tokens are accepted by the browser proxy providers listed in cli_oidc_browser_keys.
+resource "authentik_provider_oauth2" "cli" {
+  lifecycle {
+    enabled = local.cli_oidc_enabled
+  }
+
+  allowed_redirect_uris = [
+    {
+      matching_mode     = "regex"
+      redirect_uri_type = "authorization"
+      url               = "^http://127\\.0\\.0\\.1:[0-9]+/callback$"
+    }
+  ]
+
+  authorization_flow = data.authentik_flow.authorization.id
+  client_id          = "factory-cli"
+  client_type        = "public"
+  grant_types        = ["authorization_code", "refresh_token"]
+  invalidation_flow  = data.authentik_flow.invalidation.id
+  issuer_mode        = "per_provider"
+  name               = "factory-cli"
+
+  property_mappings = [
+    data.authentik_property_mapping_provider_scope.openid.id,
+    data.authentik_property_mapping_provider_scope.email.id,
+    data.authentik_property_mapping_provider_scope.profile.id,
+    data.authentik_property_mapping_provider_scope.offline_access.id,
+    authentik_property_mapping_provider_scope.groups.id,
+  ]
+
+  signing_key = data.authentik_certificate_key_pair.signing.id
+  sub_mode    = "user_email"
+}
+
 resource "authentik_provider_oauth2" "gateway" {
   lifecycle {
     enabled = var.gateway_oidc_enabled
@@ -358,13 +403,14 @@ resource "authentik_provider_oauth2" "openbao" {
 resource "authentik_provider_proxy" "browser" {
   for_each = var.browser_group_policy_bindings
 
-  access_token_validity = "minutes=10"
-  authorization_flow    = data.authentik_flow.authorization.id
-  external_host         = each.value.host
-  invalidation_flow     = data.authentik_flow.invalidation.id
-  mode                  = "forward_single"
-  name                  = local.browser_provider_names[each.key]
-  property_mappings     = local.browser_proxy_property_mapping_ids
+  access_token_validity    = "minutes=10"
+  authorization_flow       = data.authentik_flow.authorization.id
+  external_host            = each.value.host
+  invalidation_flow        = data.authentik_flow.invalidation.id
+  jwt_federation_providers = contains(var.cli_oidc_browser_keys, each.key) ? [authentik_provider_oauth2.cli.id] : []
+  mode                     = "forward_single"
+  name                     = local.browser_provider_names[each.key]
+  property_mappings        = local.browser_proxy_property_mapping_ids
 }
 
 # Authentik Google OAuth Source

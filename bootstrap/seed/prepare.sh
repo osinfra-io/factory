@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+set +x
+umask 077
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+REPO_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+readonly REPO_DIR
+readonly ENVIRONMENT="${1:-sandbox}"
+
+case "${ENVIRONMENT}" in
+  sandbox) FOLDER_ID=567188438944 ENV_SHORT=sb ;;
+  non-production) FOLDER_ID=851025769053 ENV_SHORT=nonprod ;;
+  production) FOLDER_ID=1093631952702 ENV_SHORT=prod ;;
+  *)
+    echo "usage: prepare.sh [sandbox|non-production|production]" >&2
+    exit 1
+    ;;
+esac
+readonly FOLDER_ID ENV_SHORT
+readonly SEED_PROJECT="bootstrap-${FOLDER_ID}-${ENV_SHORT}"
+readonly STAGE="bootstrap-${ENVIRONMENT}"
+readonly WORK_DIR="${REPO_DIR}/.work/${STAGE}"
+readonly NAMESPACE="${STAGE}"
+readonly FLOOR_CONFIG_REPO="https://github.com/osinfra-io/factory"
+FLOOR_CONFIG_BRANCH="$(git -C "${REPO_DIR}" branch --show-current)"
+readonly FLOOR_CONFIG_BRANCH
+readonly FLOOR_CONFIG_PATH="${REPO_DIR}/floor/config/floors/${STAGE}"
+readonly ENCRYPTION_FILE="${WORK_DIR}/encryption.hcl"
+readonly FOUNDATION_ENCRYPTION_FILE="${WORK_DIR}/foundation-encryption.hcl"
+
+fail() {
+  echo "${ENVIRONMENT} bootstrap: $*" >&2
+  exit 1
+}
+
+kubectl() {
+  command kubectl --context=docker-desktop "$@"
+}
+
+for tool in base64 cmp git gcloud kubectl openssl tr; do
+  command -v "${tool}" >/dev/null || fail "required command '${tool}' is missing"
+done
+
+[ "$(command kubectl config current-context)" = "docker-desktop" ] ||
+  fail "select docker-desktop explicitly; this script never switches contexts"
+[ -n "${FLOOR_CONFIG_BRANCH}" ] ||
+  fail "check out a named Factory branch; bootstrap configuration is fetched from that branch"
+
+if ! branch_revision="$(git -C "${REPO_DIR}" ls-remote --heads origin \
+  "refs/heads/${FLOOR_CONFIG_BRANCH}" | cut -f1)"; then
+  fail "could not read origin/${FLOOR_CONFIG_BRANCH}; Flux must fetch the bootstrap source from GitHub"
+fi
+[ "${branch_revision}" = "$(git -C "${REPO_DIR}" rev-parse HEAD)" ] ||
+  fail "push the current commit to origin/${FLOOR_CONFIG_BRANCH}; Flux fetches the bootstrap source from GitHub"
+[ -z "$(git -C "${REPO_DIR}" status --porcelain -- bootstrap floor/config/floors/"${STAGE}")" ] ||
+  fail "commit and push bootstrap and floor/config/floors/${STAGE} before preparing"
+
+kubectl get deployment tofu-controller --namespace=flux-system >/dev/null ||
+  fail "the local Flux floor must already be running"
+kubectl wait deployment/tofu-controller --namespace=flux-system \
+  --for=condition=Available --timeout=30s >/dev/null
+
+gcloud resource-manager folders describe "${FOLDER_ID}" --format='value(name)' >/dev/null ||
+  fail "the gcloud user cannot read the ${ENVIRONMENT} folder"
+gcloud auth application-default print-access-token >/dev/null ||
+  fail "run gcloud auth application-default login"
+
+mkdir -p "${WORK_DIR}"
+chmod 700 "${WORK_DIR}"
+
+# This namespace is separate from the disposable integration fixtures.
+existing_namespace="$(kubectl get namespace "${NAMESPACE}" --ignore-not-found \
+  --output=jsonpath='{.metadata.name}')"
+if [ -n "${existing_namespace}" ]; then
+  owner="$(kubectl get namespace "${NAMESPACE}" \
+    --output=jsonpath='{.metadata.labels.app\.kubernetes\.io/managed-by}')"
+  [ "${owner}" = "factory-floor" ] ||
+    fail "the bootstrap namespace exists but is not owned by factory-floor"
+fi
+kubectl apply --filename="${FLOOR_CONFIG_PATH}/namespace.yaml" >/dev/null
+
+if [ ! -s "${ENCRYPTION_FILE}" ]; then
+  existing_secret="$(kubectl get secrets --namespace="${NAMESPACE}" \
+    --output=jsonpath='{.items[*].metadata.name}')"
+  [ -z "${existing_secret}" ] ||
+    fail "bootstrap secrets already exist; restore the original .work/${STAGE}/encryption.hcl rather than generate a new key"
+
+  passphrase="$(openssl rand -base64 32)"
+  cat >"${ENCRYPTION_FILE}" <<HCL
+key_provider "pbkdf2" "default" {
+  passphrase = "${passphrase}"
+}
+method "aes_gcm" "default" {
+  keys = key_provider.pbkdf2.default
+}
+state {
+  method   = method.aes_gcm.default
+  enforced = true
+}
+plan {
+  method   = method.aes_gcm.default
+  enforced = true
+}
+HCL
+  unset passphrase
+fi
+
+if [ -n "$(kubectl get secret floor-bootstrap-state-env --namespace="${NAMESPACE}" \
+  --ignore-not-found --output=jsonpath='{.metadata.name}')" ]; then
+  kubectl get secret floor-bootstrap-state-env --namespace="${NAMESPACE}" \
+    --output=jsonpath='{.data.TF_ENCRYPTION}' |
+    base64 --decode |
+    cmp --silent - "${ENCRYPTION_FILE}" ||
+    fail "the local encryption key does not match the bootstrap Secret; refusing to replace it"
+fi
+
+kubectl create secret generic floor-bootstrap-state-env \
+  --namespace="${NAMESPACE}" --from-file="TF_ENCRYPTION=${ENCRYPTION_FILE}" \
+  --dry-run=client --output=yaml |
+  kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
+
+# Only a short-lived access token enters Kubernetes, never the ADC refresh token.
+gcloud auth application-default print-access-token |
+  tr --delete '\n' |
+  kubectl create secret generic floor-bootstrap-auth --namespace="${NAMESPACE}" \
+    --from-file=GOOGLE_OAUTH_ACCESS_TOKEN=/dev/stdin --dry-run=client --output=yaml |
+  kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
+
+kms_key="$(gcloud kms keys describe default --keyring=state-encryption --location=us \
+  --project="${SEED_PROJECT}" --format='value(name)' 2>/dev/null || true)"
+if [ -n "${kms_key}" ]; then
+
+  cat >"${FOUNDATION_ENCRYPTION_FILE}" <<HCL
+key_provider "gcp_kms" "default" {
+  key_length         = 32
+  kms_encryption_key = "${kms_key}"
+}
+method "aes_gcm" "default" {
+  keys = key_provider.gcp_kms.default
+}
+state {
+  method   = method.aes_gcm.default
+  enforced = true
+}
+plan {
+  method   = method.aes_gcm.default
+  enforced = true
+}
+remote_state_data_sources {
+  default {
+    method = method.aes_gcm.default
+  }
+}
+HCL
+
+  kubectl create secret generic floor-foundation-state-env \
+    --namespace="${NAMESPACE}" --from-file="TF_ENCRYPTION=${FOUNDATION_ENCRYPTION_FILE}" \
+    --dry-run=client --output=yaml |
+    kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
+fi
+
+kubectl create configmap "${STAGE}-config" --namespace=flux-system \
+  --from-literal="FLOOR_CONFIG_BRANCH=${FLOOR_CONFIG_BRANCH}" \
+  --dry-run=client --output=yaml |
+  kubectl apply --server-side --force-conflicts --field-manager=environment-bootstrap --filename=- >/dev/null
+
+kubectl apply --filename=- >/dev/null <<YAML
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: bootstrap-floor-config
+  namespace: flux-system
+spec:
+  interval: 1m
+  ref:
+    branch: ${FLOOR_CONFIG_BRANCH}
+  url: ${FLOOR_CONFIG_REPO}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: ${STAGE}
+  namespace: flux-system
+spec:
+  deletionPolicy: Orphan
+  interval: 1m
+  path: ./floor/config/floors/${STAGE}
+  prune: false
+  sourceRef:
+    kind: GitRepository
+    name: bootstrap-floor-config
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: ${STAGE}-config
+  wait: false
+YAML
+
+echo "${ENVIRONMENT} bootstrap registered; no cloud apply was approved."
+echo "From the Factory repository root, run FLOOR_ADDITIONAL_NAMESPACES=${NAMESPACE} tests/integration/floor/setup.sh to expose it through floor-api."
+echo "Review ${NAMESPACE}/${STAGE} through the floor's get_workspace and pending_approvals tools; a human must approve."
+echo "Rerun this script before approving if the Google access token has expired."
+echo "After the seed is Ready, rerun this script to prepare Foundation's GCS/KMS state."
+echo "Keep ${ENCRYPTION_FILE} and the ${NAMESPACE} state Secrets safe; do not reset Docker Desktop."

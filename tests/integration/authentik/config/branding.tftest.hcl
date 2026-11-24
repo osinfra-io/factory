@@ -27,16 +27,6 @@ variables {
   import_built_in_brand      = false
   google_oauth_client_id     = "mock-google-client"
   google_oauth_client_secret = "mock-google-secret"
-  teams = {
-    factory = {
-      authentik_groups = {
-        authentik-admins = {
-          description = "Factory Authentik administrators"
-          label       = "Authentik Admins"
-        }
-      }
-    }
-  }
 }
 
 run "development_branding" {
@@ -79,5 +69,52 @@ run "development_branding" {
   assert {
     condition     = length(module.authentik_config.stage_bindings) == 4 && length(module.authentik_config.policy_bindings) == 2
     error_message = "Local authentication must exercise all shared stages and conditional policies."
+  }
+}
+
+run "factory_access_policy" {
+  command = plan
+
+  variables {
+    local_test_user_email = "local-test@example.com"
+  }
+
+  plan_options {
+    target = [
+      module.authentik_config.authentik_group.application,
+      module.authentik_config.authentik_policy_binding.browser_access,
+    ]
+  }
+
+  assert {
+    condition = (
+      toset(keys(module.team_access.application_groups)) == toset([
+        for key in keys(var.teams["factory"].authentik_groups) : "factory/${key}"
+      ]) &&
+      alltrue([
+        for group in values(module.team_access.application_groups) : group.members == tolist(["local-test@example.com"])
+      ])
+    )
+    error_message = "The local test identity must be assigned to the shared Factory application groups."
+  }
+
+  assert {
+    condition = (
+      toset(local.superuser_group_keys) == toset(["factory/authentik-admins"]) &&
+      length(setsubtract(toset(local.superuser_group_keys), toset(keys(module.team_access.application_groups)))) == 0
+    )
+    error_message = "Only the platform-selected authentik admins group may have instance-wide superuser access."
+  }
+
+  assert {
+    condition = tomap({
+      for app, binding in local.browser_group_policy_bindings : app => tolist(binding.groups)
+      }) == tomap({
+      agentgateway = tolist(["factory: agentgateway Admins"])
+      development  = tolist(["all"])
+      floor        = tolist(["all"])
+      kagent       = tolist(["factory: kagent Admins"])
+    })
+    error_message = "The platform's shared browser applications must retain their intended group bindings."
   }
 }

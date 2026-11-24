@@ -1,0 +1,35 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: regional-common
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/assembly/regional
+  planOnly: true
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket

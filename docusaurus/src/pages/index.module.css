@@ -1,0 +1,449 @@
+/* Hero */
+
+.hero {
+  padding: 5rem 2rem 4rem;
+  background-color: #1e1e1e;
+}
+
+.heroInner {
+  max-width: 48rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.heroLogo {
+  max-width: 22rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.heroTagline {
+  font-size: 1.4rem;
+  color: #ffb400;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.heroSubtitle {
+  font-size: 1.1rem;
+  color: #a0a0a0;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.heroSecondaryCta {
+  display: inline-block;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.65rem 1.4rem;
+  border: 1px solid #606060;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.heroSecondaryCta:hover {
+  border-color: #ffb400;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Tech Strip */
+
+.techStrip {
+  background-color: #232323;
+  padding: 2rem;
+}
+
+.techStripInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.techStripTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #484848;
+}
+
+.techStripLogosRow {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.techStripViewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.techStripTrack {
+  display: flex;
+  width: max-content;
+  min-width: 200%;
+  animation: techStripScroll 72s linear infinite;
+}
+
+.techStripInner:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.techStripInner:hover .techStripTrack,
+.techStripInner:focus-visible .techStripTrack {
+  animation-play-state: paused;
+}
+
+.techStripInner:hover .techStripLogo {
+  opacity: 0.85;
+}
+
+.techStripLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #606060;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.techStripContent {
+  display: flex;
+  align-items: center;
+  flex: 1 0 50%;
+  gap: 3rem;
+  padding-right: 3rem;
+}
+
+.techStripGroup {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.techStripLogos {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-shrink: 0;
+}
+
+.techStripLogo {
+  height: 2.75rem;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+  filter: grayscale(1) brightness(2);
+}
+
+.techStripLogo[src$="/openbao-color.svg"] {
+  height: 3.4rem;
+}
+
+.techStripLogo[src$="/docker.svg"] {
+  height: 2.3rem;
+}
+
+@keyframes techStripScroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .techStripTrack {
+    animation: none;
+  }
+
+  .techStripViewport {
+    overflow-x: auto;
+  }
+}
+
+/* Features */
+
+.features {
+  padding: 4rem 0;
+  background-color: #1e1e1e;
+}
+
+.featureGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.featureItem {
+  flex: 1;
+  max-width: 20rem;
+}
+
+.featureIcon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.featureTitle {
+  font-size: 1.1rem;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.featureDescription {
+  color: #a0a0a0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.gettingStartedCta {
+  display: inline-block;
+  background-color: #ffb400;
+  color: #1e1e1e;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.gettingStartedCta:hover {
+  background-color: #e6a200;
+  color: #1e1e1e;
+  text-decoration: none;
+}
+
+/* What You Get */
+
+.whatYouGet {
+  padding: 5rem 0 2rem;
+  background-color: #232323;
+}
+
+.whatYouGetHeading {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.whatYouGetSubtitle {
+  text-align: center;
+  color: #a0a0a0;
+  font-size: 1rem;
+  max-width: 40rem;
+  margin: 0 auto 3rem;
+  line-height: 1.7;
+}
+
+.whatYouGetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.whatYouGetItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background-color: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.whatYouGetIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.whatYouGetTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 0.25rem;
+}
+
+.whatYouGetNote {
+  font-size: 0.82rem;
+  color: #707070;
+  line-height: 1.5;
+}
+
+/* Call to Action */
+
+.cta {
+  padding: 3rem 0 3rem;
+  background-color: #232323;
+}
+
+.ctaHeading {
+  font-size: 1.6rem;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Home Footer */
+
+.homeFooter {
+  background-color: #141414;
+  border-top: 1px solid #2a2a2a;
+  padding: 3rem 2rem;
+}
+
+.homeFooterInner {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  gap: 4rem;
+  align-items: flex-start;
+}
+
+.homeFooterBrand {
+  flex: 0 0 20rem;
+}
+
+.homeFooterLogo {
+  max-width: 10rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.homeFooterTagline {
+  font-size: 0.85rem;
+  color: #606060;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.homeFooterLinks {
+  flex: 1;
+  display: flex;
+  gap: 4rem;
+  justify-content: flex-end;
+}
+
+.homeFooterCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.homeFooterColTitle {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #484848;
+  margin-bottom: 0.25rem;
+}
+
+.homeFooterLink {
+  font-size: 0.875rem;
+  color: #707070;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.homeFooterLink:hover {
+  color: #a0a0a0;
+  text-decoration: none;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem 1.5rem;
+  }
+
+  .heroTitle {
+    font-size: 2rem;
+  }
+
+  .heroTagline {
+    font-size: 1.1rem;
+  }
+
+  .techStrip {
+    padding: 1.5rem;
+  }
+
+  .techStripContent {
+    gap: 2rem;
+    padding-right: 2rem;
+  }
+
+  .techStripLogos {
+    gap: 1.25rem;
+  }
+
+  .techStripLogo {
+    height: 2.2rem;
+  }
+
+  .techStripLogo[src$="/openbao-color.svg"] {
+    height: 2.7rem;
+  }
+
+  .techStripLogo[src$="/docker.svg"] {
+    height: 1.85rem;
+  }
+
+  .featureGrid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .featureItem {
+    max-width: none;
+  }
+
+  .whatYouGetGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .homeFooterInner {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .homeFooterBrand {
+    flex: none;
+  }
+
+  .homeFooterLinks {
+    justify-content: flex-start;
+  }
+}

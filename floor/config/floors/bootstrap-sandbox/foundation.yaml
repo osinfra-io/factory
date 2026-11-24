@@ -1,0 +1,43 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: foundation-source
+  namespace: bootstrap-sandbox
+spec:
+  interval: 1m
+  ref:
+    branch: ${FLOOR_CONFIG_BRANCH}
+  url: https://github.com/osinfra-io/factory
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foundation-bootstrap-backend
+  namespace: bootstrap-sandbox
+data:
+  bucket: bootstrap-567188438944-sb-state
+  prefix: foundation
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foundation-bootstrap-inputs
+  namespace: bootstrap-sandbox
+data:
+  environment: sandbox
+  google_environment_root_folder_id: "567188438944"
+  google_quota_project: bootstrap-567188438944-sb
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  labels:
+    app.kubernetes.io/component: foundation
+  name: foundation-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  dependsOn:
+    - name: bootstrap-sandbox
+  tfVarsFiles:
+    - tofu/foundation/teams/factory.tfvars
+  workspace: foundation-main-sandbox

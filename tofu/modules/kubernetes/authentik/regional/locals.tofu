@@ -32,6 +32,13 @@ locals {
 
   extra_containers = var.cloud_sql_connection_name == null ? [] : [local.cloud_sql_proxy_container]
 
+  global_env = var.web_base_url == null ? [] : [
+    {
+      name  = "AUTHENTIK_WEB__BASE_URL"
+      value = var.web_base_url
+    }
+  ]
+
   helm_values = yamlencode({
     authentik = {
       postgresql = {
@@ -44,6 +51,8 @@ locals {
     }
 
     global = {
+      env = local.global_env
+
       envFrom = [
         {
           secretRef = {

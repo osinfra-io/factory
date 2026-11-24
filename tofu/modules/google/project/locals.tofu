@@ -11,10 +11,10 @@ locals {
   # https://opentofu.org/docs/language/expressions/conditionals
 
   cis_2_2_logging_bucket_locked       = local.cis_2_2_logging_sink_local ? google_logging_project_bucket_config.cis_2_2_logging_sink.locked : null
-  cis_2_2_logging_sink_external       = var.cis_2_2_logging_sink_project_id != ""
-  cis_2_2_logging_sink_local          = var.cis_2_2_logging_sink_project_id == ""
-  cis_2_2_logging_sink_project_id     = var.cis_2_2_logging_sink_project_id == "" ? google_project.this.project_id : var.cis_2_2_logging_sink_project_id
-  cis_2_2_logging_sink_storage_bucket = var.cis_2_2_logging_sink_project_id == "" ? "logging.googleapis.com/${google_logging_project_bucket_config.cis_2_2_logging_sink.name}" : "logging.googleapis.com/projects/${var.cis_2_2_logging_sink_project_id}/locations/${var.key_ring_location}/buckets/cis-2-2-logging-sink"
+  cis_2_2_logging_sink_external       = var.cis_2_2_logging_sink != null ? true : var.cis_2_2_logging_sink_project_id != ""
+  cis_2_2_logging_sink_local          = !local.cis_2_2_logging_sink_external
+  cis_2_2_logging_sink_project_id     = local.cis_2_2_logging_sink_local ? google_project.this.project_id : local.external_logging_project_id
+  cis_2_2_logging_sink_storage_bucket = local.cis_2_2_logging_sink_local ? "logging.googleapis.com/${google_logging_project_bucket_config.cis_2_2_logging_sink.name}" : "logging.googleapis.com/projects/${local.external_logging_project_id}/locations/${var.key_ring_location}/buckets/cis-2-2-logging-sink"
 
   # This map is used to create the GCP-CIS v1.3.0 logging metrics and alarms (2.4 - 2.11). It is recommended that metric filters and alarms be established for
   # the following resources.
@@ -90,8 +90,9 @@ locals {
     for k, v in local.cis_logging_metrics : k => merge({ status = v.status }, var.labels)
   }
 
+  external_logging_project_id      = var.cis_2_2_logging_sink != null ? var.cis_2_2_logging_sink.project_id : var.cis_2_2_logging_sink_project_id
   logging_service_identity_enabled = true
-  logging_service_identity_member  = try("serviceAccount:${google_project_service_identity.logging.email}", "serviceAccount:pending@pending.iam.gserviceaccount.com")
+  logging_service_identity_member  = local.cis_2_2_logging_sink_local ? "serviceAccount:${data.google_logging_project_settings.this.kms_service_account_id}" : null
 
   monitoring_notification_channels = {
     "budget" = {
@@ -110,7 +111,13 @@ locals {
   # Format Function
   # https://opentofu.org/docs/language/functions/format
 
-  project_id = var.random_project_id ? format("%s-%s-%s", var.prefix, random_id.this.hex, module.core_helpers.env) : local.base_project_id
+  project_id = var.random_project_id ? format("%s-%s-%s", var.prefix, local.random_project_id_suffix, module.core_helpers.env) : local.base_project_id
+
+  random_project_id_bytes  = ceil(var.random_project_id_hex_length / 2)
+  random_project_id_prefix = "tf"
+  random_project_id_suffix = var.random_project_id ? substr(
+    random_id.this.hex, 0, length(local.random_project_id_prefix) + var.random_project_id_hex_length
+  ) : null
 
   # Concat Function
   # https://opentofu.org/docs/language/functions/concat

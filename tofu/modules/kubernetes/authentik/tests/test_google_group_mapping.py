@@ -19,11 +19,16 @@ class GoogleGroupMappingTest(unittest.TestCase):
         )
         self.assertIsNotNone(match)
         groups = {
-            "pt-pneuma-agentgateway-admins": {
-                "name": "pt-pneuma: agentgateway Admins",
+            "runtime-agentgateway-admins": {
+                "name": "runtime: agentgateway Admins",
                 "members": ["member@example.com"],
                 "description": "UI access",
-            }
+            },
+            "sandbox-agentgateway-admins": {
+                "name": "runtime: agentgateway Admins",
+                "members": ["member@example.com"],
+                "description": "Same group name from another key",
+            },
         }
         expression = textwrap.dedent(match.group(1)).replace(
             "${jsonencode(jsonencode(var.application_groups))}",
@@ -37,14 +42,20 @@ class GoogleGroupMappingTest(unittest.TestCase):
         result = self.mapping(
             {"email": "member@example.com", "email_verified": True}
         )
-        self.assertEqual(result["groups"], ["pt-pneuma: agentgateway Admins"])
+        self.assertEqual(result["groups"], ["runtime: agentgateway Admins"])
         self.assertEqual(result["attributes"]["osinfra_google_email"], "member@example.com")
+
+    def test_duplicate_group_names_are_returned_once(self):
+        result = self.mapping(
+            {"email": "member@example.com", "email_verified": True}
+        )
+        self.assertEqual(len(result["groups"]), len(set(result["groups"])))
 
     def test_normalized_member(self):
         result = self.mapping(
             {"email": "MEMBER@example.com", "email_verified": True}
         )
-        self.assertEqual(result["groups"], ["pt-pneuma: agentgateway Admins"])
+        self.assertEqual(result["groups"], ["runtime: agentgateway Admins"])
         self.assertEqual(result["email"], "member@example.com")
         self.assertEqual(result["attributes"]["osinfra_google_email"], result["email"])
 
@@ -52,14 +63,14 @@ class GoogleGroupMappingTest(unittest.TestCase):
         result = self.mapping(
             {"email": "member@example.com", "verified_email": True}
         )
-        self.assertEqual(result["groups"], ["pt-pneuma: agentgateway Admins"])
+        self.assertEqual(result["groups"], ["runtime: agentgateway Admins"])
 
     def test_nonmember_cannot_supply_groups(self):
         result = self.mapping(
             {
                 "email": "other@example.com",
                 "email_verified": True,
-                "groups": ["pt-pneuma: agentgateway Admins"],
+                "groups": ["runtime: agentgateway Admins"],
             }
         )
         self.assertEqual(result["groups"], [])
@@ -68,7 +79,7 @@ class GoogleGroupMappingTest(unittest.TestCase):
         result = self.mapping(
             {"email": "member@example.com", "email_verified": True, "verified_email": True}
         )
-        self.assertEqual(result["groups"], ["pt-pneuma: agentgateway Admins"])
+        self.assertEqual(result["groups"], ["runtime: agentgateway Admins"])
 
     def test_unverified_identity_fails(self):
         for info in [

@@ -334,17 +334,17 @@ run "managed_application_membership" {
   }
 
   variables {
-    superuser_group_keys = ["pt-pneuma-authentik-admins"]
+    superuser_group_keys = ["runtime-authentik-admins"]
     application_groups = {
-      pt-pneuma-authentik-admins = {
+      runtime-authentik-admins = {
         description = "Authentik instance administration"
         members     = ["member@example.com"]
-        name        = "pt-pneuma: authentik Admins"
+        name        = "runtime: authentik Admins"
       }
-      pt-pneuma-agentgateway-admins = {
+      runtime-agentgateway-admins = {
         description = "agentgateway UI access"
         members     = ["member@example.com", "new@example.com"]
-        name        = "pt-pneuma: agentgateway Admins"
+        name        = "runtime: agentgateway Admins"
       }
     }
   }
@@ -392,17 +392,17 @@ run "managed_application_membership" {
   }
 
   assert {
-    condition     = output.application_groups["pt-pneuma-agentgateway-admins"].name == "pt-pneuma: agentgateway Admins" && !output.application_groups["pt-pneuma-agentgateway-admins"].is_superuser && output.application_groups["pt-pneuma-agentgateway-admins"].users == tolist([101])
+    condition     = output.application_groups["runtime-agentgateway-admins"].name == "runtime: agentgateway Admins" && !output.application_groups["runtime-agentgateway-admins"].is_superuser && output.application_groups["runtime-agentgateway-admins"].users == tolist([101])
     error_message = "Only a verified Google identity may join the non-superuser application group; preserve the display name."
   }
 
   assert {
-    condition     = output.application_groups["pt-pneuma-authentik-admins"].name == "pt-pneuma: authentik Admins" && output.application_groups["pt-pneuma-authentik-admins"].is_superuser && output.application_groups["pt-pneuma-authentik-admins"].users == tolist([101])
+    condition     = output.application_groups["runtime-authentik-admins"].name == "runtime: authentik Admins" && output.application_groups["runtime-authentik-admins"].is_superuser && output.application_groups["runtime-authentik-admins"].users == tolist([101])
     error_message = "Only an explicitly selected, verified group may receive Authentik superuser privileges."
   }
 
   assert {
-    condition     = output.pending_application_members["pt-pneuma-agentgateway-admins"] == tolist(["new@example.com"])
+    condition     = output.pending_application_members["runtime-agentgateway-admins"] == tolist(["new@example.com"])
     error_message = "Unverified or not-yet-enrolled identities must remain explicitly pending."
   }
 
@@ -421,16 +421,16 @@ run "application_membership_removed" {
 
   variables {
     application_groups = {
-      pt-pneuma-agentgateway-admins = {
+      runtime-agentgateway-admins = {
         description = "agentgateway UI access"
         members     = []
-        name        = "pt-pneuma: agentgateway Admins"
+        name        = "runtime: agentgateway Admins"
       }
     }
   }
 
   assert {
-    condition     = length(output.application_groups["pt-pneuma-agentgateway-admins"].users) == 0 && length(output.pending_application_members["pt-pneuma-agentgateway-admins"]) == 0
+    condition     = length(output.application_groups["runtime-agentgateway-admins"].users) == 0 && length(output.pending_application_members["runtime-agentgateway-admins"]) == 0
     error_message = "Removing all declared members must empty the managed application group without deleting it."
   }
 }

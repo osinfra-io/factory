@@ -1,0 +1,1487 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: trust-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/trust
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  workspace: trust-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-global-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio-global
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+  workspace: istio-global-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: onboarding-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: runtime-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/onboarding
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-onboarding-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: onboarding-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: runtime-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/onboarding
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-onboarding-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: cert-manager-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: onboarding-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/cert-manager
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-cert-manager-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: cert-manager-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: onboarding-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/cert-manager
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-cert-manager-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: cert-manager-istio-csr-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east1-b-sandbox
+    - name: trust-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/cert-manager-istio-csr
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-cert-manager-istio-csr-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: cert-manager-istio-csr-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east4-a-sandbox
+    - name: trust-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/cert-manager-istio-csr
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-cert-manager-istio-csr-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-istio-csr-us-east1-b-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-istio-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-istio-csr-us-east4-a-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-istio-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: mesh-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+    - name: istio-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/mesh
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-mesh-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: mesh-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+    - name: istio-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/mesh
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-mesh-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: opa-gatekeeper-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/opa-gatekeeper
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-opa-gatekeeper-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: opa-gatekeeper-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/opa-gatekeeper
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-opa-gatekeeper-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: opa-gatekeeper-templates-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: opa-gatekeeper-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/opa-gatekeeper-templates
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-opa-gatekeeper-templates-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: opa-gatekeeper-templates-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: opa-gatekeeper-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/opa-gatekeeper-templates
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-opa-gatekeeper-templates-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: opa-gatekeeper-constraints-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: opa-gatekeeper-templates-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/opa-gatekeeper-constraints
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-opa-gatekeeper-constraints-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: opa-gatekeeper-constraints-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: opa-gatekeeper-templates-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/opa-gatekeeper-constraints
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-opa-gatekeeper-constraints-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: agentgateway-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/agentgateway
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-agentgateway-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: agentgateway-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/agentgateway
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-agentgateway-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: openbao-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east1-b-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/openbao
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-openbao-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: openbao-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: cert-manager-us-east4-a-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/openbao
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-openbao-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: authentik-global-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: assembly-us-east1-sandbox
+    - name: istio-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/authentik-global
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+  workspace: authentik-global-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: authentik-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+    - name: authentik-global-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/authentik
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-authentik-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: authentik-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east4-a-sandbox
+    - name: authentik-global-sandbox
+    - name: authentik-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/authentik
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-authentik-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-manifests-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east1-b-sandbox
+    - name: agentgateway-us-east1-b-sandbox
+    - name: authentik-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio-manifests
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-istio-manifests-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-manifests-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-us-east4-a-sandbox
+    - name: agentgateway-us-east4-a-sandbox
+    - name: authentik-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio-manifests
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-istio-manifests-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: agentgateway-manifests-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: agentgateway-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/agentgateway-manifests
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-agentgateway-manifests-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: agentgateway-manifests-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: agentgateway-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/agentgateway-manifests
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-agentgateway-manifests-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-test-us-east1-b-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-manifests-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio-test
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east1-b-istio-test-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: istio-test-us-east4-a-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: istio-manifests-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/istio-test
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-switch
+      optional: true
+  workspace: us-east4-a-istio-test-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: authentik-config-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: authentik-global-sandbox
+    - name: istio-global-sandbox
+    - name: istio-manifests-us-east1-b-sandbox
+    - name: istio-manifests-us-east4-a-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/authentik-config
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+    - kind: Secret
+      name: floor-authentik-google-oauth
+      varsKeys:
+        - google_oauth_client_secret
+  workspace: authentik-config-sandbox
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: openbao-config-sandbox
+  namespace: bootstrap-sandbox
+spec:
+  backendConfig:
+    customConfiguration: |
+      backend "gcs" {}
+  backendConfigsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      keys:
+        - bucket
+    - kind: ConfigMap
+      name: runtime-sandbox-backend
+  dependsOn:
+    - name: authentik-config-sandbox
+    - name: istio-global-sandbox
+    - name: openbao-us-east1-b-sandbox
+  destroyResourcesOnDeletion: false
+  disableDriftDetection: true
+  interval: 10m
+  path: ./tofu/runtime/openbao-config
+  planOnly: false
+  runnerPodTemplate:
+    spec:
+      envFrom:
+        - secretRef:
+            name: floor-bootstrap-auth
+        - secretRef:
+            name: floor-foundation-state-env
+        - secretRef:
+            name: floor-openbao-auth
+  serviceAccountName: tf-bootstrap
+  sourceRef:
+    kind: GitRepository
+    name: foundation-source
+  storeReadablePlan: json
+  varsFrom:
+    - kind: ConfigMap
+      name: foundation-bootstrap-backend
+      varsKeys:
+        - bucket
+  workspace: openbao-config-sandbox

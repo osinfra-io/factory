@@ -40,6 +40,14 @@ data "authentik_property_mapping_provider_scope" "entitlements" {
   managed = "goauthentik.io/providers/oauth2/scope-entitlements"
 }
 
+data "authentik_property_mapping_provider_scope" "offline_access" {
+  lifecycle {
+    enabled = local.cli_oidc_enabled
+  }
+
+  managed = "goauthentik.io/providers/oauth2/scope-offline_access"
+}
+
 data "authentik_property_mapping_provider_scope" "openid" {
   managed = "goauthentik.io/providers/oauth2/scope-openid"
 }

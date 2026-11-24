@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 
-ADMIN = "pt-pneuma: agentgateway Admins"
+ADMIN = "runtime: agentgateway Admins"
 
 
 class PolicyRequest:
@@ -122,7 +122,7 @@ class BrowserAccessPolicyTest(unittest.TestCase):
         self.assertFalse(self.allows([], "roles_only"))
 
     def test_child_group_inherits_required_parent_access(self):
-        child = "pt-pneuma: agentgateway Operators"
+        child = "runtime: agentgateway Operators"
         self.assertTrue(self.allows(["all", child], inherited=[ADMIN]))
         self.assertFalse(self.allows(["all", child]))
         self.assertFalse(self.allows([child], inherited=[ADMIN]))

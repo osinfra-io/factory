@@ -48,7 +48,14 @@ Google-backed OIDC sign-in is a separate manual developer check and is not cover
 
 3. Authentik setup uses `git config user.email` as the local test identity; it must match the Google account used for sign-in. The identity is added to every sandbox application group, including Authentik Admins. Verify team-scoped access after sign-in. Automated policy checks do not prove that Google sign-in or group claims work end to end.
 
-The local fixture uses the same host-level authorization as the cloud: `agentgateway.localhost` requires the managed agentgateway Admins group, `kagent.localhost` requires kagent Admins, while `dev.localhost` uses the baseline `all` group. No post-auth authorization Lua is deployed; only identity-header stripping remains.
+The local fixture reads Factory's authentik group declarations from [`tofu/foundation/teams/factory.tfvars`](../../tofu/foundation/teams/factory.tfvars). The fixture's platform configuration selects the groups allowed into shared browser applications and grants instance-wide superuser access to `factory/authentik-admins`. `agentgateway.localhost` requires the managed agentgateway Admins group, `kagent.localhost` requires kagent Admins, and the fixture-only diagnostic app at `dev.localhost` uses the baseline `all` group. No post-auth authorization Lua is deployed; only identity-header stripping remains.
+
+Run the mocked authentik configuration tests against the same team file:
+
+```bash
+tofu -chdir=tests/integration/authentik/config test \
+  -var-file=../../../../tofu/foundation/teams/factory.tfvars -var=environment=sandbox
+```
 
 Google users are classified as internal only when their verified email and Google Workspace `hd` claim both match `osinfra.io`; other Google users remain external. Existing accounts receive the classification on their next Google sign-in. Internal status permits access to the authentik user interface, but administrative permissions still require the declared authentik Admins group.
 

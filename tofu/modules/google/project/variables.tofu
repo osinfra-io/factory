@@ -18,6 +18,19 @@ variable "cis_2_2_logging_bucket_locked" {
   default     = true
 }
 
+variable "cis_2_2_logging_sink" {
+  default     = null
+  description = "External CIS 2.2 logging sink project; set the object when the project ID is unknown until apply"
+  type = object({
+    project_id = string
+  })
+
+  validation {
+    condition     = var.cis_2_2_logging_sink == null || var.cis_2_2_logging_sink_project_id == ""
+    error_message = "Set either cis_2_2_logging_sink or cis_2_2_logging_sink_project_id, not both."
+  }
+}
+
 variable "cis_2_2_logging_sink_project_id" {
   description = "The CIS 2.2 logging sink project ID"
   type        = string
@@ -63,6 +76,17 @@ variable "random_project_id" {
   description = "If true, a random hex value with a prefix of tf will be added to the `project_id`"
   type        = bool
   default     = true
+}
+
+variable "random_project_id_hex_length" {
+  default     = 3
+  description = "Number of random hexadecimal digits after tf in a generated project ID"
+  type        = number
+
+  validation {
+    condition     = var.random_project_id_hex_length >= 1 && var.random_project_id_hex_length <= 24 && floor(var.random_project_id_hex_length) == var.random_project_id_hex_length
+    error_message = "The random project ID suffix length must be a whole number between 1 and 24."
+  }
 }
 
 variable "security_notification_email" {
