@@ -31,6 +31,9 @@ SHARED_FILES = {
 
 
 def check_shared_files(root: Path) -> list[str]:
+    deployment_root = root / "tofu"
+    if deployment_root.is_symlink():
+        return ["tofu: Flux source artifacts omit symlinks"]
     errors = []
     for source, copies in SHARED_FILES.items():
         canonical = root / source
@@ -45,13 +48,12 @@ def check_shared_files(root: Path) -> list[str]:
             elif not path.is_symlink() and path.read_bytes() != content:
                 errors.append(f"{copy}: differs from {source}")
 
-    for base in ("tofu/modules", "tofu/runtime"):
-        for directory, directories, files in os.walk(root / base):
-            directories[:] = [name for name in directories if name not in (".terraform", "tests")]
-            for name in files:
-                path = Path(directory) / name
-                if path.suffix == ".tofu" and path.is_symlink():
-                    errors.append(f"{path.relative_to(root)}: Flux source artifacts omit symlinks")
+    for directory, directories, files in os.walk(deployment_root):
+        directories[:] = [name for name in directories if name not in (".terraform", "tests")]
+        for name in directories + files:
+            path = Path(directory) / name
+            if path.is_symlink():
+                errors.append(f"{path.relative_to(root)}: Flux source artifacts omit symlinks")
     return errors
 
 
@@ -81,7 +83,8 @@ def main() -> int:
     errors = check_shared_files(root)
     if errors:
         print("\n".join(errors), file=sys.stderr)
-        print("Edit canonical shared files, then run: python3 tests/check_shared_files.py --sync",
+        print("Replace deployment symlinks with regular files or directories. To refresh shared copies, "
+              "edit their canonical sources, then run: python3 tests/check_shared_files.py --sync",
               file=sys.stderr)
         return 1
     return 0

@@ -50,6 +50,37 @@ class SharedFilesTests(unittest.TestCase):
         path.symlink_to(self.root / self.source)
         self.assertTrue(any("new.tofu" in error for error in check_shared_files(self.root)))
 
+    def test_rejects_foundation_assembly_and_module_asset_symlinks(self):
+        for name in (
+            "tofu/foundation/main.tofu",
+            "tofu/assembly/backend.tofu",
+            "tofu/modules/example/policy.rego",
+            "tofu/modules/example/values.yaml",
+        ):
+            with self.subTest(path=name):
+                path = self.root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.symlink_to(self.root / self.source)
+                self.assertIn(f"{name}: Flux source artifacts omit symlinks",
+                              check_shared_files(self.root))
+                path.unlink()
+
+    def test_rejects_deployment_directory_symlinks_and_preserves_directory_exclusions(self):
+        for name in ("tofu/foundation/tests", "tofu/assembly/.terraform"):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.symlink_to((self.root / self.source).parent)
+        self.assertEqual(check_shared_files(self.root), [])
+        path = self.root / "tofu/runtime/new-stage"
+        path.symlink_to((self.root / self.source).parent)
+        self.assertIn("tofu/runtime/new-stage: Flux source artifacts omit symlinks",
+                      check_shared_files(self.root))
+        deployment_root = self.root / "tofu"
+        target = self.root / "materialized"
+        deployment_root.rename(target)
+        deployment_root.symlink_to(target)
+        self.assertIn("tofu: Flux source artifacts omit symlinks", check_shared_files(self.root))
+
     def test_sync_rejects_invalid_sources_before_modifying_copies(self):
         canonical = self.root / self.source
         canonical.unlink()

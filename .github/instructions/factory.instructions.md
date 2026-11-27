@@ -53,7 +53,7 @@ Modules follow this standard file layout:
 
 Use local relative paths for dependencies between modules in this repository. When identical files are needed in sibling directories, keep one canonical copy in the nearest `shared/` directory and use relative symlinks.
 
-Floor is the exception: Flux Git source artifacts omit symlinks. Deployment-consumed OpenTofu files must be regular files. Keep shared copies listed in `tests/check_shared_files.py`, edit their canonical sources, and regenerate them with `python3 tests/check_shared_files.py --sync`. The `shared-files` pre-commit hook checks synchronization and rejects deployment-source symlinks; test fixtures may still use symlinks.
+Floor is the exception: Flux Git source artifacts omit symlinks. Deployment-consumed files and directories must not be symlinks. Keep shared copies listed in `tests/check_shared_files.py`, edit their canonical sources, and regenerate them with `python3 tests/check_shared_files.py --sync`. The `shared-files` pre-commit hook checks synchronization and rejects file and directory symlinks throughout `tofu/`, excluding `tests/` and `.terraform/`; test fixtures may still use symlinks.
 
 Keep all conditional logic, string transformations, and computed values in `locals.tofu`. The only inline exception is a single-function type conversion with no conditional or string logic, such as `toset(var.names)` or `jsonencode(var.config)`.
 
