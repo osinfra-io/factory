@@ -21,9 +21,7 @@ resource "helm_release" "cni" {
   namespace  = "istio-system"
   repository = var.chart_repository
 
-  values = [
-    yamlencode(local.cni_helm_values)
-  ]
+  values = local.helm_release_cni_values
 
   version = var.istio_version
 }
@@ -38,10 +36,7 @@ resource "helm_release" "istiod" {
   namespace  = "istio-system"
   repository = var.chart_repository
 
-  values = [
-    file("${path.module}/../helm/istiod.yml"),
-    yamlencode(local.istiod_helm_values)
-  ]
+  values = local.helm_release_istiod_values
 
   version = var.istio_version
 }
@@ -56,9 +51,7 @@ resource "helm_release" "ztunnel" {
   namespace  = "istio-system"
   repository = var.chart_repository
 
-  values = [
-    yamlencode(local.ztunnel_helm_values)
-  ]
+  values = local.helm_release_ztunnel_values
 
   version = var.istio_version
 }

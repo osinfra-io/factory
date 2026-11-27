@@ -21,13 +21,13 @@ variable "gateway_namespace" {
 
 variable "outpost_namespace" {
   default     = "authentik"
-  description = "Namespace of the region-local Authentik outpost Service."
+  description = "Namespace of the region-local authentik outpost Service."
   type        = string
 }
 
 variable "outpost_path_prefix" {
   default     = "/outpost.goauthentik.io/auth/envoy"
-  description = "Envoy forward-auth endpoint on the Authentik outpost."
+  description = "Envoy forward-auth endpoint on the authentik outpost."
   type        = string
 
   validation {
@@ -38,24 +38,25 @@ variable "outpost_path_prefix" {
 
 variable "outpost_service_name" {
   default     = "authentik-server"
-  description = "Region-local Service hosting the embedded Authentik outpost."
+  description = "Region-local Service hosting the embedded authentik outpost."
   type        = string
 }
 
 variable "outpost_service_port" {
   default     = 80
-  description = "HTTP Service port hosting the embedded Authentik outpost."
+  description = "HTTP Service port hosting the embedded authentik outpost."
   type        = number
 
   validation {
-    condition     = var.outpost_service_port >= 1 && var.outpost_service_port <= 65535 && floor(var.outpost_service_port) == var.outpost_service_port
+    condition = var.outpost_service_port >= 1 && var.outpost_service_port <= 65535 && floor(var.outpost_service_port) == var.outpost_service_port
+
     error_message = "The outpost Service port must be an integer from 1 through 65535."
   }
 }
 
 variable "policies" {
   default     = {}
-  description = "Resolved host/route intent keyed by stable policy identity. Browser authorization uses host-scoped Authentik application bindings, not CUSTOM policy JWT claims."
+  description = "Resolved host/route intent keyed by stable policy identity. Browser authorization uses host-scoped authentik application bindings, not CUSTOM policy JWT claims."
 
   type = map(object({
     audiences       = optional(list(string), [])
@@ -77,7 +78,7 @@ variable "policies" {
         }) if policy.mode == "browser" && policy.host == host
       ])) == 1
     ])
-    error_message = "Browser routes sharing a host must declare identical required_groups and required_roles for host-scoped Authentik authorization."
+    error_message = "Browser routes sharing a host must declare identical required_groups and required_roles for host-scoped authentik authorization."
   }
 
   validation {

@@ -34,7 +34,8 @@ variable "cluster_prefix" {
   description = "Prefix for your cluster name, region, and zone (if applicable) will be added to the end of the cluster name. Must be 20 characters or less"
   type        = string
   validation {
-    condition     = length(var.cluster_prefix) <= 20
+    condition = length(var.cluster_prefix) <= 20
+
     error_message = "The cluster prefix must be 20 characters or less."
   }
 }

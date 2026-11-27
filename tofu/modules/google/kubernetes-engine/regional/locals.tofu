@@ -46,6 +46,11 @@ locals {
     }
   }
 
+  google_artifact_registry_repository_iam_member_default_node_lifecycle_enabled = var.artifact_registry_repository != null
+
+
+
+
   key_ring_name = "${local.name}-cluster-encryption-${random_id.this.hex}"
 
   kms_crypto_keys = {

@@ -18,4 +18,5 @@ locals {
   }
 
   user_project_override = var.google_quota_project != null
+
 }

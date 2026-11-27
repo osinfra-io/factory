@@ -31,7 +31,7 @@ module "private_test" {
   dns_name                           = "mock-priv-subdomain.mock-domain."
   labels                             = local.labels
   name                               = "mock-priv-subdomain-mock-domain"
-  private_visibility_config_networks = ["https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/mock-vpc"]
+  private_visibility_config_networks = local.private_test_private_visibility_config_networks
   project                            = var.project
   visibility                         = "private"
 }

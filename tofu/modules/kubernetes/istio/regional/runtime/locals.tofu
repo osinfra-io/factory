@@ -30,6 +30,19 @@ locals {
     } : k => v if v != null
   }
 
+  helm_release_cni_values = [
+    yamlencode(local.cni_helm_values)
+  ]
+
+  helm_release_istiod_values = [
+    file("${path.module}/../helm/istiod.yml"),
+    yamlencode(local.istiod_helm_values)
+  ]
+
+  helm_release_ztunnel_values = [
+    yamlencode(local.ztunnel_helm_values)
+  ]
+
   istiod_helm_values = {
     autoscaleMax = var.pilot_autoscale_max
     autoscaleMin = var.pilot_autoscale_min

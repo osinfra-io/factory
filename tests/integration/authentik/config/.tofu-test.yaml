@@ -1,0 +1,3 @@
+args:
+  - -var-file=../../../../tofu/foundation/teams/factory.tfvars
+  - -var=environment=sandbox

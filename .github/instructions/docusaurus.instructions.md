@@ -11,6 +11,8 @@ checked-in configuration from approved or applied infrastructure.
 
 ## Documentation structure
 
+Paths and commands in this file are relative to `docusaurus/`.
+
 - `docs/architecture/index.md` is the architecture overview.
 - `docs/architecture/environment-lifecycle.md` describes environment rollout,
   DNS gates, and reconciliation handoff.
@@ -19,13 +21,9 @@ checked-in configuration from approved or applied infrastructure.
 - `docs/local-development.md` describes the documentation site and local
   integration workflow.
 
-Use the existing architecture terms consistently:
-
-- **Foundation** establishes organizational and environment foundations.
-- **Assembly** composes cloud infrastructure, projects, and environments.
-- **Runtime** provides clusters and workload capabilities.
-- **Floor** is the execution and orchestration environment across these layers,
-  not another layer.
+Use the architecture terms defined in
+`.github/instructions/factory.instructions.md` (relative to the repository root).
+Floor operates across the three layers; it is not another layer.
 
 Keep documentation concise and grounded in source code and tests in this
 repository. Label plans and target architecture as such. Do not claim that a

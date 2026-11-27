@@ -12,7 +12,7 @@ terraform {
   }
 }
 
-# Kubernetes Authentik
+# Kubernetes authentik
 # https://github.com/osinfra-io/pt-arche-kubernetes-authentik
 
 module "test" {

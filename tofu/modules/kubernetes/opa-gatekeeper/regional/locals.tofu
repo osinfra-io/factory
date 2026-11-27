@@ -2,6 +2,11 @@
 # https://opentofu.org/docs/language/values/locals
 
 locals {
+  helm_release_gatekeeper_values = [
+    file("${path.module}/helm/gatekeeper.yml"),
+    yamlencode(local.helm_values)
+  ]
+
   helm_values = {
     audit = {
       resources = {

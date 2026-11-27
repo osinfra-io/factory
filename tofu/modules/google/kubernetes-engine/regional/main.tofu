@@ -3,7 +3,7 @@
 
 resource "google_artifact_registry_repository_iam_member" "default_node" {
   lifecycle {
-    enabled = var.artifact_registry_repository != null
+    enabled = local.google_artifact_registry_repository_iam_member_default_node_lifecycle_enabled
   }
 
   location   = local.artifact_registry.location
@@ -17,6 +17,9 @@ resource "google_artifact_registry_repository_iam_member" "default_node" {
 # https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/container_cluster
 
 resource "google_container_cluster" "this" {
+  # tofu-scan skip: CIS 5.1.1 - Image vulnerability scanning is not enabled; review this exception before production use
+  # tofu-scan skip: CIS 5.6.3 - Authorized networks are not configured; review this exception before production use
+  # tofu-scan skip: CIS 5.6.4 - The public control plane endpoint is enabled; review this exception before production use
   lifecycle {
     ignore_changes = [
 

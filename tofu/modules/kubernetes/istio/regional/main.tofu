@@ -14,7 +14,6 @@ module "runtime" {
   cni_platform                    = "gke"
   enable_ca_server                = false
   enable_multi_network            = true
-  environment                     = module.core_helpers.environment
   image_hub                       = local.istio_image_hub
   istio_version                   = var.istio_version
   mesh_config_extension_providers = var.mesh_config_extension_providers
@@ -158,15 +157,14 @@ resource "kubernetes_ingress_v1" "istio_gateway" {
   }
 
   metadata {
-    name      = "istio-gateway"
-    namespace = "istio-ingress"
-
     annotations = {
       "kubernetes.io/ingress.allow-http"            = "false"
       "kubernetes.io/ingress.global-static-ip-name" = google_compute_global_address.istio_gateway.name
       "networking.gke.io/v1beta1.FrontendConfig"    = kubernetes_manifest.istio_gateway_frontendconfig.manifest.metadata.name
       "networking.gke.io/managed-certificates"      = kubernetes_manifest.istio_gateway_managed_certificate.manifest.metadata.name
     }
+    name      = "istio-gateway"
+    namespace = "istio-ingress"
   }
 
   spec {
@@ -274,44 +272,7 @@ resource "kubernetes_manifest" "istio_gateway" {
     enabled = var.enable_istio_gateway
   }
 
-  manifest = {
-    apiVersion = "gateway.networking.k8s.io/v1"
-    kind       = "Gateway"
-
-    metadata = {
-      name      = "gateway"
-      namespace = "istio-ingress"
-    }
-
-    spec = {
-      gatewayClassName = "istio"
-
-      # istiod provisions the data plane Deployment/Service (named gateway-istio) from this
-      # Gateway. The GKE Service annotations are copied onto the generated resources via
-      # infrastructure; the parametersRef ConfigMap carries the strategic-merge patches for the
-      # Service (NodePort), Deployment, HPA, and PodDisruptionBudget.
-
-      infrastructure = {
-        annotations = {
-          "cloud.google.com/app-protocols"  = jsonencode({ "https" = "HTTPS" })
-          "cloud.google.com/backend-config" = jsonencode({ "default" = "istio-gateway-backend" })
-          "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
-
-          # Suppress IST0170: The MCS only exports port 443 (not status-port 15021) by design,
-          # so Istio sees inconsistent ports across clusters. This is expected.
-          "galley.istio.io/analyze-suppress" = "IST0170"
-        }
-
-        parametersRef = {
-          group = ""
-          kind  = "ConfigMap"
-          name  = kubernetes_config_map_v1.istio_gateway_options.metadata[0].name
-        }
-      }
-
-      listeners = local.gateway_listeners
-    }
-  }
+  manifest = local.kubernetes_manifest_istio_gateway_manifest
 }
 
 # Kubernetes Manifest Resource
@@ -497,41 +458,7 @@ resource "kubernetes_manifest" "istio_gateway_mcs" {
     enabled = var.enable_istio_gateway
   }
 
-  manifest = {
-    apiVersion = "networking.gke.io/v1"
-    kind       = "MultiClusterService"
-
-    metadata = {
-      annotations = {
-        "cloud.google.com/backend-config" = jsonencode({ "default" = kubernetes_manifest.istio_gateway_backendconfig.manifest.metadata.name })
-        "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
-        "networking.gke.io/app-protocols" = jsonencode({ "https" = "HTTPS" })
-      }
-      name      = "istio-gateway-mcs"
-      namespace = "istio-ingress"
-    }
-
-    spec = {
-      template = {
-        spec = {
-          selector = {
-            "gateway.networking.k8s.io/gateway-name" = "gateway"
-          }
-
-          ports = [
-            {
-              name       = "https"
-              port       = 443
-              protocol   = "TCP"
-              targetPort = 443
-            }
-          ]
-        }
-      }
-
-      clusters = var.multi_cluster_service_clusters
-    }
-  }
+  manifest = local.kubernetes_manifest_istio_gateway_mcs_manifest
 }
 
 resource "kubernetes_manifest" "istio_gateway_tls" {

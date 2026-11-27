@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "pre-commit autoupdate --freeze",
+        "timeoutSec": 120
+      }
+    ]
+  }
+}

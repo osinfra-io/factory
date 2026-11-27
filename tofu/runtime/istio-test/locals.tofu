@@ -1,4 +1,7 @@
 locals {
+  kubernetes_deployment_v1_istio_test_container_image = "${local.registry}:${var.image_version}"
+
+  kubernetes_service_v1_istio_test_zonal_metadata_name = "istio-test-${local.location}"
   labels = {
     app = "istio-test"
   }

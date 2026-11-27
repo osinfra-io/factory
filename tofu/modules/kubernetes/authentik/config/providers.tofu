@@ -1,10 +1,10 @@
 terraform {
   required_providers {
 
-    # Authentik Provider
+    # authentik Provider
     # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs
 
-    # Constrained to the provider line matching the Authentik server version
+    # Constrained to the provider line matching the authentik server version
     # installed by regional/variables.tofu. Newer provider lines expect API
     # response fields the server does not return.
 

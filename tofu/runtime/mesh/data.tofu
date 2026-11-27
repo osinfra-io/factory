@@ -6,7 +6,7 @@ data "terraform_remote_state" "peer_cluster" {
     bucket = var.bucket
     prefix = "runtime"
   }
-  workspace = "${each.key}-runtime-${module.core_helpers.environment}"
+  workspace = local.terraform_remote_state_peer_cluster_workspace_by_instance[each.key]
 }
 
 data "terraform_remote_state" "peer_istio" {
@@ -17,5 +17,5 @@ data "terraform_remote_state" "peer_istio" {
     bucket = var.bucket
     prefix = "runtime"
   }
-  workspace = "${each.key}-istio-${module.core_helpers.environment}"
+  workspace = local.terraform_remote_state_peer_istio_workspace_by_instance[each.key]
 }

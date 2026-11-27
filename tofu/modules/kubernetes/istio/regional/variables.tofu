@@ -2,15 +2,15 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "artifact_registry" {
+  default     = "us-docker.pkg.dev/plt-lz-services-tf79-prod/plt-docker-virtual"
   description = "The registry to pull the images from"
   type        = string
-  default     = "us-docker.pkg.dev/plt-lz-services-tf79-prod/plt-docker-virtual"
 }
 
 variable "chart_repository" {
+  default     = "https://blob.istio.io/istio-release/charts"
   description = "The repository to pull the Istio Helm chart from"
   type        = string
-  default     = "https://blob.istio.io/istio-release/charts"
 }
 
 variable "cluster_prefix" {
@@ -19,188 +19,189 @@ variable "cluster_prefix" {
 }
 
 variable "cni_cpu_limits" {
+  default     = null
   description = "The CPU limit for the Istio CNI node agent, unset by default to match the upstream chart which ships requests only"
   type        = string
-  default     = null
 }
 
 variable "cni_cpu_requests" {
+  default     = "100m"
   description = "The CPU request for the Istio CNI node agent"
   type        = string
-  default     = "100m"
 }
 
 variable "cni_memory_limits" {
+  default     = null
   description = "The memory limit for the Istio CNI node agent, unset by default to match the upstream chart which ships requests only"
   type        = string
-  default     = null
 }
 
 variable "cni_memory_requests" {
+  default     = "100Mi"
   description = "The memory request for the Istio CNI node agent"
   type        = string
-  default     = "100Mi"
 }
 
 variable "east_west_gateway_cpu_limits" {
+  default     = "2"
   description = "The CPU limit for the Istio east-west gateway"
   type        = string
-  default     = "2"
 }
 
 variable "east_west_gateway_cpu_requests" {
+  default     = "100m"
   description = "The CPU request for the Istio east-west gateway"
   type        = string
-  default     = "100m"
 }
 
 variable "east_west_gateway_memory_limits" {
+  default     = "1Gi"
   description = "The memory limit for the Istio east-west gateway"
   type        = string
-  default     = "1Gi"
 }
 
 variable "east_west_gateway_memory_requests" {
+  default     = "128Mi"
   description = "The memory request for the Istio east-west gateway"
   type        = string
-  default     = "128Mi"
 }
 
 variable "enable_istio_gateway" {
+  default     = false
   description = "Enable the Istio gateway, used for ingress traffic into the mesh"
   type        = bool
-  default     = false
 }
 
 variable "gateway_autoscale_max" {
+  default     = 5
   description = "The maximum number of gateway replicas to run"
   type        = number
-  default     = 5
 }
 
 variable "gateway_autoscale_min" {
+  default     = 1
   description = "The minimum number of gateway replicas to run"
   type        = number
-  default     = 1
 }
 
 variable "gateway_cpu_limits" {
+  default     = "100m"
   description = "The CPU limit for the Istio gateway"
   type        = string
-  default     = "100m"
 }
 
 variable "gateway_cpu_requests" {
+  default     = "25m"
   description = "The CPU request for the Istio gateway"
   type        = string
-  default     = "25m"
 }
 
 variable "gateway_dns" {
+  default     = {}
   description = "Map of attributes for the Istio gateway domain names, it is also used to create the managed certificate resource"
   type = map(object({
     managed_zone = string
     project      = string
   }))
-  default = {}
 }
 
 variable "gateway_mci_global_address" {
+  default     = ""
   description = "The IP address for the Istio Gateway multi-cluster ingress"
   type        = string
-  default     = ""
 }
 
 variable "gateway_mci_ssl_certificate_names" {
+  default     = []
   description = "The names of the pre-shared SSL certificates attached to the Istio Gateway multi-cluster ingress"
   type        = list(string)
-  default     = []
 
   validation {
-    condition     = !var.enable_istio_gateway || length(var.gateway_mci_ssl_certificate_names) > 0
+    condition = !var.enable_istio_gateway || length(var.gateway_mci_ssl_certificate_names) > 0
+
     error_message = "At least one SSL certificate name is required when enable_istio_gateway is true."
   }
 }
 
 variable "gateway_memory_limits" {
+  default     = "64Mi"
   description = "The memory limit for the Istio gateway"
   type        = string
-  default     = "64Mi"
 }
 
 variable "gateway_memory_requests" {
+  default     = "32Mi"
   description = "The memory request for the Istio gateway"
   type        = string
-  default     = "32Mi"
 }
 
 
 variable "labels" {
+  default     = {}
   description = "A map of key/value pairs to assign to the resources being created"
   type        = map(string)
-  default     = {}
 }
 
 variable "mesh_config_extension_providers" {
+  default     = []
   description = "Istio meshConfig extensionProviders entries (e.g. envoyExtAuthzHttp providers) merged into istiod's Helm values, keeping the mesh config fully rendered by Helm instead of patched out-of-band"
   type        = list(any)
-  default     = []
 }
 
 variable "mesh_config_service_settings" {
+  default     = []
   description = "Istio meshConfig serviceSettings entries (e.g. clusterLocal service scoping) merged into istiod's Helm values, keeping the mesh config fully rendered by Helm instead of patched out-of-band"
   type        = list(any)
-  default     = []
 }
 
 variable "multi_cluster_service_clusters" {
+  default     = []
   description = "List of clusters to be included in the MultiClusterService"
   type = list(object({
     link = string
   }))
-  default = []
 }
 
 variable "pilot_autoscale_max" {
+  default     = 5
   description = "The maximum number of Istio pilot replicas to run"
   type        = number
-  default     = 5
 }
 
 variable "pilot_autoscale_min" {
+  default     = 1
   description = "The minimum number of Istio pilot replicas to run"
   type        = number
-  default     = 1
 }
 
 variable "pilot_cpu_limits" {
+  default     = "25m"
   description = "The CPU limit for the Istio pilot"
   type        = string
-  default     = "25m"
 }
 
 variable "pilot_cpu_requests" {
+  default     = "10m"
   description = "The CPU request for the Istio pilot"
   type        = string
-  default     = "10m"
 }
 
 variable "pilot_memory_limits" {
+  default     = "64Mi"
   description = "The memory limit for the Istio pilot"
   type        = string
-  default     = "64Mi"
 }
 
 variable "pilot_memory_requests" {
+  default     = "32Mi"
   description = "The memory request for the Istio pilot"
   type        = string
-  default     = "32Mi"
 }
 
 variable "pilot_replica_count" {
+  default     = 1
   description = "The number of Istio pilot replicas to run"
   type        = number
-  default     = 1
 }
 
 variable "project" {
@@ -209,27 +210,27 @@ variable "project" {
 }
 
 variable "proxy_cpu_limits" {
+  default     = "25m"
   description = "The CPU limit for the Istio proxy"
   type        = string
-  default     = "25m"
 }
 
 variable "proxy_cpu_requests" {
+  default     = "10m"
   description = "The CPU request for the Istio proxy"
   type        = string
-  default     = "10m"
 }
 
 variable "proxy_memory_limits" {
+  default     = "64Mi"
   description = "The memory limit for the Istio proxy"
   type        = string
-  default     = "64Mi"
 }
 
 variable "proxy_memory_requests" {
+  default     = "32Mi"
   description = "The memory request for the Istio proxy"
   type        = string
-  default     = "32Mi"
 }
 
 variable "tls_self_signed_cert_cert_manager_root_cert" {
@@ -239,30 +240,30 @@ variable "tls_self_signed_cert_cert_manager_root_cert" {
 
 variable "tls_self_signed_cert_cert_manager_root_key" {
   description = "The private key for the cert-manager root certificate"
-  type        = string
   sensitive   = true
+  type        = string
 }
 
 variable "ztunnel_cpu_limits" {
+  default     = "500m"
   description = "The CPU limit for ztunnel"
   type        = string
-  default     = "500m"
 }
 
 variable "ztunnel_cpu_requests" {
+  default     = "250m"
   description = "The CPU request for ztunnel"
   type        = string
-  default     = "250m"
 }
 
 variable "ztunnel_memory_limits" {
+  default     = "512Mi"
   description = "The memory limit for ztunnel"
   type        = string
-  default     = "512Mi"
 }
 
 variable "ztunnel_memory_requests" {
+  default     = "256Mi"
   description = "The memory request for ztunnel"
   type        = string
-  default     = "256Mi"
 }

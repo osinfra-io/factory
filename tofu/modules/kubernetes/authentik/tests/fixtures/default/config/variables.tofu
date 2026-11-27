@@ -1,6 +1,16 @@
 # Input Variables
 # https://opentofu.org/docs/language/values/variables
 
+variable "application_groups" {
+  default     = {}
+  description = "Managed application groups exercised by the fixture"
+  type = map(object({
+    description = string
+    members     = list(string)
+    name        = string
+  }))
+}
+
 variable "google_oauth_client_id" {
   default     = "test-client-id"
   description = "The Google OAuth client ID used by the test fixture"
@@ -16,6 +26,6 @@ variable "google_oauth_client_secret" {
 
 variable "superuser_group_keys" {
   default     = []
-  description = "Application groups that receive Authentik-wide superuser permissions in the test fixture"
+  description = "Application groups that receive authentik-wide superuser permissions in the test fixture"
   type        = set(string)
 }

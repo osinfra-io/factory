@@ -2,25 +2,18 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "allowed_groups" {
+  default     = ["system:masters"]
   description = "Kubernetes groups permitted to manage protected gateway authentication resources"
   type        = list(string)
-  default     = ["system:masters"]
 }
 
 variable "allowed_users" {
+  default     = []
   description = "Kubernetes usernames permitted to manage protected gateway authentication resources"
   type        = list(string)
-  default     = []
 }
 
 variable "protected_kinds" {
-  description = "Kubernetes resource kinds that only allowed users and groups may manage"
-
-  type = list(object({
-    apiGroup = string
-    kind     = string
-  }))
-
   default = [
     {
       apiGroup = "networking.istio.io"
@@ -36,6 +29,13 @@ variable "protected_kinds" {
     },
   ]
 
+  description = "Kubernetes resource kinds that only allowed users and groups may manage"
+
+  type = list(object({
+    apiGroup = string
+    kind     = string
+  }))
+
   validation {
     condition = alltrue([
       for protected_kind in var.protected_kinds :
@@ -48,9 +48,9 @@ variable "protected_kinds" {
 }
 
 variable "protected_namespaces" {
+  default     = ["authentik"]
   description = "Kubernetes namespaces whose lifecycle and Secrets only allowed users and groups may manage"
   type        = list(string)
-  default     = ["authentik"]
 
   validation {
     condition = alltrue([

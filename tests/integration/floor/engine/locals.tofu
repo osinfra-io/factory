@@ -7,6 +7,8 @@
 locals {
   branch_planner_resources = "- namespace: ${var.fixture_namespace}\n"
 
+  helm_release_tofu_controller_values = [yamlencode(local.tofu_controller_values)]
+
   tofu_controller_values = {
     branchPlanner = {
       enabled = true

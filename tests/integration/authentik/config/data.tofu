@@ -1,4 +1,4 @@
-# Authentik Brand
+# authentik Brand
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/brand
 
 data "authentik_brand" "built_in" {

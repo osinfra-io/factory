@@ -4,5 +4,5 @@ data "terraform_remote_state" "trust" {
     bucket = var.bucket
     prefix = "runtime"
   }
-  workspace = "trust-${coalesce(module.core_helpers.environment, "unsupported")}"
+  workspace = local.terraform_remote_state_trust_workspace
 }

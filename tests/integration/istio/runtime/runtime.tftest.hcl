@@ -21,7 +21,6 @@ run "cloud_wrapper_helm_parity" {
     cni_platform                    = "gke"
     enable_ca_server                = false
     enable_multi_network            = true
-    environment                     = "non-production"
     image_hub                       = "mock-docker.pkg.dev/mock-project/mock-virtual/istio"
     istio_version                   = "1.31.0-rc.0"
     mesh_config_extension_providers = []
@@ -99,7 +98,6 @@ run "local_runtime_profile" {
     cni_platform                    = ""
     enable_ca_server                = true
     enable_multi_network            = false
-    environment                     = "local"
     image_hub                       = "docker.io/istio"
     istio_version                   = "1.31.0-rc.0"
     mesh_config_extension_providers = []

@@ -42,6 +42,8 @@ locals {
     }
   }
 
+  for_each = var.import_built_in_brand ? toset(["built_in"]) : toset([])
+
   superuser_group_keys = ["factory/authentik-admins"]
 
   team_access_teams = {

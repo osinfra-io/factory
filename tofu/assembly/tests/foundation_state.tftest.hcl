@@ -180,13 +180,13 @@ run "ports_the_shared_vpc_for_the_factory_locations" {
       ])) == toset(["factory-us-east1-b"]) &&
       toset(keys(google_project_service_identity.multi_cluster)) == toset(["factory"]) &&
       output.team_dns["factory"].dns_name == "factory.sb.osinfra.io." &&
-      length(output.cloud_sql_instances) == 0 &&
+      toset(keys(output.cloud_sql_instances)) == toset(["factory/authentik"]) &&
       google_compute_global_address.private_services["sandbox"].address == "172.16.0.0" &&
       google_compute_global_address.private_services["sandbox"].prefix_length == 16 &&
       google_service_networking_connection.private_services["sandbox"].reserved_peering_ranges == tolist([google_compute_global_address.private_services["sandbox"].name]) &&
       toset(keys(google_artifact_registry_repository.docker_standard)) == toset(["factory"])
     )
-    error_message = "Factory's workload must plan DNS, six cluster networks, a fleet host and a registry for its clusters without enabling Cloud SQL; the shared Private Service Access range must remain."
+    error_message = "Factory's workload must plan DNS, six cluster networks, a fleet host, a registry and its declared Cloud SQL instance; the shared Private Service Access range must remain."
   }
 }
 
@@ -300,9 +300,9 @@ run "ports_opt_in_corpus_services" {
   assert {
     condition = (
       google_artifact_registry_repository.docker_virtual["factory"].mode == "VIRTUAL_REPOSITORY" &&
-      contains(google_artifact_registry_repository_iam_binding.readers["factory"].members, "group:member-node-pullers@example.com") &&
-      !contains(google_artifact_registry_repository_iam_binding.readers["factory"].members, "group:member-registry-readers@example.com") &&
-      !contains(google_artifact_registry_repository_iam_binding.readers["other"].members, "group:registry-readers@example.com") &&
+      google_artifact_registry_repository_iam_member.readers["factory:group:member-node-pullers@example.com"].member == "group:member-node-pullers@example.com" &&
+      !contains(keys(google_artifact_registry_repository_iam_member.readers), "factory:group:member-registry-readers@example.com") &&
+      !contains(keys(google_artifact_registry_repository_iam_member.readers), "other:group:registry-readers@example.com") &&
       google_dns_managed_zone_iam_member.team_writers["factory/group:dns-writers@example.com"].managed_zone == output.team_dns["factory"].name &&
       google_iam_workload_identity_pool_provider.github["sandbox"].attribute_condition == "assertion.repository_owner_id == \"12345\"" &&
       google_iam_workload_identity_pool_provider.github["sandbox"].attribute_mapping["attribute.repository_id"] == "assertion.repository_id" &&

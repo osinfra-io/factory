@@ -78,4 +78,4 @@ expect_status 403 https://openbao.localhost/v1/sys/mounts \
 
 python3 "${SCRIPT_DIR}/verify-access.py"
 
-echo "OpenBao automated checks passed. Google-backed Authentik UI and CLI sign-in remains a manual browser check."
+echo "OpenBao automated checks passed. Google-backed authentik UI and CLI sign-in remains a manual browser check."

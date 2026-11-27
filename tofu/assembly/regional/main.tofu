@@ -22,7 +22,7 @@ module "google_network_master_subnets" {
   for_each = local.regional_subnets
 
   ip_cidr_range            = each.value.ranges.control_plane
-  name                     = "${each.key}-master"
+  name                     = local.google_network_master_subnets_name_by_instance[each.key]
   network                  = local.main.shared_vpc.name
   private_ip_google_access = true
   project                  = local.main.shared_vpc.host_project_id
@@ -55,7 +55,7 @@ module "google_network_nat" {
   source = "../../modules/google/network/regional/nat"
 
   depends_on = [module.google_network_subnets]
-  for_each   = length(local.regional_subnets) > 0 ? toset([module.core_helpers.region]) : toset([])
+  for_each   = local.google_network_nat_for_each
 
   network = local.main.shared_vpc.name
   project = local.main.shared_vpc.host_project_id

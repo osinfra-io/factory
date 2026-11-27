@@ -2,7 +2,7 @@
 # https://opentofu.org/docs/language/import
 
 import {
-  for_each = var.import_built_in_brand ? toset(["built_in"]) : toset([])
+  for_each = local.for_each
 
   id = data.authentik_brand.built_in.id
   to = module.authentik_config.authentik_brand.built_in

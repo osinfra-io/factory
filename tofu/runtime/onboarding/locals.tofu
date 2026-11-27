@@ -1,5 +1,5 @@
 locals {
-  stage = "onboarding"
+  kubernetes_namespace_v1_this_for_each = var.runtime_enabled ? local.namespaces : {}
 
   namespaces = {
     authentik = {
@@ -15,4 +15,6 @@ locals {
     istio-ingress = {}
     istio-system  = {}
   }
+
+  stage = "onboarding"
 }

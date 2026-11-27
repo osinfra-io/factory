@@ -47,7 +47,7 @@ resource "google_project" "bootstrap" {
   deletion_policy     = "PREVENT"
   folder_id           = local.environment_folder.id
   labels              = module.core_helpers.labels
-  name                = "${local.environment_folder.title} bootstrap"
+  name                = local.google_project_bootstrap_name
   project_id          = local.project_id
 }
 

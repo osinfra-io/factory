@@ -24,5 +24,11 @@ locals {
     }
   ]
 
+  reader_token_output = try(kubernetes_secret_v1.istio_reader["this"].data["token"], null)
+
   stage = "istio"
+
+  terraform_remote_state_global_workspace = "istio-global-${coalesce(module.core_helpers.environment, "unsupported")}"
+
+  terraform_remote_state_trust_workspace = "trust-${coalesce(module.core_helpers.environment, "unsupported")}"
 }

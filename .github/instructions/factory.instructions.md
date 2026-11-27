@@ -53,11 +53,13 @@ Modules follow this standard file layout:
 
 Use local relative paths for dependencies between modules in this repository. When identical files are needed in sibling directories, keep one canonical copy in the nearest `shared/` directory and use relative symlinks.
 
+Floor is the exception: Flux Git source artifacts omit symlinks. Deployment-consumed files and directories must not be symlinks. Keep shared copies listed in `tests/check_shared_files.py`, edit their canonical sources, and regenerate them with `python3 tests/check_shared_files.py --sync`. The `shared-files` pre-commit hook checks synchronization and rejects file and directory symlinks throughout `tofu/`, excluding `tests/` and `.terraform/`; test fixtures may still use symlinks.
+
 Keep all conditional logic, string transformations, and computed values in `locals.tofu`. The only inline exception is a single-function type conversion with no conditional or string logic, such as `toset(var.names)` or `jsonencode(var.config)`.
 
 Ordering and formatting:
 
-- Keep variables, outputs, and locals alphabetical.
+- Keep variables, outputs, locals, and `.tfvars` entries alphabetical.
 - In `main.tofu`, put modules before resources; sort blocks by type and then name. Keep blocks using the same module source contiguous.
 - In `data.tofu`, sort blocks by type and then name.
 - Keep block arguments alphabetical, with module `source` first, followed by a blank line and alphabetized meta-arguments, then other arguments.
@@ -76,7 +78,17 @@ Factory uses **Sandbox**, **Non-Production**, and **Production** environments. K
 
 Pin GitHub Actions to full 40-character commit SHAs with inline version comments. Do not add deployment behavior that bypasses the repository's configured execution and promotion flow.
 
-If a repository-level `.pre-commit-config.yaml` exists, run `pre-commit run -a` from the repository root before committing. Update hook revisions once per session with `pre-commit autoupdate --freeze` before the first full run.
+## Validation and Pre-commit
+
+Use focused checks while iterating. Inspect OpenTofu test providers before running a suite; do not assume `tofu test` is mocked or safe to run against real infrastructure.
+
+For suites requiring a workspace or CLI arguments, use a `.tofu-test.yaml` in the tested directory. Keep variable-file paths relative to that directory and reuse environment and team tfvars rather than duplicating their values or changing deployment defaults to make tests pass.
+
+The Copilot session-start hook in `.github/hooks/pre-commit.json` runs `pre-commit autoupdate --freeze` from the repository root when a session starts or resumes. It may modify `.pre-commit-config.yaml`; do not repeat the update manually if the hook succeeded. If the hook did not run or failed, run the update before the first full pre-commit run.
+
+Run `pre-commit run -a` from the repository root before committing. Hooks may fix files automatically and report a failed run because files changed. Review those changes, address any remaining failures, and rerun until all hooks pass. Preserve unrelated work and include reviewed hook revision updates and automatic fixes with the task's commit.
+
+Do not disable hooks or weaken assertions to get a passing run. Any necessary scanner skip must identify the check and give a verified reason; do not invent a justification.
 
 ## Documentation and Git
 

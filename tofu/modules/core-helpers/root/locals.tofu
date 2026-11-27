@@ -4,6 +4,11 @@
 locals {
   # Production state provides shared team metadata; environment state provides scoped folders
   # and identity groups for the current deployment environment.
+  all_team_keys = toset(concat(
+    keys(local.production_teams),
+    keys(local.environment_teams)
+  ))
+
   all_teams = {
     for team_key in local.all_team_keys : team_key => merge(
       try(local.production_teams[team_key], {}),
@@ -26,25 +31,20 @@ locals {
     )
   }
 
-  all_team_keys = toset(concat(
-    keys(local.production_teams),
-    keys(local.environment_teams)
-  ))
-
   env = module.workspace.env
 
   environment = module.workspace.environment
-
-  environment_teams = local.environment != "production" && length(local.foundation_workspaces) > 0 ? merge([
-    for workspace_name, workspace_data in data.terraform_remote_state.foundation_environment :
-    try(workspace_data.outputs.teams, {})
-  ]...) : {}
 
   environment_folder_id = local.team_data != null && local.environment_key != null ? try(local.team_data.environments[local.environment_key], null) : null
 
   environment_key = local.environment != null ? title(local.environment) : null
 
   environment_root_folder_id = local.team_data != null ? try(local.team_data.environment_root_folder_id, null) : null
+
+  environment_teams = local.environment != "production" && length(local.foundation_workspaces) > 0 ? merge([
+    for workspace_name, workspace_data in data.terraform_remote_state.foundation_environment :
+    try(workspace_data.outputs.teams, {})
+  ]...) : {}
 
   foundation_environment_bucket = var.foundation_environment_state_bucket != null ? var.foundation_environment_state_bucket : (local.env != null ? "foundation-state-${local.env}" : null)
 
@@ -58,11 +58,6 @@ locals {
 
   foundation_workspaces = var.foundation_workspaces != null ? toset(var.foundation_workspaces) : toset([])
 
-  production_teams = length(local.foundation_workspaces) > 0 ? merge([
-    for workspace_name, workspace_data in data.terraform_remote_state.foundation :
-    try(workspace_data.outputs.teams, {})
-  ]...) : {}
-
   labels = {
     cost-center         = var.cost_center
     data-classification = var.data_classification
@@ -72,6 +67,11 @@ locals {
     team                = var.team
     zone                = module.workspace.zone != null ? "${module.workspace.region}-${module.workspace.zone}" : null
   }
+
+  production_teams = length(local.foundation_workspaces) > 0 ? merge([
+    for workspace_name, workspace_data in data.terraform_remote_state.foundation :
+    try(workspace_data.outputs.teams, {})
+  ]...) : {}
 
   # Project naming components for downstream consumption
   project_naming = local.team_data != null ? {

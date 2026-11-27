@@ -1,11 +1,11 @@
-# Authentik
+# authentik
 # https://github.com/osinfra-io/factory
 
 module "authentik_config" {
-  source = "../../../../tofu/modules/kubernetes/authentik/config"
+  source             = "../../../../tofu/modules/kubernetes/authentik/config"
+  application_groups = local.application_groups
 
   application_launch_url = "https://dev.localhost/istio-test/auth"
-  application_groups     = local.application_groups
   application_name       = "Development"
   application_slug       = "development-oidc"
   authentik_url          = "https://authentik.localhost"
@@ -25,7 +25,6 @@ module "authentik_config" {
   manage_default_authentication_stage = true
   openbao_application_icon            = "https://docs.osinfra.io/img/authentik/applications/openbao.svg"
   openbao_hostname                    = "openbao.localhost"
-  superuser_group_keys                = local.superuser_group_keys
 
   redirect_uris = [
     {
@@ -33,14 +32,7 @@ module "authentik_config" {
       url           = "https://dev.localhost/oauth2/callback"
     },
   ]
-}
-
-module "authentik_regional_config" {
-  source = "../../../../tofu/modules/kubernetes/authentik/regional/config"
-
-  authentik_url      = "https://authentik.localhost"
-  namespace          = "authentik"
-  proxy_provider_ids = module.authentik_config.proxy_provider_ids
+  superuser_group_keys = local.superuser_group_keys
 }
 
 # Application Access
@@ -51,4 +43,12 @@ module "team_access" {
 
   environment = var.environment
   teams       = local.team_access_teams
+}
+
+module "authentik_regional_config" {
+  source = "../../../../tofu/modules/kubernetes/authentik/regional/config"
+
+  authentik_url      = "https://authentik.localhost"
+  namespace          = "authentik"
+  proxy_provider_ids = module.authentik_config.proxy_provider_ids
 }

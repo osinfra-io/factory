@@ -1,13 +1,4 @@
 billing_account_id = "01C550-A2C86B-B8F16B"
-environment        = "production"
-host_project_team  = "factory"
-
-gke_fleet_host = {
-  location = "us-east1-b"
-  team     = "factory"
-}
-
-private_service_range = "172.16.0.0/16"
 
 # Records carried over from the legacy osinfra.io zone; runtime hosts are created by Runtime.
 dns_records = [
@@ -72,3 +63,12 @@ dns_records = [
     type    = "CNAME"
   },
 ]
+environment = "production"
+
+gke_fleet_host = {
+  location = "us-east1-b"
+  team     = "factory"
+}
+host_project_team = "factory"
+
+private_service_range = "172.16.0.0/16"

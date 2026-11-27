@@ -4,3 +4,248 @@ module "istio" {
   gateway_dns = local.gateway_dns
   project     = local.assembly.workload_projects[var.team].id
 }
+
+# OpenBao has a dedicated global multi-cluster ingress, separate from the Istio mesh gateway.
+
+resource "google_compute_global_address" "openbao_mci" {
+  name    = "openbao-mci"
+  project = local.assembly.workload_projects[var.team].id
+}
+
+resource "google_compute_managed_ssl_certificate" "openbao_mci" {
+  name    = "openbao-mci"
+  project = local.assembly.workload_projects[var.team].id
+
+  managed {
+    domains = [local.openbao_hostname]
+  }
+}
+
+# Google Compute Security Policy Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/compute_security_policy
+
+resource "google_compute_security_policy" "shared_ingress" {
+  provider = google-beta
+
+  advanced_options_config {
+    log_level = "VERBOSE"
+  }
+
+  adaptive_protection_config {
+    auto_deploy_config {
+      confidence_threshold        = 0.5
+      expiration_sec              = 7200
+      impacted_baseline_threshold = 0.01
+      load_threshold              = 0.8
+    }
+
+    layer_7_ddos_defense_config {
+      enable = true
+    }
+  }
+
+  name    = local.shared_ingress_policy_name
+  project = local.assembly.workload_projects[var.team].id
+
+  rule {
+    action      = "deny(403)"
+    description = "Deny requests with Host headers outside osinfra.io"
+
+    match {
+      expr {
+        expression = local.cloud_armor_external_hostname_deny_expression
+      }
+    }
+
+    preview  = false
+    priority = 7000
+  }
+
+  dynamic "rule" {
+    for_each = local.openbao_cloud_armor_deny_rules
+
+    content {
+      action      = "deny(403)"
+      description = rule.value.description
+
+      match {
+        expr {
+          expression = rule.value.expression
+        }
+      }
+
+      preview  = false
+      priority = rule.value.priority
+    }
+  }
+
+  dynamic "rule" {
+    for_each = local.authentik_cloud_armor_allow_rules
+
+    content {
+      action      = "allow"
+      description = rule.value.description
+
+      match {
+        expr {
+          expression = rule.value.expression
+        }
+      }
+
+      preview  = false
+      priority = rule.value.priority
+    }
+  }
+
+  dynamic "rule" {
+    for_each = local.cloud_armor_preconfigured_waf_rules
+
+    content {
+      action      = rule.value.action
+      description = rule.value.description
+
+      match {
+        expr {
+          expression = local.cloud_armor_waf_rule_expressions[rule.value.name]
+        }
+      }
+
+      dynamic "preconfigured_waf_config" {
+        for_each = local.cloud_armor_waf_config_instances[rule.value.name]
+
+        content {
+          dynamic "exclusion" {
+            for_each = local.cloud_armor_waf_exclusions_by_rule_set[rule.value.name]
+
+            content {
+              target_rule_ids = exclusion.value.target_rule_ids
+              target_rule_set = exclusion.value.target_rule_set
+
+              dynamic "request_query_param" {
+                for_each = exclusion.value.request_query_param_names
+
+                content {
+                  operator = "EQUALS"
+                  value    = request_query_param.value
+                }
+              }
+            }
+          }
+        }
+      }
+
+      preview  = rule.value.preview
+      priority = rule.value.priority
+    }
+  }
+
+  rule {
+    action      = "throttle"
+    description = "Rate limit each source IP to 5000 requests per minute"
+
+    match {
+      config {
+        src_ip_ranges = ["*"]
+      }
+
+      versioned_expr = "SRC_IPS_V1"
+    }
+
+    preview  = false
+    priority = 30000
+
+    rate_limit_options {
+      conform_action = "allow"
+      enforce_on_key = "IP"
+      exceed_action  = "deny(429)"
+
+      rate_limit_threshold {
+        count        = 5000
+        interval_sec = 60
+      }
+    }
+  }
+
+  rule {
+    action      = "allow"
+    description = "Default allow rule"
+
+    match {
+      config {
+        src_ip_ranges = ["*"]
+      }
+
+      versioned_expr = "SRC_IPS_V1"
+    }
+
+    priority = 2147483647
+  }
+}
+
+# Google Compute SSL Policy Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/compute_ssl_policy
+
+resource "google_compute_ssl_policy" "shared_ingress" {
+  min_tls_version = "TLS_1_2"
+  name            = local.shared_ingress_policy_name
+  profile         = "MODERN"
+  project         = local.assembly.workload_projects[var.team].id
+}
+
+resource "google_dns_record_set" "openbao_mci" {
+  managed_zone = local.environment_zone_name
+  name         = local.google_dns_record_set_openbao_mci_name
+  project      = local.assembly.shared_vpc.host_project_id
+  rrdatas      = [google_compute_global_address.openbao_mci.address]
+  ttl          = 300
+  type         = "A"
+}
+
+resource "google_kms_crypto_key" "openbao_unseal" {
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  key_ring        = google_kms_key_ring.openbao_unseal.id
+  name            = "unseal"
+  rotation_period = "7776000s"
+}
+
+resource "google_kms_crypto_key_iam_member" "openbao_unseal" {
+  crypto_key_id = google_kms_crypto_key.openbao_unseal.id
+  member        = local.openbao_kms_member
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+}
+
+resource "google_kms_crypto_key_iam_member" "openbao_unseal_viewer" {
+  crypto_key_id = google_kms_crypto_key.openbao_unseal.id
+  member        = local.openbao_kms_member
+  role          = "roles/cloudkms.viewer"
+}
+
+# CryptoKeys and KeyRings cannot be deleted from Google Cloud. Losing the key means losing every
+# secret stored in OpenBao, so destruction is blocked.
+
+resource "google_kms_key_ring" "openbao_unseal" {
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  # The multi-region location lets OpenBao clusters in every region use the same key.
+  location = "us"
+  name     = "openbao-unseal"
+  project  = local.assembly.workload_projects[var.team].id
+}
+
+# The OpenBao pods impersonate this account through GKE Workload Identity to auto-unseal.
+resource "google_service_account" "openbao_kms" {
+  account_id   = "openbao-kms"
+  display_name = "OpenBao KMS Auto-Unseal"
+  project      = local.assembly.workload_projects[var.team].id
+}
+
+resource "google_service_account_iam_member" "openbao_kms_workload_identity" {
+  member             = local.openbao_workload_identity_member
+  role               = "roles/iam.workloadIdentityUser"
+  service_account_id = google_service_account.openbao_kms.name
+}

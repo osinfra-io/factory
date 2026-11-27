@@ -21,7 +21,10 @@ test_protected_kind_denied if {
 			"userInfo": {"groups": ["system:authenticated"], "username": "developer@example.com"},
 		},
 	}
-	result.msg == "gateway authn/authz resource security.istio.io/AuthorizationPolicy is platform-managed and may only be changed by platform principals"
+	result.msg == sprintf(
+		"gateway authn/authz resource %s/%s is platform-managed and may only be changed by platform principals",
+		["security.istio.io", "AuthorizationPolicy"],
+	)
 }
 
 test_allowed_group if {

@@ -2,9 +2,9 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "additional_namespaces" {
+  default     = []
   description = "Opt-in namespaces exposed alongside the disposable local floor fixture namespace"
   type        = set(string)
-  default     = []
 
   validation {
     condition = alltrue([
@@ -21,63 +21,63 @@ variable "additional_namespaces" {
 }
 
 variable "approver_group" {
-  description = "Authentik group whose members may approve plans through floor-api"
-  type        = string
   default     = "fixture: Floor Verification Approvers"
+  description = "authentik group whose members may approve plans through floor-api"
+  type        = string
 }
 
 variable "authentik_http_port" {
-  description = "HTTP port exposed by the Authentik server Service"
-  type        = number
   default     = 80
+  description = "HTTP port exposed by the authentik server Service"
+  type        = number
 }
 
 variable "authentik_namespace" {
-  description = "Namespace containing the Authentik server"
-  type        = string
   default     = "authentik"
+  description = "Namespace containing the authentik server"
+  type        = string
 }
 
 variable "authentik_service" {
-  description = "Authentik server Service name"
-  type        = string
   default     = "authentik-server"
+  description = "authentik server Service name"
+  type        = string
 }
 
 variable "fixture_namespace" {
+  default     = "floor-fixture"
   description = "Namespace holding the floor fixture Terraform objects"
   type        = string
-  default     = "floor-fixture"
 }
 
 variable "gateway_name" {
-  description = "AgentGateway Gateway name"
-  type        = string
   default     = "agentgateway-proxy"
+  description = "agentgateway Gateway name"
+  type        = string
 }
 
 variable "gateway_namespace" {
-  description = "Namespace containing the AgentGateway Gateway"
-  type        = string
   default     = "agentgateway"
+  description = "Namespace containing the agentgateway Gateway"
+  type        = string
 }
 
 variable "gateway_principal" {
-  description = "Istio principal of the AgentGateway proxy, the only workload allowed to reach floor-api"
-  type        = string
   default     = "cluster.local/ns/agentgateway/sa/agentgateway-proxy"
+  description = "Istio principal of the agentgateway proxy, the only workload allowed to reach floor-api"
+  type        = string
 }
 
 variable "git_repository" {
+  default     = "fixture"
   description = "GitRepository the sandbox repoints at a pull request head"
   type        = string
-  default     = "fixture"
 }
 
 variable "github_repository" {
+  default     = "osinfra-io/factory-floor-fixture"
   description = "Owner and repository of the floor fixture configuration"
   type        = string
-  default     = "osinfra-io/factory-floor-fixture"
 }
 
 variable "github_token_checksum" {
@@ -86,49 +86,49 @@ variable "github_token_checksum" {
 }
 
 variable "github_token_secret" {
+  default     = "floor-github-token"
   description = "Secret holding the GitHub token floor-api reads pull requests and writes comments with"
   type        = string
-  default     = "floor-github-token"
 }
 
 variable "hostname" {
+  default     = "floor.localhost"
   description = "Local hostname routed through the Istio ingress Gateway"
   type        = string
-  default     = "floor.localhost"
 }
 
 variable "image" {
+  default     = "factory-floor-api:local"
   description = "floor-api container image"
   type        = string
-  default     = "factory-floor-api:local"
 }
 
 variable "istio_gateway_name" {
+  default     = "gateway"
   description = "Istio ingress Gateway name"
   type        = string
-  default     = "gateway"
 }
 
 variable "istio_gateway_namespace" {
+  default     = "istio-ingress"
   description = "Namespace containing the Istio ingress Gateway"
   type        = string
-  default     = "istio-ingress"
 }
 
 variable "namespace" {
+  default     = "floor-system"
   description = "Namespace containing floor-api"
   type        = string
-  default     = "floor-system"
 }
 
 variable "request_timeout" {
+  default     = "240s"
   description = "HTTPRoute request timeout, above the floor-api revision timeout so an approve is not cut short while the planner re-plans"
   type        = string
-  default     = "240s"
 }
 
 variable "service_port" {
+  default     = 8080
   description = "Port floor-api listens on"
   type        = number
-  default     = 8080
 }

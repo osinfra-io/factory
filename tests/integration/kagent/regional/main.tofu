@@ -139,12 +139,11 @@ resource "kubernetes_manifest" "opentofu_mcp_server" {
 
 resource "kubernetes_namespace_v1" "kagent" {
   metadata {
-    name = "kagent"
-
     # Substrate's NetworkPolicy admits only namespaces carrying this label to its API.
     labels = {
       "ate.dev/api-access" = "true"
     }
+    name = "kagent"
   }
 }
 

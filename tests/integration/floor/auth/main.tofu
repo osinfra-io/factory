@@ -1,4 +1,4 @@
-# Authentik Group
+# authentik Group
 # https://search.opentofu.org/provider/goauthentik/authentik/latest/docs/resources/group
 
 resource "authentik_group" "floor_approvers" {
@@ -6,7 +6,7 @@ resource "authentik_group" "floor_approvers" {
   users = local.approver_user_ids
 }
 
-# Authentik Token
+# authentik Token
 # https://search.opentofu.org/provider/goauthentik/authentik/latest/docs/resources/token
 
 # An app password is what the outpost accepts as HTTP Basic credentials.
@@ -24,7 +24,7 @@ resource "authentik_token" "floor_visitor" {
   user         = tonumber(authentik_user.floor_visitor.id)
 }
 
-# Authentik User
+# authentik User
 # https://search.opentofu.org/provider/goauthentik/authentik/latest/docs/resources/user
 
 resource "authentik_user" "floor_verify" {

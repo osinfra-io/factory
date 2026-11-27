@@ -174,16 +174,6 @@ locals {
     "gateway.networking.k8s.io/gateway-name" = "gateway"
   }
 
-  gateway_auth_policies = {
-    for key, item in local.gateway_auth_browser_policy_inputs :
-    key => merge(
-      item,
-      module.gateway_auth["this"].resolved_policies[key],
-      { cluster_name = local.cluster_name },
-    )
-    if var.runtime_enabled
-  }
-
   gateway_auth_request_authentication_manifest = {
     apiVersion = "security.istio.io/v1"
     kind       = "RequestAuthentication"
@@ -260,6 +250,53 @@ locals {
     }
   }
 
+  kubernetes_manifest_gateway_authentik_jwt_bypass_filter_manifest = {
+    apiVersion = "networking.istio.io/v1alpha3"
+    kind       = "EnvoyFilter"
+    metadata = {
+      annotations = {
+        # IST0133: EnvoyFilters are inherently low-level; this warning is expected.
+        "galley.istio.io/analyze-suppress" = "IST0133"
+      }
+      name      = "gateway-authentik-jwt-bypass"
+      namespace = "istio-ingress"
+    }
+    spec = {
+      # The gateway-wide RequestAuthentication (gateway-authentik-jwt) rejects any request carrying
+      # an Authorization: Bearer token that is not a valid JWT for the configured issuer. authentik
+      # authenticates its own API and OIDC token clients with opaque Bearer tokens, so the jwt_authn
+      # filter is disabled for the authentik virtual hosts only; every other host still enforces JWT.
+      configPatches = [
+        for vhost_name in local.authentik_vhost_names : {
+          applyTo = "VIRTUAL_HOST"
+          match = {
+            context = "GATEWAY"
+            routeConfiguration = {
+              vhost = {
+                name = vhost_name
+              }
+            }
+          }
+          patch = {
+            operation = "MERGE"
+            value = {
+              typed_per_filter_config = {
+                "envoy.filters.http.jwt_authn" = {
+                  "@type"  = "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig"
+                  disabled = true
+                }
+              }
+            }
+          }
+        }
+      ]
+
+      workloadSelector = {
+        labels = local.gateway_auth_gateway_selector
+      }
+    }
+  }
+
   routes = merge(
     local.agentgateway_routes,
     local.authentik_routes,
@@ -270,4 +307,6 @@ locals {
   stage = "istio-manifests"
 
   team_subdomain = split(".", local.global.team_hostname)[0]
+
+  terraform_remote_state_global_workspace = "istio-global-${coalesce(module.core_helpers.environment, "unsupported")}"
 }

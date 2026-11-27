@@ -2,6 +2,11 @@
 # https://opentofu.org/docs/language/values/locals
 
 locals {
+  helm_release_cert_manager_values = [
+    file("${path.module}/helm/cert-manager.yml"),
+    yamlencode(local.helm_values)
+  ]
+
   helm_values = {
     cainjector = {
       replicaCount = var.cainjector_replicas

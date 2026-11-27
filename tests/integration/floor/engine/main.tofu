@@ -23,7 +23,7 @@ resource "helm_release" "tofu_controller" {
   namespace  = "flux-system"
   repository = "https://flux-iac.github.io/tofu-controller/"
 
-  values = [yamlencode(local.tofu_controller_values)]
+  values = local.helm_release_tofu_controller_values
 
   version = var.tofu_controller_chart_version
 }

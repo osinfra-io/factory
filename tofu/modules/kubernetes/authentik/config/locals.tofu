@@ -4,6 +4,34 @@
 locals {
   all_group_name = "all"
 
+  application_group_attributes = {
+    for key, group in var.application_groups : key => jsonencode({
+      description = group.description
+    })
+  }
+
+  application_group_names = {
+    for key, group in var.application_groups : group.name => key
+  }
+
+  application_group_users = {
+    for key, group in var.application_groups : key => [
+      for email in group.members : local.google_user_ids_by_email[email]
+      if contains(keys(local.google_user_ids_by_email), email)
+    ]
+  }
+
+  application_groups_enabled = local.google_oauth_enabled && length(var.application_groups) > 0
+
+
+
+  application_groups_requested = length(var.application_groups) > 0
+
+
+
+
+  authentication_stage_bindings = local.branding_enabled ? local.authentication_stages : {}
+
   authentication_stage_policies = {
     for key, stage in local.authentication_stages : key => stage
     if try(stage.policy_name, null) != null
@@ -32,93 +60,16 @@ locals {
     }
   }
 
-  authentication_stage_bindings = local.branding_enabled ? local.authentication_stages : {}
-
-  application_group_attributes = {
-    for key, group in var.application_groups : key => jsonencode({
-      description = group.description
-    })
-  }
-
-  application_group_names = {
-    for key, group in var.application_groups : group.name => key
-  }
-
-  application_group_users = {
-    for key, group in var.application_groups : key => [
-      for email in group.members : local.google_user_ids_by_email[email]
-      if contains(keys(local.google_user_ids_by_email), email)
-    ]
-  }
-
-  application_groups_enabled   = local.google_oauth_enabled && length(var.application_groups) > 0
-  application_groups_requested = length(var.application_groups) > 0
-
   # Normalize the base URL so a trailing slash in authentik_url does not produce double slashes in
   # the issuer and JWKS URLs.
   authentik_base_url = trimsuffix(var.authentik_url, "/")
 
-  browser_application_names = {
-    for key, binding in var.browser_group_policy_bindings : key => coalesce(binding.name, trimprefix(binding.host, "https://"))
+  authentik_group_application_is_superuser_by_instance = {
+    for instance_key, instance_value in var.application_groups : instance_key => contains(var.superuser_group_keys, instance_key)
   }
 
-  # Provider names must be unique, while display names such as "Istio" repeat across hosts.
-  browser_provider_names = local.browser_application_slugs
-
-  browser_application_slugs = {
-    for key, binding in var.browser_group_policy_bindings : key => replace(replace(replace(trimprefix(key, "https://"), ".", "-"), "/", "-"), "_", "-")
-  }
-
-  browser_access_policy_expressions = {
-    for name, binding in local.browser_access_policies : name => <<-EOT
-      import json
-      from authentik.sources.oauth.models import UserOAuthSourceConnection
-      request.debug = True
-      requirements = json.loads(${jsonencode(jsonencode({ groups = binding.groups, roles = binding.roles }))})
-      user = request.user
-      if not user.is_active:
-          return False
-      names = requirements["groups"] + requirements["roles"]
-      if any(": " in name for name in names):
-          email = user.attributes.get("osinfra_google_email", "")
-          if (
-              not isinstance(email, str)
-              or not email
-              or email != user.email
-              or not UserOAuthSourceConnection.objects.filter(user=user, source__slug="google").exists()
-          ):
-              return False
-      memberships = set(user.all_groups().values_list("name", flat=True))
-      return all(
-          not required or any(name in memberships for name in required)
-          for required in (requirements["groups"], requirements["roles"])
-      )
-    EOT
-  }
-
-  # Bindings that share a policy name share one policy; validation requires identical requirements.
-  browser_access_policies = {
-    for name, keys in local.browser_access_policy_keys : name => var.browser_group_policy_bindings[keys[0]]
-  }
-
-  browser_access_policy_keys = {
-    for key, name in local.browser_access_policy_names : name => key...
-  }
-
-  browser_access_policy_names = {
-    for key, binding in var.browser_group_policy_bindings : key => coalesce(
-      binding.policy_name,
-      "${lower(replace(replace(trimprefix(binding.host, "https://"), ".", "-"), "_", "-"))}-browser-access"
-    )
-  }
-
-  browser_groups = {
-    for group in distinct(flatten([
-      for binding in values(var.browser_group_policy_bindings) : concat(binding.groups, binding.roles)
-      ])) : group => {
-      group = group
-    }
-    if group != local.all_group_name && !contains(keys(local.application_group_names), group)
+  authentik_provider_proxy_browser_jwt_federation_providers_by_instance = {
+    for instance_key, instance_value in var.browser_group_policy_bindings : instance_key => contains(var.cli_oidc_browser_keys, instance_key) ? [authentik_provider_oauth2.cli.id] : []
   }
 
   brand_attributes = jsonencode({
@@ -217,17 +168,87 @@ locals {
     }
   EOT
 
-  # Authentik strips the final newline; normalize it to avoid perpetual in-place updates.
+  # authentik strips the final newline; normalize it to avoid perpetual in-place updates.
   brand_custom_css_api = chomp(local.brand_custom_css)
+
+  brand_output = local.branding_enabled ? authentik_brand.this : null
 
   branding_enabled = var.branding != null
 
-  built_in_brand_domain = "authentik-default"
+
+
+  # Bindings that share a policy name share one policy; validation requires identical requirements.
+
+
+
+  browser_access_policies = {
+    for name, keys in local.browser_access_policy_keys : name => var.browser_group_policy_bindings[keys[0]]
+  }
+
+  browser_access_policy_expressions = {
+    for name, binding in local.browser_access_policies : name => <<-EOT
+      import json
+      from authentik.sources.oauth.models import UserOAuthSourceConnection
+      request.debug = True
+      requirements = json.loads(${jsonencode(jsonencode({ groups = binding.groups, roles = binding.roles }))})
+      user = request.user
+      if not user.is_active:
+          return False
+      names = requirements["groups"] + requirements["roles"]
+      if any(": " in name for name in names):
+          email = user.attributes.get("osinfra_google_email", "")
+          if (
+              not isinstance(email, str)
+              or not email
+              or email != user.email
+              or not UserOAuthSourceConnection.objects.filter(user=user, source__slug="google").exists()
+          ):
+              return False
+      memberships = set(user.all_groups().values_list("name", flat=True))
+      return all(
+          not required or any(name in memberships for name in required)
+          for required in (requirements["groups"], requirements["roles"])
+      )
+    EOT
+  }
+
+  browser_access_policy_keys = {
+    for key, name in local.browser_access_policy_names : name => key...
+  }
+
+  browser_access_policy_names = {
+    for key, binding in var.browser_group_policy_bindings : key => coalesce(
+      binding.policy_name,
+      "${lower(replace(replace(trimprefix(binding.host, "https://"), ".", "-"), "_", "-"))}-browser-access"
+    )
+  }
+
+  browser_application_names = {
+    for key, binding in var.browser_group_policy_bindings : key => coalesce(binding.name, trimprefix(binding.host, "https://"))
+  }
+
+  browser_application_slugs = {
+    for key, binding in var.browser_group_policy_bindings : key => replace(replace(replace(trimprefix(key, "https://"), ".", "-"), "/", "-"), "_", "-")
+  }
+
+  browser_groups = {
+    for group in distinct(flatten([
+      for binding in values(var.browser_group_policy_bindings) : concat(binding.groups, binding.roles)
+      ])) : group => {
+      group = group
+    }
+    if group != local.all_group_name && !contains(keys(local.application_group_names), group)
+  }
+
+  # Provider names must be unique, while display names such as "Istio" repeat across hosts.
+  browser_provider_names = local.browser_application_slugs
 
   browser_proxy_property_mapping_ids = concat(
     local.proxy_default_property_mapping_ids,
     local.application_groups_enabled ? [authentik_property_mapping_provider_scope.google_proxy.id] : [],
   )
+
+  built_in_brand_domain = "authentik-default"
 
   # Name of the built-in default authentication flow's identification stage. Consumers import
   # the pre-existing object into authentik_stage_identification.default_authentication (same
@@ -241,6 +262,9 @@ locals {
 
   cli_oidc_enabled = length(var.cli_oidc_browser_keys) > 0
 
+
+
+
   default_authentication_identification_stage_name = "default-authentication-identification"
 
   default_authentication_source_uuids = local.default_authentication_stage_managed ? nonsensitive(authentik_stage_identification.default_authentication.sources) : []
@@ -251,6 +275,8 @@ locals {
     var.default_authentication_source_uuids,
     local.google_oauth_enabled ? [authentik_source_oauth.google.uuid] : [],
   ))
+
+  flow_output = local.branding_enabled ? authentik_flow.authentication : null
 
   google_authentication_flow_id = local.google_oauth_enabled ? authentik_flow.google_authentication.uuid : data.authentik_flow.default_source_authentication.id
 
@@ -336,9 +362,16 @@ locals {
 
   jwks_uri = var.gateway_oidc_enabled ? "${local.authentik_base_url}/application/o/${var.application_slug}/jwks/" : null
 
+  openbao_client_id_output = local.openbao_oidc_enabled ? authentik_provider_oauth2.openbao.client_id : null
+
+  openbao_client_secret_output = local.openbao_oidc_enabled ? authentik_provider_oauth2.openbao.client_secret : null
+
   openbao_issuer_url = local.openbao_oidc_enabled ? "${local.authentik_base_url}/application/o/openbao/" : null
 
   openbao_oidc_enabled = var.openbao_hostname != null
+
+
+
 
   openbao_redirect_uris = local.openbao_oidc_enabled ? [
     {
@@ -352,8 +385,6 @@ locals {
       url               = "http://localhost:8250/oidc/callback"
     },
   ] : []
-
-  proxy_provider_ids = [for provider in authentik_provider_proxy.browser : provider.id]
 
   pending_application_members = {
     for key, group in var.application_groups : key => tolist([
@@ -369,4 +400,6 @@ locals {
     data.authentik_property_mapping_provider_scope.profile.id,
     data.authentik_property_mapping_provider_scope.proxy.id,
   ]
+
+  proxy_provider_ids = [for provider in authentik_provider_proxy.browser : provider.id]
 }

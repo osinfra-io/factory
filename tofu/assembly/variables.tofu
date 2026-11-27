@@ -24,7 +24,8 @@ variable "dns_records" {
   }))
 
   validation {
-    condition     = length(var.dns_records) == length(distinct([for record in var.dns_records : "${record.name}:${record.type}"]))
+    condition = length(var.dns_records) == length(distinct([for record in var.dns_records : "${record.name}:${record.type}"]))
+
     error_message = "DNS records must have a unique name and type."
   }
 }
@@ -56,7 +57,8 @@ variable "github_repository_owner_id" {
   type        = string
 
   validation {
-    condition     = var.github_repository_owner_id == null || can(regex("^[0-9]+$", var.github_repository_owner_id))
+    condition = var.github_repository_owner_id == null || can(regex("^[0-9]+$", var.github_repository_owner_id))
+
     error_message = "The GitHub repository owner ID must be numeric."
   }
 }
@@ -70,7 +72,8 @@ variable "gke_fleet_host" {
   })
 
   validation {
-    condition     = var.gke_fleet_host == null || can(var.teams[var.gke_fleet_host.team].workload_project.kubernetes_engine.locations[var.gke_fleet_host.location].subnet)
+    condition = var.gke_fleet_host == null || can(var.teams[var.gke_fleet_host.team].workload_project.kubernetes_engine.locations[var.gke_fleet_host.location].subnet)
+
     error_message = "The GKE fleet host must be a cluster location requested by the selected team."
   }
 }
@@ -105,6 +108,17 @@ variable "monthly_project_budgets" {
   }
 }
 
+variable "prefix" {
+  description = "GCS prefix for the environment's Foundation state, separate from Assembly's state"
+  type        = string
+
+  validation {
+    condition = var.prefix == "foundation"
+
+    error_message = "Assembly reads Foundation state from the foundation prefix."
+  }
+}
+
 variable "private_service_range" {
   description = "Platform-assigned IPv4 CIDR for private services access"
   type        = string
@@ -112,16 +126,6 @@ variable "private_service_range" {
   validation {
     condition     = can(cidrnetmask(var.private_service_range))
     error_message = "The private services range must be a valid IPv4 CIDR."
-  }
-}
-
-variable "prefix" {
-  description = "GCS prefix for the environment's Foundation state, separate from Assembly's state"
-  type        = string
-
-  validation {
-    condition     = var.prefix == "foundation"
-    error_message = "Assembly reads Foundation state from the foundation prefix."
   }
 }
 

@@ -18,8 +18,10 @@ locals {
   gke_mcs_importer_member      = "serviceAccount:${var.project}.svc.id.goog[gke-mcs/gke-mcs-importer]"
   gke_mcs_service_agent_member = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-mcsd.iam.gserviceaccount.com"
 
-  is_fleet_host   = var.gke_fleet_host_project_id == ""
+  is_fleet_host = var.gke_fleet_host_project_id == ""
+
   is_fleet_member = var.gke_fleet_host_project_id != ""
+
 
   workload_identities = {
     for k, v in var.namespaces : k => {

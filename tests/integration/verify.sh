@@ -24,7 +24,7 @@ for component in istio authentik agentgateway agent-substrate kagent openbao; do
 done
 
 run_stage "holistic anonymous HTTP" python3 -B "${SCRIPT_DIR}/verify/verify-http.py"
-run_stage "fail-closed, in-mesh admin-denial, and ztunnel mTLS (Authentik is restored afterwards)" \
+run_stage "fail-closed, in-mesh admin-denial, and ztunnel mTLS (authentik is restored afterwards)" \
   python3 -B "${SCRIPT_DIR}/verify/verify-runtime.py"
 run_stage floor "${SCRIPT_DIR}/floor/verify.sh"
 

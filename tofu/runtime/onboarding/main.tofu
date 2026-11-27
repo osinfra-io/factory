@@ -2,7 +2,7 @@
 # their own workloads (agentgateway, openbao) are created by their modules.
 
 resource "kubernetes_namespace_v1" "this" {
-  for_each = var.runtime_enabled ? local.namespaces : {}
+  for_each = local.kubernetes_namespace_v1_this_for_each
 
   # topology.istio.io/network on istio-system is owned by the Istio stage.
   lifecycle {

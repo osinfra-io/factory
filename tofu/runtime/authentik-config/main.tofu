@@ -21,17 +21,17 @@ module "authentik_config" {
   superuser_group_keys                = local.superuser_group_keys
 }
 
+module "team_access" {
+  source = "../../modules/kubernetes/authentik/config/team-access"
+
+  environment = module.core_helpers.environment
+  teams       = var.teams
+}
+
 module "authentik_regional_config" {
   source = "../../modules/kubernetes/authentik/regional/config"
 
   authentik_url      = local.authentik_url
   namespace          = local.namespace
   proxy_provider_ids = module.authentik_config.proxy_provider_ids
-}
-
-module "team_access" {
-  source = "../../modules/kubernetes/authentik/config/team-access"
-
-  environment = module.core_helpers.environment
-  teams       = var.teams
 }

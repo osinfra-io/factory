@@ -23,4 +23,4 @@ if [ "${google_location%% *}" != "302" ] ||
   echo "Google login must redirect using the registered https://localhost callback." >&2
   exit 1
 fi
-echo "Authentik runtime and Google redirect checks passed; real browser sign-in is still required."
+echo "authentik runtime and Google redirect checks passed; real browser sign-in is still required."

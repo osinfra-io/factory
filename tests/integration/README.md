@@ -1,6 +1,6 @@
 # Local integration tests
 
-An opt-in developer test that runs Authentik, Istio ambient, agentgateway, Agent Substrate, kagent, and OpenBao together on a dedicated Docker Desktop Kind cluster. It is not a CI gate; the module mock tests are run separately.
+An opt-in developer test that runs authentik, Istio ambient, agentgateway, Agent Substrate, kagent, and OpenBao together on a dedicated Docker Desktop Kind cluster. It is not a CI gate; the module mock tests are run separately.
 
 Factory composes its local modules, so everything cross-cutting lives here: the shared ingress gateway and TLS certificate, browser-auth policies and routes (rendered by the `gateway-auth` module), the diagnostic workload, the ownership marker, and the holistic verifiers.
 
@@ -8,7 +8,7 @@ Factory composes its local modules, so everything cross-cutting lives here: the 
 
 | Path | Purpose |
 | --- | --- |
-| `setup.sh`, `verify.sh` | Stack entry points: Istio → Authentik → agentgateway → Agent Substrate → kagent → OpenBao → Floor |
+| `setup.sh`, `verify.sh` | Stack entry points: Istio → authentik → agentgateway → Agent Substrate → kagent → OpenBao → Floor |
 | `shared/` | Preflight/ownership, cluster guards, and `hostnames.txt` |
 | `istio/`, `authentik/`, `agentgateway/`, `agent-substrate/`, `kagent/`, `openbao/` | Per-component fixtures with their own `setup.sh` and `verify.sh`; OpenBao also applies a local OIDC and team-policy configuration stage |
 | `verify/` | Holistic HTTP and runtime (fail-closed, admin denial, ztunnel mTLS) verifiers |
@@ -33,11 +33,11 @@ Full teardown must be performed in the Docker Desktop application because WSL ca
 
 - The `floor` component installs the floor engine off the ambient mesh in `flux-system`: the Flux Operator, a `FluxInstance` running source, kustomize, and notification controllers, and tofu-controller with its Branch Planner scoped to the `floor-fixture` namespace. It deploys `floor-api`, the Go MCP server behind `floor.localhost`, as the only writer of plan approvals. The Floor config is reconciled from this repository's current branch, so push that branch before setup. Setup does not open a PR. After the local checks pass, `verify.sh` opens and squash-merges a PR in `osinfra-io/factory-floor-fixture`, using `gh` with permission to write contents and create, comment on, and merge PRs under the repository's normal rules.
 
-The OpenBao setup applies its fixture-owned OIDC and KV v2 configuration using the local Authentik outputs and credentials under `.work/`. It seeds a README under the local `factory` team key and lets each team role list the top-level team names; secret values remain team-scoped. Automated verification checks OIDC settings, reader/writer/admin capabilities, top-level team listing, and cross-team denial; it uses short-lived test tokens and never prints them.
+The OpenBao setup applies its fixture-owned OIDC and KV v2 configuration using the local authentik outputs and credentials under `.work/`. It seeds a README under the local `factory` team key and lets each team role list the top-level team names; secret values remain team-scoped. Automated verification checks OIDC settings, reader/writer/admin capabilities, top-level team listing, and cross-team denial; it uses short-lived test tokens and never prints them.
 
 Google-backed OIDC sign-in is a separate manual developer check and is not covered by the automated verifier:
 
-1. Open `https://openbao.localhost/ui/`, choose the OIDC login method, and complete the Google sign-in through Authentik.
+1. Open `https://openbao.localhost/ui/`, choose the OIDC login method, and complete the Google sign-in through authentik.
 2. Use the CLI callback flow with a browser-enabled terminal:
 
    ```bash
@@ -46,7 +46,7 @@ Google-backed OIDC sign-in is a separate manual developer check and is not cover
    bao login -method=oidc -path=oidc role=default
    ```
 
-3. Authentik setup uses `git config user.email` as the local test identity; it must match the Google account used for sign-in. The identity is added to every sandbox application group, including Authentik Admins. Verify team-scoped access after sign-in. Automated policy checks do not prove that Google sign-in or group claims work end to end.
+3. authentik setup uses `git config user.email` as the local test identity; it must match the Google account used for sign-in. The identity is added to every sandbox application group, including Authentik Admins. Verify team-scoped access after sign-in. Automated policy checks do not prove that Google sign-in or group claims work end to end.
 
 The local fixture reads Factory's authentik group declarations from [`tofu/foundation/teams/factory.tfvars`](../../tofu/foundation/teams/factory.tfvars). The fixture's platform configuration selects the groups allowed into shared browser applications and grants instance-wide superuser access to `factory/authentik-admins`. `agentgateway.localhost` requires the managed agentgateway Admins group, `kagent.localhost` requires kagent Admins, and the fixture-only diagnostic app at `dev.localhost` uses the baseline `all` group. No post-auth authorization Lua is deployed; only identity-header stripping remains.
 
@@ -61,7 +61,7 @@ Google users are classified as internal only when their verified email and Googl
 
 The shared `gateway-auth` module always exempts standard health and readiness paths, so removing `/istio-test/health` from `public_paths` does not make that endpoint protected. For configuration-parity checks, use a metadata endpoint such as `https://dev.localhost/istio-test/metadata/cluster-name` with the HTTP verifier's `--expect-status` mode.
 
-To verify membership changes without regenerating gateway configuration, sign in at `https://agentgateway.localhost/ui/` with a declared member, then apply only the Authentik configuration with the revocation flag:
+To verify membership changes without regenerating gateway configuration, sign in at `https://agentgateway.localhost/ui/` with a declared member, then apply only the authentik configuration with the revocation flag:
 
 ```bash
 bash tests/integration/authentik/set-application-access.sh revoke

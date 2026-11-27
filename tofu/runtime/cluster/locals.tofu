@@ -15,6 +15,17 @@ locals {
     if var.runtime_enabled && network.location == "${module.core_helpers.region}-${module.core_helpers.zone}"
   }
 
+  clusters_output = {
+    for key, cluster in module.google_kubernetes_engine_regional : key => {
+      artifact_registry = local.artifact_registries[key]
+      ca_certificate    = cluster.container_cluster_ca_certificate
+      endpoint          = cluster.container_cluster_endpoint
+      name              = cluster.container_cluster_name
+      project_id        = local.clusters[key].project_id
+      team              = local.clusters[key].team
+    }
+  }
+
   gke_hub_memberships = {
     for key, network in merge([for region, state in data.terraform_remote_state.assembly_member_regions : state.outputs.runtime_networks]...) : key => {
       cluster_id = "projects/${network.project_id}/locations/${network.region}/clusters/${key}"
@@ -32,6 +43,10 @@ locals {
       regex("^projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/repositories/(?P<repository>[^/]+)$", network.artifact_registry_repository),
       null
     )
+  }
+
+  terraform_remote_state_assembly_member_regions_workspace_by_instance = {
+    for instance_key, instance_value in local.member_regions : instance_key => "${instance_key}-assembly-${module.core_helpers.environment}"
   }
 
   workspace_valid = can(regex("^us-east[14]-[a-f]-runtime-(sandbox|non-production|production)$", terraform.workspace))

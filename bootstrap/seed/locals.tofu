@@ -11,6 +11,8 @@ locals {
     sandbox        = { id = "567188438944", title = "Sandbox" }
   }
 
+  google_project_bootstrap_name = "${local.environment_folder.title} bootstrap"
+
   project_id = "bootstrap-${local.environment_folder.id}-${module.core_helpers.env}"
 
   runner_service_account_emails = {

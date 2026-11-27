@@ -55,7 +55,7 @@ status="$(curl --noproxy '*' --connect-timeout 5 --max-time 15 --insecure --sile
 location="$(grep -i '^location:' "${response_headers}" | tail -1 | tr -d '\r' | cut -d ' ' -f2-)"
 [ "${status}" = "302" ] || die "Expected 302 for protected URL ${url}, got ${status}"
 [[ "${location}" == https://authentik.localhost/application/o/authorize/* ]] ||
-  die "Protected URL ${url} did not redirect to Authentik"
+  die "Protected URL ${url} did not redirect to authentik"
 
 for path in /ui/ /api /config_dump; do
   for identity in anonymous forged; do
@@ -72,9 +72,9 @@ for path in /ui/ /api /config_dump; do
       --silent --show-error --dump-header "${response_headers}" --output /dev/null \
       --write-out '%{http_code}' "${headers[@]}" "${url}")"
     [ "${status}" = "302" ] ||
-      die "Expected Authentik redirect for ${identity} admin request ${url}, got ${status}"
+      die "Expected authentik redirect for ${identity} admin request ${url}, got ${status}"
     grep -qi '^location: https://authentik.localhost/application/o/authorize/' "${response_headers}" ||
-      die "Admin request ${url} did not redirect to Authentik"
+      die "Admin request ${url} did not redirect to authentik"
   done
 done
 

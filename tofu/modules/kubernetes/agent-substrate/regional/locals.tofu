@@ -5,22 +5,6 @@ locals {
   api_endpoint = "dns:///api.${var.namespace}.svc:443"
 
   substrate_atelet_chart = "${var.chart_repository}/substrate-atelet"
-  substrate_chart        = "${var.chart_repository}/substrate"
-  substrate_crds_chart   = "${var.chart_repository}/substrate-crds"
-
-  # Literal so Helm does not parse commas or backslashes in the credentials.
-  substrate_sensitive_values = [
-    {
-      name  = "rustfs.accessKey"
-      type  = "literal"
-      value = var.rustfs_access_key
-    },
-    {
-      name  = "rustfs.secretKey"
-      type  = "literal"
-      value = var.rustfs_secret_key
-    }
-  ]
 
   substrate_atelet_helm_values = yamlencode({
     objectStore = {
@@ -30,6 +14,8 @@ locals {
       region            = "us-east-1"
     }
   })
+  substrate_chart      = "${var.chart_repository}/substrate"
+  substrate_crds_chart = "${var.chart_repository}/substrate-crds"
 
   substrate_helm_values = yamlencode({
     atelet = {
@@ -51,4 +37,18 @@ locals {
       }
     }
   })
+
+  # Literal so Helm does not parse commas or backslashes in the credentials.
+  substrate_sensitive_values = [
+    {
+      name  = "rustfs.accessKey"
+      type  = "literal"
+      value = var.rustfs_access_key
+    },
+    {
+      name  = "rustfs.secretKey"
+      type  = "literal"
+      value = var.rustfs_secret_key
+    }
+  ]
 }

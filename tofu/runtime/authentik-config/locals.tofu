@@ -53,6 +53,7 @@ locals {
 
   google_oauth_enabled = var.google_oauth_client_id != "" && nonsensitive(var.google_oauth_client_secret != "")
 
+
   istio_global = data.terraform_remote_state.istio_global.outputs
 
   namespace = "authentik"
@@ -81,4 +82,8 @@ locals {
   superuser_group_keys = local.google_oauth_enabled ? ["${var.team}/authentik-admins"] : []
 
   team_hostname = local.istio_global.team_hostname
+
+  terraform_remote_state_authentik_global_workspace = "authentik-global-${coalesce(module.core_helpers.environment, "unsupported")}"
+
+  terraform_remote_state_istio_global_workspace = "istio-global-${coalesce(module.core_helpers.environment, "unsupported")}"
 }

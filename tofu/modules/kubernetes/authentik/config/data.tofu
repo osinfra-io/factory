@@ -1,11 +1,11 @@
-# Authentik Certificate Key Pair Data Source
+# authentik Certificate Key Pair Data Source
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/certificate_key_pair
 
 data "authentik_certificate_key_pair" "signing" {
   name = var.signing_key_name
 }
 
-# Authentik Flow Data Source
+# authentik Flow Data Source
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/flow
 
 data "authentik_flow" "authorization" {
@@ -20,7 +20,7 @@ data "authentik_flow" "invalidation" {
   slug = var.invalidation_flow_slug
 }
 
-# Authentik Expression Policy
+# authentik Expression Policy
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/policy_expression
 
 data "authentik_policy_expression" "authentication_stage_policies" {
@@ -29,7 +29,7 @@ data "authentik_policy_expression" "authentication_stage_policies" {
   name = each.value.policy_name
 }
 
-# Authentik Property Mapping Provider Scope Data Source
+# authentik Property Mapping Provider Scope Data Source
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/property_mapping_provider_scope
 
 data "authentik_property_mapping_provider_scope" "email" {
@@ -60,7 +60,7 @@ data "authentik_property_mapping_provider_scope" "proxy" {
   managed = "goauthentik.io/providers/proxy/scope-proxy"
 }
 
-# Authentik Stage Data Source
+# authentik Stage Data Source
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/stage
 
 data "authentik_stage" "authentication_stages" {
@@ -69,7 +69,7 @@ data "authentik_stage" "authentication_stages" {
   name = each.value.name
 }
 
-# Authentik Users Data Source
+# authentik Users Data Source
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/data-sources/users
 
 data "authentik_users" "google" {

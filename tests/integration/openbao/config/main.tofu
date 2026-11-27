@@ -64,11 +64,9 @@ resource "vault_jwt_auth_backend_role" "oidc" {
 resource "vault_kv_secret_v2" "team_readme" {
   for_each = local.team_readme_contents
 
-  data_json = jsonencode({
-    README = each.value
-  })
-  mount = vault_mount.team_kv2.path
-  name  = "${each.key}/README"
+  data_json = local.vault_kv_secret_v2_team_readme_data_json_by_instance[each.key]
+  mount     = vault_mount.team_kv2.path
+  name      = local.vault_kv_secret_v2_team_readme_name_by_instance[each.key]
 }
 
 # OpenBao Mount Resource

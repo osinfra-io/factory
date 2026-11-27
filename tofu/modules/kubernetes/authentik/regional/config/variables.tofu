@@ -2,7 +2,7 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "authentik_url" {
-  description = "The public Authentik base URL used when no outpost-specific URL is provided"
+  description = "The public authentik base URL used when no outpost-specific URL is provided"
   type        = string
 
   validation {
@@ -18,7 +18,7 @@ variable "namespace" {
 
 variable "outpost_authentik_url" {
   default     = null
-  description = "Optional browser-accessible Authentik base URL used by the regional embedded outpost"
+  description = "Optional browser-accessible authentik base URL used by the regional embedded outpost"
   nullable    = true
   type        = string
 

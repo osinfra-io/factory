@@ -2,15 +2,15 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "artifact_registry" {
+  default     = "us-docker.pkg.dev/plt-lz-services-tf79-prod/plt-docker-virtual"
   description = "The registry to pull the images from"
   type        = string
-  default     = "us-docker.pkg.dev/plt-lz-services-tf79-prod/plt-docker-virtual"
 }
 
 variable "audit_resources_limits_cpu" {
+  default     = "40m"
   description = "The CPU limit for the audit container"
   type        = string
-  default     = "40m"
 
   validation {
     condition     = can(regex("^([0-9]*\\.?[0-9]+)(m)?$", var.audit_resources_limits_cpu))
@@ -19,9 +19,9 @@ variable "audit_resources_limits_cpu" {
 }
 
 variable "audit_resources_limits_memory" {
+  default     = "128Mi"
   description = "The memory limit for the audit container"
   type        = string
-  default     = "128Mi"
 
   validation {
     condition     = can(regex("^([0-9]*\\.?[0-9]+)(Ei|Pi|Ti|Gi|Mi|Ki|E|P|T|G|M|K)?$", var.audit_resources_limits_memory))
@@ -30,9 +30,9 @@ variable "audit_resources_limits_memory" {
 }
 
 variable "audit_resources_requests_cpu" {
+  default     = "10m"
   description = "The CPU request for the audit container"
   type        = string
-  default     = "10m"
 
   validation {
     condition     = can(regex("^([0-9]*\\.?[0-9]+)(m)?$", var.audit_resources_requests_cpu))
@@ -41,9 +41,9 @@ variable "audit_resources_requests_cpu" {
 }
 
 variable "audit_resources_requests_memory" {
+  default     = "32Mi"
   description = "The memory request for the audit container"
   type        = string
-  default     = "32Mi"
 
   validation {
     condition     = can(regex("^([0-9]*\\.?[0-9]+)(Ei|Pi|Ti|Gi|Mi|Ki|E|P|T|G|M|K)?$", var.audit_resources_requests_memory))
@@ -52,43 +52,43 @@ variable "audit_resources_requests_memory" {
 }
 
 variable "chart_repository" {
+  default     = "https://open-policy-agent.github.io/gatekeeper/charts"
   description = "The repository to pull the Helm chart from"
   type        = string
-  default     = "https://open-policy-agent.github.io/gatekeeper/charts"
 }
 
 variable "controller_manager_resources_limits_cpu" {
+  default     = "100m"
   description = "The CPU limit for the controller manager container"
   type        = string
-  default     = "100m"
 }
 
 variable "controller_manager_resources_limits_memory" {
+  default     = "256Mi"
   description = "The memory limit for the controller manager container"
   type        = string
-  default     = "256Mi"
 }
 
 variable "controller_manager_resources_requests_cpu" {
+  default     = "10m"
   description = "The CPU request for the controller manager container"
   type        = string
-  default     = "10m"
 }
 
 variable "controller_manager_resources_requests_memory" {
+  default     = "32Mi"
   description = "The memory request for the controller manager container"
   type        = string
-  default     = "32Mi"
 }
 
 variable "gatekeeper_version" {
+  default     = "v3.23.1"
   description = "The version to install, this is used for the chart as well as the image tag"
   type        = string
-  default     = "v3.23.1"
 }
 
 variable "replicas" {
+  default     = 1
   description = "The number of replicas to run"
   type        = number
-  default     = 1
 }

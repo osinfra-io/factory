@@ -4,6 +4,46 @@ locals {
 
   global = data.terraform_remote_state.global.outputs
 
+  google_compute_global_address_openbao_ingress_name = "openbao-${local.location}"
+
+  google_dns_record_set_openbao_zonal_name = "${local.zonal_hostname}."
+
+  kubernetes_manifest_openbao_mcs_manifest_by_instance = {
+    for instance_key, instance_value in local.config_instances : instance_key => {
+      apiVersion = "networking.gke.io/v1"
+      kind       = "MultiClusterService"
+      metadata = {
+        annotations = {
+          "cloud.google.com/backend-config" = jsonencode({ "default" = kubernetes_manifest.openbao_backendconfig[instance_key].manifest.metadata.name })
+          "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
+          "networking.gke.io/app-protocols" = jsonencode({ "https" = "HTTPS" })
+        }
+        name      = "openbao-mcs"
+        namespace = kubernetes_namespace_v1.openbao[instance_key].metadata[0].name
+      }
+      spec = {
+        clusters = local.multi_cluster_service_clusters
+        template = {
+          spec = {
+            ports = [
+              {
+                name       = "https"
+                port       = 8200
+                protocol   = "TCP"
+                targetPort = 8200
+              }
+            ]
+            selector = {
+              "app.kubernetes.io/instance" = "openbao"
+              "app.kubernetes.io/name"     = "openbao"
+              component                    = "server"
+            }
+          }
+        }
+      }
+    }
+  }
+
   labels = {
     env  = module.core_helpers.environment
     team = local.cluster.team
@@ -72,6 +112,8 @@ locals {
   }
 
   stage = "openbao"
+
+  terraform_remote_state_global_workspace = "istio-global-${coalesce(module.core_helpers.environment, "unsupported")}"
 
   # SANs for the pod certificate: the external hostnames, every in-cluster name clients and Raft peers
   # use, and loopback for the in-pod bao CLI and probes.

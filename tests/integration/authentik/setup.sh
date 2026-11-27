@@ -21,7 +21,7 @@ if kubectl --context="${KUBE_CONTEXT}" get namespace authentik >/dev/null 2>&1; 
   fi
   if [ ! -f "${WORK_DIR}/runtime/terraform.tfstate" ] &&
     [ -n "$(kubectl --context="${KUBE_CONTEXT}" get deployment,statefulset,secret --namespace=authentik --output=name)" ]; then
-    echo "Existing Authentik resources have no local fixture state; refusing to adopt them." >&2
+    echo "Existing authentik resources have no local fixture state; refusing to adopt them." >&2
     exit 1
   fi
 fi
@@ -104,13 +104,13 @@ while True:
         if len(outposts) == 1 and len(stages) == 1 and not missing_flows and not missing_scopes:
             break
     except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as error:
-        print(f"Waiting for Authentik bootstrap ({type(error).__name__}).", file=sys.stderr)
+        print(f"Waiting for authentik bootstrap ({type(error).__name__}).", file=sys.stderr)
     if time.monotonic() >= deadline:
         if missing_flows:
-            raise SystemExit(f"Timed out waiting for built-in Authentik flows: {', '.join(sorted(missing_flows))}.")
+            raise SystemExit(f"Timed out waiting for built-in authentik flows: {', '.join(sorted(missing_flows))}.")
         if missing_scopes:
             raise SystemExit(f"Timed out waiting for built-in OAuth scope mappings: {', '.join(sorted(missing_scopes))}.")
-        raise SystemExit("Timed out waiting for built-in Authentik objects; inspect server/worker logs.")
+        raise SystemExit("Timed out waiting for built-in authentik objects; inspect server/worker logs.")
     time.sleep(5)
 
 with (work / "config/bootstrap.tfvars.json").open("w") as stream:
@@ -121,4 +121,4 @@ local_tofu config init -input=false
 # No additional OpenTofu arguments are needed during initial setup.
 # shellcheck disable=SC2119
 apply_local_config
-echo "Authentik configured in Kubernetes. Browser verification remains pending."
+echo "authentik configured in Kubernetes. Browser verification remains pending."

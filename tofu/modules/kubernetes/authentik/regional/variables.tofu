@@ -3,23 +3,24 @@
 
 variable "authentik_version" {
   default     = "2026.8.5"
-  description = "The Authentik Helm chart and application version to install"
+  description = "The authentik Helm chart and application version to install"
   type        = string
 }
 
 variable "chart_repository" {
   default     = "https://charts.goauthentik.io"
-  description = "The repository to pull the Authentik Helm chart from"
+  description = "The repository to pull the authentik Helm chart from"
   type        = string
 }
 
 variable "cloud_sql_connection_name" {
   default     = null
-  description = "Connection name (project:region:instance) of the Cloud SQL instance the Auth Proxy sidecar dials. Authentik connects to the proxy over the pod loopback, so the private-IP instance is reachable without exposing the database on the mesh."
+  description = "Connection name (project:region:instance) of the Cloud SQL instance the Auth Proxy sidecar dials. authentik connects to the proxy over the pod loopback, so the private-IP instance is reachable without exposing the database on the mesh."
   type        = string
 
   validation {
-    condition     = var.cloud_sql_connection_name != null || var.external_database_host != "127.0.0.1"
+    condition = var.cloud_sql_connection_name != null || var.external_database_host != "127.0.0.1"
+
     error_message = "Set cloud_sql_connection_name for the loopback Cloud SQL proxy, or specify an external_database_host for a direct database connection."
   }
 }
@@ -55,7 +56,7 @@ variable "cloud_sql_proxy_resources_requests_memory" {
 }
 
 variable "existing_secret" {
-  description = "Name of an existing Kubernetes Secret providing the Authentik environment (AUTHENTIK_SECRET_KEY, AUTHENTIK_POSTGRESQL__PASSWORD, AUTHENTIK_BOOTSTRAP_TOKEN, AUTHENTIK_BOOTSTRAP_PASSWORD). Mounted into the server and worker via envFrom so no secrets are stored in the Helm release."
+  description = "Name of an existing Kubernetes Secret providing the authentik environment (AUTHENTIK_SECRET_KEY, AUTHENTIK_POSTGRESQL__PASSWORD, AUTHENTIK_BOOTSTRAP_TOKEN, AUTHENTIK_BOOTSTRAP_PASSWORD). Mounted into the server and worker via envFrom so no secrets are stored in the Helm release."
   type        = string
 }
 
@@ -65,7 +66,8 @@ variable "external_database_host" {
   type        = string
 
   validation {
-    condition     = length(trimspace(var.external_database_host)) > 0
+    condition = length(trimspace(var.external_database_host)) > 0
+
     error_message = "The external_database_host must not be empty."
   }
 }
@@ -94,90 +96,92 @@ variable "google_service_account_email" {
   type        = string
 
   validation {
-    condition     = var.cloud_sql_connection_name == null || var.google_service_account_email != null
+    condition = var.cloud_sql_connection_name == null || var.google_service_account_email != null
+
     error_message = "Cloud SQL proxy connections require a google_service_account_email for Workload Identity."
   }
 }
 
 variable "helm_timeout" {
   default     = 900
-  description = "Seconds to wait for the Authentik Helm release to become ready. The default exceeds the Helm provider's 300s because Authentik's first boot runs database migrations and blueprint bootstrapping, which can take several minutes under STRICT mTLS sidecar startup"
+  description = "Seconds to wait for the authentik Helm release to become ready. The default exceeds the Helm provider's 300s because authentik's first boot runs database migrations and blueprint bootstrapping, which can take several minutes under STRICT mTLS sidecar startup"
   type        = number
 }
 
 variable "namespace" {
-  description = "The Kubernetes namespace to deploy Authentik into"
+  description = "The Kubernetes namespace to deploy authentik into"
   type        = string
 }
 
 variable "server_replicas" {
   default     = 2
-  description = "The number of Authentik server replicas to run"
+  description = "The number of authentik server replicas to run"
   type        = number
 }
 
 variable "server_resources_limits_cpu" {
   default     = null
-  description = "The CPU limit for the Authentik server, unset by default so request handling is never throttled"
+  description = "The CPU limit for the authentik server, unset by default so request handling is never throttled"
   type        = string
 }
 
 variable "server_resources_limits_memory" {
   default     = "1Gi"
-  description = "The memory limit for the Authentik server"
+  description = "The memory limit for the authentik server"
   type        = string
 }
 
 variable "server_resources_requests_cpu" {
   default     = "200m"
-  description = "The CPU request for the Authentik server"
+  description = "The CPU request for the authentik server"
   type        = string
 }
 
 variable "server_resources_requests_memory" {
   default     = "512Mi"
-  description = "The memory request for the Authentik server"
+  description = "The memory request for the authentik server"
   type        = string
 }
 
 variable "web_base_url" {
   default     = null
-  description = "The public scheme and host for Authentik's system Base URL, used for generated links and the Admin UI configuration warning"
+  description = "The public scheme and host for authentik's system Base URL, used for generated links and the Admin UI configuration warning"
   nullable    = true
   type        = string
 
   validation {
-    condition     = var.web_base_url == null || can(regex("^https://[^/]+$", var.web_base_url))
+    condition = var.web_base_url == null || can(regex("^https://[^/]+$", var.web_base_url))
+
     error_message = "The web_base_url must be an HTTPS origin without a path or trailing slash."
   }
 }
 
 variable "worker_replicas" {
   default     = 1
-  description = "The number of Authentik worker replicas to run"
+  description = "The number of authentik worker replicas to run"
   type        = number
 }
 
 variable "worker_resources_limits_cpu" {
   default     = null
-  description = "The CPU limit for the Authentik worker, unset by default so background task processing is never throttled"
+  description = "The CPU limit for the authentik worker, unset by default so background task processing is never throttled"
   type        = string
 }
 
 variable "worker_resources_limits_memory" {
   default     = "512Mi"
-  description = "The memory limit for the Authentik worker"
+  description = "The memory limit for the authentik worker"
   type        = string
 }
 
 variable "worker_resources_requests_cpu" {
   default     = "100m"
-  description = "The CPU request for the Authentik worker"
+  description = "The CPU request for the authentik worker"
   type        = string
 }
 
 variable "worker_resources_requests_memory" {
   default     = "256Mi"
-  description = "The memory request for the Authentik worker"
+  description = "The memory request for the authentik worker"
   type        = string
 }
