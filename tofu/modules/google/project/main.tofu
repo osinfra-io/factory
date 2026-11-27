@@ -1,3 +1,5 @@
+# tofu-scan skip-global: CIS 1.17 - Essential Contacts are managed outside this repository
+
 # Billing Budget Resource
 # https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/billing_budget
 

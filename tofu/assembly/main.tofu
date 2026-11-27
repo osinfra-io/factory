@@ -2,6 +2,17 @@ module "core_helpers" {
   source = "../modules/core-helpers/child"
 }
 
+module "google_network_vpc" {
+  source = "../modules/google/network"
+
+  depends_on = [module.google_project_network]
+  for_each   = local.network_projects
+
+  name       = "standard-shared"
+  project    = module.google_project_network[each.key].id
+  shared_vpc = true
+}
+
 module "google_network_environment_dns" {
   source = "../modules/google/network/dns"
 
@@ -19,8 +30,8 @@ module "google_network_private_dns" {
 
   for_each = local.network_projects
 
-  dns_name                           = "private.${local.dns_domain}"
-  name                               = "private-${local.dns_zone_name}"
+  dns_name                           = local.google_network_private_dns_dns_name
+  name                               = local.google_network_private_dns_name
   private_visibility_config_networks = [module.google_network_vpc[each.key].self_link]
   project                            = module.google_project_network[each.key].id
   visibility                         = "private"
@@ -33,20 +44,9 @@ module "google_network_team_dns" {
   for_each   = local.team_dns
 
   dns_name   = each.value
-  name       = "${each.key}-${local.dns_zone_name}"
+  name       = local.google_network_team_dns_name_by_instance[each.key]
   project    = module.google_project_network[var.environment].id
   visibility = "public"
-}
-
-module "google_network_vpc" {
-  source = "../modules/google/network"
-
-  depends_on = [module.google_project_network]
-  for_each   = local.network_projects
-
-  name       = "standard-shared"
-  project    = module.google_project_network[each.key].id
-  shared_vpc = true
 }
 
 module "google_project_network" {
@@ -80,7 +80,7 @@ module "google_project_teams" {
   folder_id             = local.workload_folder_ids[each.key]
   monthly_budget_amount = var.monthly_project_budgets.team
   prefix                = local.team_project_prefixes[each.key]
-  services              = concat(local.project_services, tolist(each.value.services))
+  services              = local.google_project_teams_services_by_instance[each.key]
 }
 
 module "google_project_workloads" {
@@ -119,7 +119,7 @@ resource "google_artifact_registry_repository" "docker_remote" {
   depends_on = [module.google_project_network]
 
   lifecycle {
-    enabled = length(local.artifact_registries) > 0
+    enabled = local.google_artifact_registry_repository_docker_remote_lifecycle_enabled
   }
 
   description   = "Docker Hub upstream"
@@ -145,7 +145,7 @@ resource "google_artifact_registry_repository" "docker_standard" {
   format        = "DOCKER"
   location      = "us"
   project       = module.google_project_network[var.environment].id
-  repository_id = "${each.key}-standard"
+  repository_id = local.google_artifact_registry_repository_docker_standard_repository_id_by_instance[each.key]
 }
 
 resource "google_artifact_registry_repository" "docker_virtual" {
@@ -155,7 +155,7 @@ resource "google_artifact_registry_repository" "docker_virtual" {
   location      = "us"
   mode          = "VIRTUAL_REPOSITORY"
   project       = module.google_project_network[var.environment].id
-  repository_id = "${each.key}-virtual"
+  repository_id = local.google_artifact_registry_repository_docker_virtual_repository_id_by_instance[each.key]
 
   virtual_repository_config {
     upstream_policies {
@@ -172,16 +172,6 @@ resource "google_artifact_registry_repository" "docker_virtual" {
   }
 }
 
-resource "google_artifact_registry_repository_iam_member" "readers" {
-  for_each = local.registry_reader_members
-
-  location   = google_artifact_registry_repository.docker_virtual[each.value.team].location
-  member     = each.value.member
-  project    = google_artifact_registry_repository.docker_virtual[each.value.team].project
-  repository = google_artifact_registry_repository.docker_virtual[each.value.team].name
-  role       = "roles/artifactregistry.reader"
-}
-
 resource "google_artifact_registry_repository_iam_binding" "writers" {
   for_each = local.registry_writer_teams
 
@@ -190,6 +180,16 @@ resource "google_artifact_registry_repository_iam_binding" "writers" {
   project    = google_artifact_registry_repository.docker_standard[each.key].project
   repository = google_artifact_registry_repository.docker_standard[each.key].name
   role       = "roles/artifactregistry.writer"
+}
+
+resource "google_artifact_registry_repository_iam_member" "readers" {
+  for_each = local.registry_reader_members
+
+  location   = google_artifact_registry_repository.docker_virtual[each.value.team].location
+  member     = each.value.member
+  project    = google_artifact_registry_repository.docker_virtual[each.value.team].project
+  repository = google_artifact_registry_repository.docker_virtual[each.value.team].name
+  role       = "roles/artifactregistry.reader"
 }
 
 resource "google_compute_global_address" "private_services" {
@@ -313,7 +313,7 @@ resource "google_kms_key_ring" "team_state" {
 }
 
 resource "google_project_iam_custom_role" "dns_records" {
-  for_each = length(local.dns_writers) == 0 ? {} : local.network_projects
+  for_each = local.google_project_iam_custom_role_dns_records_for_each
 
   permissions = [
     "dns.changes.create",
@@ -332,7 +332,7 @@ resource "google_project_iam_custom_role" "dns_records" {
 }
 
 resource "google_project_iam_custom_role" "gke_firewall" {
-  for_each = length(local.gke_teams) == 0 ? {} : local.network_projects
+  for_each = local.google_project_iam_custom_role_gke_firewall_for_each
 
   permissions = [
     "compute.firewalls.create",
@@ -411,8 +411,8 @@ resource "google_service_account" "registry_publishers" {
   depends_on = [module.google_project_network]
   for_each   = local.github_publishers
 
-  account_id   = "${each.key}-publisher"
-  display_name = "Factory registry publisher (${each.key})"
+  account_id   = local.google_service_account_registry_publishers_account_id_by_instance[each.key]
+  display_name = local.google_service_account_registry_publishers_display_name_by_instance[each.key]
   project      = module.google_project_network[var.environment].id
 }
 

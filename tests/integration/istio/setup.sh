@@ -94,4 +94,4 @@ kube rollout status deployment/metadata-mock --namespace=istio-test --timeout=12
 kube rollout status deployment/istio-test --namespace=istio-test --timeout=180s
 kube wait --for=condition=Programmed gateway/gateway --namespace=istio-ingress --timeout=120s
 
-echo "Istio runtime is ready. Configure Authentik, then run tests/integration/istio/apply-auth.sh and apply-routes.sh."
+echo "Istio runtime is ready. Configure authentik, then run tests/integration/istio/apply-auth.sh and apply-routes.sh."

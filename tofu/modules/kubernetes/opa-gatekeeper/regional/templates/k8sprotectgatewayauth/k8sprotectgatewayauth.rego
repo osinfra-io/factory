@@ -5,7 +5,7 @@ allowed_principal if {
 }
 
 allowed_principal if {
-	group := input.review.userInfo.groups[_]
+	some group in input.review.userInfo.groups
 	group in object.get(input.parameters, "allowedGroups", [])
 }
 
@@ -17,7 +17,7 @@ allowed_principal if {
 }
 
 protected_kind if {
-	configured_kind := object.get(input.parameters, "protectedKinds", [])[_]
+	some configured_kind in object.get(input.parameters, "protectedKinds", [])
 	input.review.kind.group == configured_kind.apiGroup
 	input.review.kind.kind == configured_kind.kind
 }
@@ -45,17 +45,22 @@ review_object := object.get(input.review, "oldObject", {}) if {
 violation contains {"msg": msg} if {
 	not allowed_principal
 	protected_kind
-	msg := sprintf("gateway authn/authz resource %s/%s is platform-managed and may only be changed by platform principals", [input.review.kind.group, input.review.kind.kind])
+	msg := sprintf(
+		"gateway authn/authz resource %s/%s is platform-managed and may only be changed by platform principals",
+		[input.review.kind.group, input.review.kind.kind],
+	)
 }
 
 violation contains {"msg": msg} if {
 	not allowed_principal
 	protected_namespace
-	msg := sprintf("namespace %q is platform-managed and may only be changed by platform principals", [review_object.metadata.name])
+	namespace := sprintf("%q", [review_object.metadata.name])
+	msg := $"namespace {namespace} is platform-managed and may only be changed by platform principals"
 }
 
 violation contains {"msg": msg} if {
 	not allowed_principal
 	protected_secret
-	msg := sprintf("secrets in platform-managed namespace %q may only be changed by platform principals", [object.get(review_object.metadata, "namespace", "")])
+	namespace := sprintf("%q", [object.get(review_object.metadata, "namespace", "")])
+	msg := $"secrets in platform-managed namespace {namespace} may only be changed by platform principals"
 }

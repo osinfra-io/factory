@@ -29,5 +29,7 @@ locals {
     AUTHENTIK_SECRET_KEY           = random_password.authentik_secret_key.result
   }
 
+  terraform_remote_state_assembly_workspace = "assembly-main-${coalesce(module.core_helpers.environment, "unsupported")}"
+
   workload_identity_member = "serviceAccount:${local.project}.svc.id.goog[${local.kubernetes_namespace}/${local.kubernetes_service_account}]"
 }

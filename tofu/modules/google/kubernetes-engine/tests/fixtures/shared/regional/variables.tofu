@@ -8,12 +8,13 @@ variable "enable_gke_hub_host" {
 }
 
 variable "gke_hub_memberships" {
+  default = {}
+
   description = "Map of GKE Hub memberships with their cluster IDs"
 
   type = map(object({
     cluster_id = string
   }))
-  default = {}
 }
 
 variable "node_pools" {

@@ -29,6 +29,15 @@ run "dns" {
   }
 }
 
+run "dns_logging" {
+  command = apply
+
+  assert {
+    condition     = google_dns_policy.this.enable_logging && one(google_dns_policy.this.networks).network_url == google_compute_network.this.id && google_dns_policy.this.project == var.project
+    error_message = "DNS query logging must be enabled for the VPC in its host project."
+  }
+}
+
 run "regional" {
   command = apply
 

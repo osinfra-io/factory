@@ -10,8 +10,9 @@ locals {
   # Conditional Expressions
   # https://opentofu.org/docs/language/expressions/conditionals
 
-  cis_2_2_logging_bucket_locked       = local.cis_2_2_logging_sink_local ? google_logging_project_bucket_config.cis_2_2_logging_sink.locked : null
-  cis_2_2_logging_sink_external       = var.cis_2_2_logging_sink != null ? true : var.cis_2_2_logging_sink_project_id != ""
+  cis_2_2_logging_bucket_locked = local.cis_2_2_logging_sink_local ? google_logging_project_bucket_config.cis_2_2_logging_sink.locked : null
+  cis_2_2_logging_sink_external = var.cis_2_2_logging_sink != null ? true : var.cis_2_2_logging_sink_project_id != ""
+
   cis_2_2_logging_sink_local          = !local.cis_2_2_logging_sink_external
   cis_2_2_logging_sink_project_id     = local.cis_2_2_logging_sink_local ? google_project.this.project_id : local.external_logging_project_id
   cis_2_2_logging_sink_storage_bucket = local.cis_2_2_logging_sink_local ? "logging.googleapis.com/${google_logging_project_bucket_config.cis_2_2_logging_sink.name}" : "logging.googleapis.com/projects/${local.external_logging_project_id}/locations/${var.key_ring_location}/buckets/cis-2-2-logging-sink"

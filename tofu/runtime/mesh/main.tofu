@@ -4,7 +4,7 @@
 # A remote secret lets istiod discover endpoints in a peer cluster. Istio watches secrets with
 # the istio/multiCluster label; the data key is the peer's cluster name.
 resource "kubernetes_secret_v1" "remote_secret" {
-  for_each = var.runtime_enabled ? local.peers : toset([])
+  for_each = local.kubernetes_secret_v1_remote_secret_for_each
 
   data = {
     (local.cluster_names[each.key]) = local.kubeconfigs[each.key]
@@ -19,7 +19,7 @@ resource "kubernetes_secret_v1" "remote_secret" {
       "istio/multiCluster" = "true"
     }
 
-    name      = "istio-remote-secret-${local.cluster_names[each.key]}"
+    name      = local.kubernetes_secret_v1_remote_secret_metadata_name_by_instance[each.key]
     namespace = "istio-system"
   }
 }

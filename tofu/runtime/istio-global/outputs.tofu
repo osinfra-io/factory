@@ -1,6 +1,6 @@
 output "agentgateway_hostname" {
   description = "Shared public hostname of the agentgateway admin interface"
-  value       = "agentgateway.${local.environment_domain}"
+  value       = local.agentgateway_hostname_output
 }
 
 output "authentik_hostname" {
@@ -65,5 +65,5 @@ output "shared_vpc_host_project_id" {
 
 output "team_hostname" {
   description = "Public hostname of the team zone, which serves the test workload"
-  value       = trimsuffix(local.assembly.team_dns[var.team].dns_name, ".")
+  value       = local.team_hostname_output
 }

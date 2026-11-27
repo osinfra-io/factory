@@ -1,0 +1,4 @@
+workspace: assembly-main-sandbox
+args:
+  - -var-file=environments/sandbox.tfvars
+  - -var-file=../foundation/teams/factory.tfvars

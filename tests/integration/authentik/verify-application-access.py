@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise deployed application mappings inside Authentik without a browser identity."""
+"""Exercise deployed application mappings inside authentik without a browser identity."""
 
 import json
 import os
@@ -191,7 +191,7 @@ def verify(work):
         {"user": administrators[0]["pk"], "context": {}},
     )
     if not result["successful"]:
-        raise ValueError("Deployed verified identity scope failed inside Authentik")
+        raise ValueError("Deployed verified identity scope failed inside authentik")
     headers = json.loads(result["result"])["ak_proxy"]["user_attributes"]["additionalHeaders"]
     if headers.get("X-authentik-osinfra-google-email") != "":
         raise ValueError("A source-independent test identity received a verified Google header")
@@ -199,7 +199,7 @@ def verify(work):
     verify_memberships(
         api, objects("authentik_group", "application"), mappings[0]["id"], os.environ["TF_VAR_local_test_user_email"],
     )
-    print("Live Authentik evaluator verified native/OIDC email fields, unverified denial, source-independent header denial, and application groups.")
+    print("Live authentik evaluator verified native/OIDC email fields, unverified denial, source-independent header denial, and application groups.")
     print("Applied state confirms browser proxy providers use ten-minute claim validity.")
     print("These dry-run checks do not establish real Google browser sign-in or session revocation.")
 

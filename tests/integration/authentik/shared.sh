@@ -49,7 +49,7 @@ start_admin_forward() {
   trap 'kill "${FORWARD_PID}" 2>/dev/null || true; wait "${FORWARD_PID}" 2>/dev/null || true' EXIT
   for _ in $(seq 1 30); do
     if ! kill -0 "${FORWARD_PID}" 2>/dev/null; then
-      echo "Authentik admin port-forward failed; inspect ${WORK_DIR}/port-forward.log." >&2
+      echo "authentik admin port-forward failed; inspect ${WORK_DIR}/port-forward.log." >&2
       return 1
     fi
     if grep --quiet '^Forwarding from 127.0.0.1:19443 ' "${WORK_DIR}/port-forward.log" &&
@@ -59,6 +59,6 @@ start_admin_forward() {
     fi
     sleep 2
   done
-  echo "Timed out waiting for the loopback Authentik admin endpoint." >&2
+  echo "Timed out waiting for the loopback authentik admin endpoint." >&2
   return 1
 }

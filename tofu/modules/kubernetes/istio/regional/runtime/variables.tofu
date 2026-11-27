@@ -2,15 +2,15 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "ca_address" {
+  default     = "cert-manager-istio-csr.cert-manager.svc:443"
   description = "The certificate authority address for workload certificates; null uses Istio's built-in CA"
   type        = string
-  default     = "cert-manager-istio-csr.cert-manager.svc:443"
 }
 
 variable "chart_repository" {
+  default     = "https://blob.istio.io/istio-release/charts"
   description = "The repository to pull the Istio Helm charts from"
   type        = string
-  default     = "https://blob.istio.io/istio-release/charts"
 }
 
 variable "cluster_name" {
@@ -19,9 +19,9 @@ variable "cluster_name" {
 }
 
 variable "cni_cpu_limits" {
+  default     = null
   description = "The CPU limit for the Istio CNI node agent"
   type        = string
-  default     = null
 }
 
 variable "cni_cpu_requests" {
@@ -30,9 +30,9 @@ variable "cni_cpu_requests" {
 }
 
 variable "cni_memory_limits" {
+  default     = null
   description = "The memory limit for the Istio CNI node agent"
   type        = string
-  default     = null
 }
 
 variable "cni_memory_requests" {
@@ -46,20 +46,15 @@ variable "cni_platform" {
 }
 
 variable "enable_ca_server" {
+  default     = false
   description = "Whether istiod serves workload certificates using its built-in CA"
   type        = bool
-  default     = false
 }
 
 variable "enable_multi_network" {
+  default     = true
   description = "Enable Istio ambient multi-network control plane settings"
   type        = bool
-  default     = true
-}
-
-variable "environment" {
-  description = "Environment label applied to Istio workloads"
-  type        = string
 }
 
 variable "image_hub" {
@@ -68,15 +63,15 @@ variable "image_hub" {
 }
 
 variable "mesh_config_extension_providers" {
+  default     = []
   description = "Istio meshConfig extensionProviders entries"
   type        = list(any)
-  default     = []
 }
 
 variable "mesh_config_service_settings" {
+  default     = []
   description = "Istio meshConfig serviceSettings entries"
   type        = list(any)
-  default     = []
 }
 
 variable "network" {

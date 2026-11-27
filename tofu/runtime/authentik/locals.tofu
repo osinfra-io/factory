@@ -6,4 +6,6 @@ locals {
   secret_name = "authentik-env"
 
   stage = "authentik"
+
+  terraform_remote_state_global_workspace = "authentik-global-${coalesce(module.core_helpers.environment, "unsupported")}"
 }

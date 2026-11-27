@@ -1,6 +1,16 @@
 # Input Variables
 # https://opentofu.org/docs/language/values/variables
 
+variable "environment" {
+  description = "The environment managed by this Foundation workspace"
+  type        = string
+
+  validation {
+    condition     = contains(["non-production", "production", "sandbox"], var.environment)
+    error_message = "The environment must be sandbox, non-production, or production."
+  }
+}
+
 variable "google_environment_root_folder_id" {
   description = "The existing folder ID for the current environment"
   type        = string
@@ -21,16 +31,6 @@ variable "google_quota_project" {
   }
 }
 
-variable "environment" {
-  description = "The environment managed by this Foundation workspace"
-  type        = string
-
-  validation {
-    condition     = contains(["non-production", "production", "sandbox"], var.environment)
-    error_message = "The environment must be sandbox, non-production, or production."
-  }
-}
-
 variable "teams" {
   description = "Factory team metadata; Foundation currently supports only the Factory team"
   type = map(object({
@@ -38,7 +38,8 @@ variable "teams" {
   }))
 
   validation {
-    condition     = toset(keys(var.teams)) == toset(["factory"])
+    condition = toset(keys(var.teams)) == toset(["factory"])
+
     error_message = "Foundation must declare exactly one team with the key \"factory\"."
   }
 

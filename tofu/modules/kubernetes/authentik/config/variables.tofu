@@ -20,52 +20,38 @@ variable "application_groups" {
         for email in group.members : can(regex("^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(\\.[a-z0-9-]+)+$", email))
       ])
     ]) && length(distinct([for group in values(var.application_groups) : group.name])) == length(var.application_groups)
+
     error_message = "Application groups must have unique team-qualified names, non-blank descriptions, and unique lowercase member emails."
   }
 
   validation {
-    condition     = length(var.application_groups) == 0 || local.google_oauth_enabled
+    condition = length(var.application_groups) == 0 || local.google_oauth_enabled
+
     error_message = "Managed application groups require the existing Google OAuth source to be enabled."
-  }
-}
-
-variable "superuser_group_keys" {
-  default     = []
-  description = "Keys in application_groups whose memberships receive Authentik-wide superuser permissions."
-  type        = set(string)
-
-  validation {
-    condition     = length(setsubtract(var.superuser_group_keys, toset(keys(var.application_groups)))) == 0
-    error_message = "Every superuser_group_keys entry must identify a declared application group."
-  }
-
-  validation {
-    condition     = length(var.superuser_group_keys) == 0 || local.google_oauth_enabled
-    error_message = "Authentik superuser groups require the existing Google OAuth source to be enabled."
   }
 }
 
 variable "application_launch_url" {
   default     = null
-  description = "Optional URL shown as the launch link for the Authentik application"
+  description = "Optional URL shown as the launch link for the authentik application"
   nullable    = true
   type        = string
 }
 
 variable "application_name" {
   default     = "Istio Gateway"
-  description = "The display name of the Authentik application for the gateway"
+  description = "The display name of the authentik application for the gateway"
   type        = string
 }
 
 variable "application_slug" {
   default     = "gateway"
-  description = "The slug of the Authentik application, used in the OIDC issuer URL"
+  description = "The slug of the authentik application, used in the OIDC issuer URL"
   type        = string
 }
 
 variable "authentik_url" {
-  description = "The public base URL of the Authentik deployment, used to construct the OIDC issuer and JWKS URLs"
+  description = "The public base URL of the authentik deployment, used to construct the OIDC issuer and JWKS URLs"
   type        = string
 
   validation {
@@ -76,13 +62,33 @@ variable "authentik_url" {
 
 variable "authorization_flow_slug" {
   default     = "default-provider-authorization-implicit-consent"
-  description = "The slug of the Authentik authorization flow to use for the providers"
+  description = "The slug of the authentik authorization flow to use for the providers"
   type        = string
+}
+
+variable "branding" {
+  default     = null
+  description = "Optional branded login configuration; null leaves authentik's existing brand and authentication flow unchanged"
+  nullable    = true
+  type = object({
+    domain     = string
+    flow_title = string
+    title      = string
+  })
+
+  validation {
+    condition = var.branding == null ? true : (
+      length(trimspace(var.branding.domain)) > 0 &&
+      length(trimspace(var.branding.flow_title)) > 0 &&
+      length(trimspace(var.branding.title)) > 0
+    )
+    error_message = "Branding domain, title, and flow_title must be non-empty when branding is configured."
+  }
 }
 
 variable "browser_group_policy_bindings" {
   default     = {}
-  description = "Per-host browser authorization. Groups and roles each use OR, with AND between the lists; roles are Authentik group names. Team-qualified requirements additionally require an active, Google-linked verified identity."
+  description = "Per-host browser authorization. Groups and roles each use OR, with AND between the lists; roles are authentik group names. Team-qualified requirements additionally require an active, Google-linked verified identity."
   type = map(object({
     groups      = optional(list(string), [])
     hidden      = optional(bool, false)
@@ -127,26 +133,6 @@ variable "browser_group_policy_bindings" {
   }
 }
 
-variable "branding" {
-  default     = null
-  description = "Optional branded login configuration; null leaves Authentik's existing brand and authentication flow unchanged"
-  nullable    = true
-  type = object({
-    domain     = string
-    flow_title = string
-    title      = string
-  })
-
-  validation {
-    condition = var.branding == null ? true : (
-      length(trimspace(var.branding.domain)) > 0 &&
-      length(trimspace(var.branding.flow_title)) > 0 &&
-      length(trimspace(var.branding.title)) > 0
-    )
-    error_message = "Branding domain, title, and flow_title must be non-empty when branding is configured."
-  }
-}
-
 variable "cli_oidc_browser_keys" {
   default     = []
   description = "Keys of browser_group_policy_bindings whose proxy providers accept bearer tokens from the Factory CLI OIDC provider. The provider and application are created only when this is not empty."
@@ -170,7 +156,8 @@ variable "default_authentication_source_uuids" {
   type        = list(string)
 
   validation {
-    condition     = length(distinct(var.default_authentication_source_uuids)) == length(var.default_authentication_source_uuids)
+    condition = length(distinct(var.default_authentication_source_uuids)) == length(var.default_authentication_source_uuids)
+
     error_message = "The default_authentication_source_uuids list must not contain duplicates."
   }
 }
@@ -207,7 +194,8 @@ variable "default_authentication_stage_settings" {
   })
 
   validation {
-    condition     = length(var.default_authentication_stage_settings.user_fields) > 0
+    condition = length(var.default_authentication_stage_settings.user_fields) > 0
+
     error_message = "The default_authentication_stage_settings user_fields list must not be empty."
   }
 }
@@ -234,20 +222,20 @@ variable "google_internal_domains" {
 
 variable "google_oauth_client_id" {
   default     = ""
-  description = "The OAuth client ID for the optional Google source in Authentik; leave empty to disable the source."
+  description = "The OAuth client ID for the optional Google source in authentik; leave empty to disable the source."
   type        = string
 }
 
 variable "google_oauth_client_secret" {
   default     = ""
-  description = "The OAuth client secret for the optional Google source in Authentik; leave empty to disable the source."
+  description = "The OAuth client secret for the optional Google source in authentik; leave empty to disable the source."
   sensitive   = true
   type        = string
 }
 
 variable "invalidation_flow_slug" {
   default     = "default-provider-invalidation-flow"
-  description = "The slug of the Authentik invalidation flow to use for the providers"
+  description = "The slug of the authentik invalidation flow to use for the providers"
   type        = string
 }
 
@@ -257,7 +245,8 @@ variable "manage_default_authentication_stage" {
   type        = bool
 
   validation {
-    condition     = var.google_oauth_client_id == "" || var.google_oauth_client_secret == "" || var.manage_default_authentication_stage
+    condition = var.google_oauth_client_id == "" || var.google_oauth_client_secret == "" || var.manage_default_authentication_stage
+
     error_message = "manage_default_authentication_stage must be true when Google OAuth credentials are configured."
   }
 }
@@ -293,6 +282,24 @@ variable "redirect_uris" {
 
 variable "signing_key_name" {
   default     = "authentik Self-signed Certificate"
-  description = "The name of the Authentik certificate-key pair used to sign OIDC tokens"
+  description = "The name of the authentik certificate-key pair used to sign OIDC tokens"
   type        = string
+}
+
+variable "superuser_group_keys" {
+  default     = []
+  description = "Keys in application_groups whose memberships receive authentik-wide superuser permissions."
+  type        = set(string)
+
+  validation {
+    condition = length(setsubtract(var.superuser_group_keys, toset(keys(var.application_groups)))) == 0
+
+    error_message = "Every superuser_group_keys entry must identify a declared application group."
+  }
+
+  validation {
+    condition = length(var.superuser_group_keys) == 0 || local.google_oauth_enabled
+
+    error_message = "authentik superuser groups require the existing Google OAuth source to be enabled."
+  }
 }

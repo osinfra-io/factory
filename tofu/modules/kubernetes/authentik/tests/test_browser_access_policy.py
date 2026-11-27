@@ -1,4 +1,4 @@
-"""Execute the OpenTofu-rendered Authentik browser authorization expressions."""
+"""Execute the OpenTofu-rendered authentik browser authorization expressions."""
 
 import json
 from pathlib import Path

@@ -9,7 +9,7 @@ This is an opt-in developer test for changes that cross component boundaries, no
 
 ## Setup
 
-Set `TF_VAR_google_oauth_client_id` and `TF_VAR_google_oauth_client_secret`. The Authentik fixture requires both; its Google web client must allow:
+Set `TF_VAR_google_oauth_client_id` and `TF_VAR_google_oauth_client_secret`. The authentik fixture requires both; its Google web client must allow:
 
 ```text
 https://localhost/source/oauth/callback/google/
@@ -29,9 +29,9 @@ Preflight requires the current `docker-desktop` context and Docker Desktop Kind.
 
 Agent Substrate setup automatically enables its required certificate APIs and kubelet feature gates. This requires a dedicated single-node Docker Desktop cluster. The helper restarts the kubelet and updates the API-server manifest only when configuration changes are needed. It uses temporary files under host `.work` and node `/var/tmp` and does not create backups. If the update fails, reset Docker Desktop Kubernetes before retrying.
 
-Setup runs Istio, Authentik, gateway policy/routes, agentgateway, Agent Substrate, kagent, OpenBao, and Floor in dependency order. To iterate, rerun only the affected component's `setup.sh` (or `istio/apply-auth.sh` / `istio/apply-routes.sh`). Do not reset the cluster between ordinary edits.
+Setup runs Istio, authentik, gateway policy/routes, agentgateway, Agent Substrate, kagent, OpenBao, and Floor in dependency order. To iterate, rerun only the affected component's `setup.sh` (or `istio/apply-auth.sh` / `istio/apply-routes.sh`). Do not reset the cluster between ordinary edits.
 
-Authentik setup uses `git config user.email` as the local test identity. It must match the Google account used for sign-in. The identity is added to every configured sandbox application group, including `factory: Authentik Admins`, a superuser group; use only the disposable local fixture.
+authentik setup uses `git config user.email` as the local test identity. It must match the Google account used for sign-in. The identity is added to every configured sandbox application group, including `factory: Authentik Admins`, a superuser group; use only the disposable local fixture.
 
 ## Automated verification
 

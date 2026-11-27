@@ -29,31 +29,25 @@ resource "vault_jwt_auth_backend" "oidc" {
 }
 
 resource "vault_jwt_auth_backend_role" "oidc" {
-  allowed_redirect_uris = [
-    "https://${local.openbao_hostname}/ui/vault/auth/oidc/oidc/callback",
-    "https://${var.openbao_zone}.${local.openbao_hostname}/ui/vault/auth/oidc/oidc/callback",
-    "http://localhost:8250/oidc/callback",
-  ]
-  backend         = vault_jwt_auth_backend.oidc.path
-  bound_audiences = [local.authentik_config.openbao_client_id]
-  groups_claim    = "groups"
-  oidc_scopes     = ["email", "groups", "profile"]
-  role_name       = "default"
-  role_type       = "oidc"
-  token_max_ttl   = 3600
-  token_policies  = ["default"]
-  token_ttl       = 3600
-  user_claim      = "sub"
+  allowed_redirect_uris = local.vault_jwt_auth_backend_role_oidc_allowed_redirect_uris
+  backend               = vault_jwt_auth_backend.oidc.path
+  bound_audiences       = [local.authentik_config.openbao_client_id]
+  groups_claim          = "groups"
+  oidc_scopes           = ["email", "groups", "profile"]
+  role_name             = "default"
+  role_type             = "oidc"
+  token_max_ttl         = 3600
+  token_policies        = ["default"]
+  token_ttl             = 3600
+  user_claim            = "sub"
 }
 
 resource "vault_kv_secret_v2" "team_readme" {
   for_each = local.team_readme_content
 
-  data_json = jsonencode({
-    README = each.value
-  })
-  mount = vault_mount.team_kv2.path
-  name  = "${each.key}/README"
+  data_json = local.vault_kv_secret_v2_team_readme_data_json_by_instance[each.key]
+  mount     = vault_mount.team_kv2.path
+  name      = local.vault_kv_secret_v2_team_readme_name_by_instance[each.key]
 }
 
 resource "vault_mount" "team_kv2" {
@@ -69,6 +63,6 @@ resource "vault_policy" "team" {
   depends_on = [vault_mount.team_kv2]
   for_each   = local.team_policy_documents
 
-  name   = replace(each.key, "/", "-")
+  name   = local.vault_policy_team_name_by_instance[each.key]
   policy = each.value
 }

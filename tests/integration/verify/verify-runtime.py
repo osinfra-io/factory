@@ -80,9 +80,9 @@ def parse_positive_replicas(value):
     try:
         replicas = int(value)
     except ValueError as error:
-        raise VerificationError("Authentik server replica count is not an integer.") from error
+        raise VerificationError("authentik server replica count is not an integer.") from error
     if replicas < 1:
-        raise VerificationError("Authentik server is already scaled to zero; refusing the fail-closed disruption test.")
+        raise VerificationError("authentik server is already scaled to zero; refusing the fail-closed disruption test.")
     return replicas
 
 
@@ -124,7 +124,7 @@ def wait_for_endpoint_presence(present, timeout):
             return
         time.sleep(min(POLL_INTERVAL_SECONDS, max(0, deadline - time.monotonic())))
     expected = "ready" if present else "absent"
-    raise VerificationError(f"Timed out waiting for Authentik server endpoints to become {expected}.")
+    raise VerificationError(f"Timed out waiting for authentik server endpoints to become {expected}.")
 
 
 def wait_for_protected_recovery(timeout=RECOVERY_TIMEOUT_SECONDS):
@@ -137,7 +137,7 @@ def wait_for_protected_recovery(timeout=RECOVERY_TIMEOUT_SECONDS):
             return
         time.sleep(min(POLL_INTERVAL_SECONDS, max(0, deadline - time.monotonic())))
     raise VerificationError(
-        f"Authentik was restored, but protected traffic did not recover to HTTP 302 "
+        f"authentik was restored, but protected traffic did not recover to HTTP 302 "
         f"within {timeout}s (last observed HTTP {last_status})."
     )
 
@@ -178,7 +178,7 @@ def verify_fail_closed():
         outage_status, curl_exit = curl_status(PROTECTED_URL)
         if outage_status != "403" and not (outage_status == "000" and curl_exit != 0):
             raise VerificationError(
-                f"Fail-closed check expected HTTP 403 or a denied connection during Authentik outage; "
+                f"Fail-closed check expected HTTP 403 or a denied connection during authentik outage; "
                 f"observed HTTP {outage_status}."
             )
     except BaseException as error:
@@ -209,18 +209,18 @@ def verify_fail_closed():
     if restore_error:
         if check_error:
             raise VerificationError(
-                f"Fail-closed check failed ({check_error}); Authentik restoration/recovery also failed "
+                f"Fail-closed check failed ({check_error}); authentik restoration/recovery also failed "
                 f"({restore_error}). Do not report automated success."
             ) from restore_error
         raise VerificationError(
-            f"Fail-closed check completed, but Authentik restoration/recovery failed ({restore_error}). "
+            f"Fail-closed check completed, but authentik restoration/recovery failed ({restore_error}). "
             "Do not report automated success."
         ) from restore_error
     if check_error:
         raise check_error
 
-    print(f"PASS fail-closed: protected request denied with HTTP {outage_status} while Authentik was stopped.")
-    print("PASS recovery: Authentik restored and protected traffic returned HTTP 302.")
+    print(f"PASS fail-closed: protected request denied with HTTP {outage_status} while authentik was stopped.")
+    print("PASS recovery: authentik restored and protected traffic returned HTTP 302.")
 
 
 def get_pods(namespace, selector):
@@ -330,7 +330,7 @@ def verify_admin_denial(metrics_by_node, client_pod):
     proxy_pods = require_pods(
         ADMIN_NAMESPACE,
         "gateway.networking.k8s.io/gateway-name=agentgateway-proxy",
-        "Agentgateway proxy",
+        "agentgateway proxy",
     )
     require_flow_on_relevant_nodes(
         metrics_by_node,
@@ -458,7 +458,7 @@ def verify_runtime():
     agentgateway_pods = require_pods(
         ADMIN_NAMESPACE,
         "gateway.networking.k8s.io/gateway-name=agentgateway-proxy",
-        "Agentgateway proxy",
+        "agentgateway proxy",
     )
     diagnostic_pods = require_pods("istio-test", "app=istio-test", "diagnostic workload")
 
@@ -466,7 +466,7 @@ def verify_runtime():
         metrics_by_node,
         ingress_pods,
         agentgateway_pods,
-        "Istio ingress to Agentgateway",
+        "Istio ingress to agentgateway",
         source_workload="gateway-istio",
         destination_workload="agentgateway-proxy",
         destination_namespace=ADMIN_NAMESPACE,
@@ -475,7 +475,7 @@ def verify_runtime():
         metrics_by_node,
         agentgateway_pods,
         diagnostic_pods,
-        "Agentgateway to diagnostic workload",
+        "agentgateway to diagnostic workload",
         source_workload="agentgateway-proxy",
         destination_workload="istio-test",
         destination_namespace="istio-test",
@@ -495,7 +495,7 @@ def main():
         message = str(error) or "Verification interrupted."
         print(f"Runtime gateway verification failed: {message}", file=sys.stderr)
         return 1
-    print("All runtime security checks passed; temporary resources and Authentik state were restored.")
+    print("All runtime security checks passed; temporary resources and authentik state were restored.")
     return 0
 
 

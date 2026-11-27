@@ -38,7 +38,21 @@ locals {
     })
   }
 
+  kubernetes_secret_v1_remote_secret_for_each = var.runtime_enabled ? local.peers : toset([])
+
+  kubernetes_secret_v1_remote_secret_metadata_name_by_instance = {
+    for instance_key, instance_value in var.runtime_enabled ? local.peers : toset([]) : instance_key => "istio-remote-secret-${local.cluster_names[instance_key]}"
+  }
+
   peers = toset([for location in var.locations : location if location != local.location])
 
   stage = "mesh"
+
+  terraform_remote_state_peer_cluster_workspace_by_instance = {
+    for instance_key, instance_value in local.peers : instance_key => "${instance_key}-runtime-${module.core_helpers.environment}"
+  }
+
+  terraform_remote_state_peer_istio_workspace_by_instance = {
+    for instance_key, instance_value in local.peers : instance_key => "${instance_key}-istio-${module.core_helpers.environment}"
+  }
 }

@@ -48,7 +48,7 @@ require_command tofu
 assert_docker_desktop_kind_cluster || fail "Kubernetes is not backed by the Docker Desktop Kind cluster"
 assert_local_gateway_stack_owner || fail "initialize the dedicated local gateway stack through preflight first"
 [ -s "${INIT_FILE}" ] || fail "OpenBao initialization credentials are missing; run setup.sh first"
-[ -s "${AUTHENTIK_STATE}" ] || fail "local Authentik config state is missing; run tests/integration/authentik/setup.sh first"
+[ -s "${AUTHENTIK_STATE}" ] || fail "local authentik config state is missing; run tests/integration/authentik/setup.sh first"
 [ -s "${AUTHENTIK_CA_FILE}" ] || fail "local gateway certificate is missing; run tests/integration/istio/setup.sh first"
 
 umask 077
@@ -58,9 +58,9 @@ authentik_client_id="$(authentik_output openbao_client_id)"
 authentik_client_secret="$(authentik_output openbao_client_secret)"
 authentik_issuer_url="$(authentik_output openbao_issuer_url)"
 
-[ -n "${authentik_client_id}" ] || fail "local Authentik did not output an OpenBao client ID"
-[ -n "${authentik_client_secret}" ] || fail "local Authentik did not output an OpenBao client secret"
-[ -n "${authentik_issuer_url}" ] || fail "local Authentik did not output an OpenBao issuer URL"
+[ -n "${authentik_client_id}" ] || fail "local authentik did not output an OpenBao client ID"
+[ -n "${authentik_client_secret}" ] || fail "local authentik did not output an OpenBao client secret"
+[ -n "${authentik_issuer_url}" ] || fail "local authentik did not output an OpenBao issuer URL"
 
 tofu_stage config init \
   -reconfigure \

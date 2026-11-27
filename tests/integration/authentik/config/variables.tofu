@@ -2,7 +2,7 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "authentik_token" {
-  description = "Local Authentik bootstrap API token"
+  description = "Local authentik bootstrap API token"
   sensitive   = true
   type        = string
 }
@@ -17,7 +17,8 @@ variable "environment" {
   type        = string
 
   validation {
-    condition     = var.environment == "sandbox"
+    condition = var.environment == "sandbox"
+
     error_message = "The local integration fixture must exercise the Sandbox access policy."
   }
 }
@@ -28,7 +29,8 @@ variable "google_oauth_client_id" {
   type        = string
 
   validation {
-    condition     = length(var.google_oauth_client_id) > 0
+    condition = length(var.google_oauth_client_id) > 0
+
     error_message = "Local integration requires Google OAuth credentials."
   }
 }
@@ -39,7 +41,8 @@ variable "google_oauth_client_secret" {
   type        = string
 
   validation {
-    condition     = length(var.google_oauth_client_secret) > 0
+    condition = length(var.google_oauth_client_secret) > 0
+
     error_message = "Local integration requires Google OAuth credentials."
   }
 

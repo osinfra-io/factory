@@ -35,8 +35,18 @@ locals {
 
   cluster_workspace = "${local.location}-runtime-${coalesce(module.core_helpers.environment, "unsupported")}"
 
+  helm_kubernetes = {
+    cluster_ca_certificate = local.kubernetes_cluster_ca_certificate
+    host                   = local.kubernetes_host
+    token                  = data.google_client_config.this.access_token
+  }
+
   # A single instance key for modules that must disappear when the stage is disabled.
   instances = var.runtime_enabled ? toset(["this"]) : toset([])
+
+  kubernetes_cluster_ca_certificate = base64decode(local.cluster.ca_certificate)
+
+  kubernetes_host = "https://${local.cluster.endpoint}"
 
   location = "${coalesce(module.core_helpers.region, "unsupported")}-${coalesce(module.core_helpers.zone, "x")}"
 
@@ -44,15 +54,11 @@ locals {
 }
 
 provider "helm" {
-  kubernetes = {
-    cluster_ca_certificate = base64decode(local.cluster.ca_certificate)
-    host                   = "https://${local.cluster.endpoint}"
-    token                  = data.google_client_config.this.access_token
-  }
+  kubernetes = local.helm_kubernetes
 }
 
 provider "kubernetes" {
-  cluster_ca_certificate = base64decode(local.cluster.ca_certificate)
-  host                   = "https://${local.cluster.endpoint}"
+  cluster_ca_certificate = local.kubernetes_cluster_ca_certificate
+  host                   = local.kubernetes_host
   token                  = data.google_client_config.this.access_token
 }

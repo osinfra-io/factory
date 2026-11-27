@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/../shared/cluster.sh"
 source "${SCRIPT_DIR}/state.sh"
 
 fail() {
-  echo "AgentGateway local setup: $*" >&2
+  echo "agentgateway local setup: $*" >&2
   exit 1
 }
 
@@ -105,11 +105,11 @@ fi
 
 if [ "${MODE}" != install ]; then
   kubectl get service authentik-server --namespace=authentik >/dev/null 2>&1 ||
-    fail "Authentik must be ready in namespace authentik before applying routes"
+    fail "authentik must be ready in namespace authentik before applying routes"
   kubectl get service authentik-server --namespace=authentik \
     --output=jsonpath='{range .spec.ports[*]}{.port}{" "}{end}' |
     grep --word-regexp --quiet 80 ||
-    fail "Authentik Service authentik-server must expose HTTP port 80"
+    fail "authentik Service authentik-server must expose HTTP port 80"
   kubectl get service istio-test --namespace=istio-test >/dev/null 2>&1 ||
     fail "the diagnostic Service istio-test must be ready before applying routes"
   kubectl get gateway gateway --namespace=istio-ingress >/dev/null 2>&1 ||

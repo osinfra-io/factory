@@ -77,7 +77,7 @@ def main():
             ))
             counts.append(check_filter_order(config))
         if all(counts):
-            print("Live gateway filter order verified: identity stripping -> Authentik ext_authz; no application authorization Lua.")
+            print("Live gateway filter order verified: identity stripping -> authentik ext_authz; no application authorization Lua.")
             return
         if time.monotonic() >= deadline:
             raise SystemExit("Timed out waiting for identity stripping and ext_authz in every ingress gateway")

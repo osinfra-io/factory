@@ -1,19 +1,20 @@
 locals {
-  assembly = data.terraform_remote_state.assembly.outputs
+  agentgateway_hostname_output = "agentgateway.${local.environment_domain}"
+  assembly                     = data.terraform_remote_state.assembly.outputs
 
-  # Authentik's token-authenticated management API receives generated JSON and uses PUT/DELETE,
+  # authentik's token-authenticated management API receives generated JSON and uses PUT/DELETE,
   # which trigger false positives in Cloud Armor's protocol and method enforcement rules. There is
   # no scoped WAF exclusion for HTTP method/protocol enforcement, so this remains a full allow rule.
   authentik_cloud_armor_allow_rules = {
     authentik_api = {
-      description = "Allow token-authenticated Authentik API requests"
+      description = "Allow token-authenticated authentik API requests"
       expression  = "has(request.headers['host']) && request.headers['host'].matches(${jsonencode(local.authentik_gateway_hostname_regex)}) && request.path.startsWith('/api/v3/') && has(request.headers['authorization']) && request.headers['authorization'].startsWith('Bearer ')"
       priority    = 9000
     }
   }
 
   # The Google OAuth flow's "scope" query parameter (e.g. "userinfo.profile") is false-positive
-  # matched by the preconfigured LFI WAF rule (owasp-crs-v030301-id930120-lfi). Authentik re-wraps
+  # matched by the preconfigured LFI WAF rule (owasp-crs-v030301-id930120-lfi). authentik re-wraps
   # the original query string (including "scope") inside its own "query" parameter at every step of
   # the flow (browser callback -> /if/flow/<slug>/ -> /api/v3/flows/executor/<slug>/), including
   # built-in system flows (e.g. default-source-authentication for returning users) whose slugs are
@@ -189,6 +190,11 @@ locals {
     },
   ]
 
+  cloud_armor_waf_config_instances = {
+    for name, exclusions in local.cloud_armor_waf_exclusions_by_rule_set :
+    name => length(exclusions) > 0 ? [1] : []
+  }
+
   cloud_armor_waf_exclusions_by_rule_set = {
     for rule in local.cloud_armor_preconfigured_waf_rules : rule.name => [
       for exclusion in local.authentik_cloud_armor_waf_exclusions : exclusion
@@ -225,6 +231,8 @@ locals {
     }
   }
 
+  google_dns_record_set_openbao_mci_name = "${local.openbao_hostname}."
+
   openbao_cloud_armor_deny_rules = {
     openbao_metrics = {
       description = "Deny external requests to OpenBao metrics"
@@ -255,4 +263,8 @@ locals {
   openbao_workload_identity_member = "serviceAccount:${local.assembly.workload_projects[var.team].id}.svc.id.goog[openbao/openbao]"
 
   shared_ingress_policy_name = "shared-ingress"
+
+  team_hostname_output = trimsuffix(local.assembly.team_dns[var.team].dns_name, ".")
+
+  terraform_remote_state_assembly_workspace = "assembly-main-${coalesce(module.core_helpers.environment, "unsupported")}"
 }

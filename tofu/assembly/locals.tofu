@@ -4,6 +4,13 @@ locals {
     if config.artifact_registry != null || contains(keys(local.gke_teams), team)
   }
 
+  artifact_registries_output = {
+    for team, registry in google_artifact_registry_repository.docker_standard : team => {
+      standard = registry.id
+      virtual  = google_artifact_registry_repository.docker_virtual[team].id
+    }
+  }
+
   cloud_sql_instances = merge({}, [
     for team, config in local.workload_teams : {
       for name, instance in config.cloud_sql : "${team}/${name}" => merge(instance, {
@@ -37,13 +44,18 @@ locals {
 
   dns_zone_name = replace(trimsuffix(local.dns_domain, "."), ".", "-")
 
-  github_workload_identity = length(local.github_publishers) == 0 ? {} : local.network_projects
-
   foundation_workspace = "foundation-main-${var.environment}"
+
+  github_owner_condition = "assertion.repository_owner_id == ${jsonencode(var.github_repository_owner_id)}"
 
   github_publishers = { for team, registry in local.artifact_registries : team => registry if length(registry.github_repository_ids) > 0 }
 
-  github_owner_condition = "assertion.repository_owner_id == ${jsonencode(var.github_repository_owner_id)}"
+  github_registry_publishers_output = {
+    for team, publisher in google_service_account.registry_publishers : team => {
+      provider        = google_iam_workload_identity_pool_provider.github[var.environment].name
+      service_account = publisher.email
+    }
+  }
 
   github_repository_bindings = merge({}, [
     for team, registry in local.github_publishers : {
@@ -59,6 +71,8 @@ locals {
     key => "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.registry_publishers[var.environment].name}/attribute.repository_id/${binding.repository}"
   }
 
+  github_workload_identity = length(local.github_publishers) == 0 ? {} : local.network_projects
+
   gke_service_agents = {
     for team in keys(local.gke_teams) :
     team => google_project_service_identity.gke[team].member
@@ -67,6 +81,44 @@ locals {
   gke_teams = {
     for team, config in local.workload_teams : team => config
     if config.kubernetes_engine != null && length(config.kubernetes_engine.locations) > 0
+  }
+
+  google_artifact_registry_repository_docker_remote_lifecycle_enabled = length(local.artifact_registries) > 0
+
+
+
+
+
+  google_artifact_registry_repository_docker_standard_repository_id_by_instance = {
+    for instance_key, instance_value in local.artifact_registries : instance_key => "${instance_key}-standard"
+  }
+
+  google_artifact_registry_repository_docker_virtual_repository_id_by_instance = {
+    for instance_key, instance_value in local.artifact_registries : instance_key => "${instance_key}-virtual"
+  }
+
+  google_network_private_dns_dns_name = "private.${local.dns_domain}"
+
+  google_network_private_dns_name = "private-${local.dns_zone_name}"
+
+  google_network_team_dns_name_by_instance = {
+    for instance_key, instance_value in local.team_dns : instance_key => "${instance_key}-${local.dns_zone_name}"
+  }
+
+  google_project_iam_custom_role_dns_records_for_each = length(local.dns_writers) == 0 ? {} : local.network_projects
+
+  google_project_iam_custom_role_gke_firewall_for_each = length(local.gke_teams) == 0 ? {} : local.network_projects
+
+  google_project_teams_services_by_instance = {
+    for instance_key, instance_value in local.team_projects : instance_key => concat(local.project_services, tolist(instance_value.services))
+  }
+
+  google_service_account_registry_publishers_account_id_by_instance = {
+    for instance_key, instance_value in local.github_publishers : instance_key => "${instance_key}-publisher"
+  }
+
+  google_service_account_registry_publishers_display_name_by_instance = {
+    for instance_key, instance_value in local.github_publishers : instance_key => "Factory registry publisher (${instance_key})"
   }
 
   hub_teams = {
@@ -132,6 +184,8 @@ locals {
     }
   }
 
+  regions = toset([for subnet in values(local.team_subnets) : subnet.region])
+
   registry_reader_members = merge([
     for team, members in local.registry_readers : {
       for member in members : "${team}:${member}" => {
@@ -165,8 +219,6 @@ locals {
     )
   }
 
-  regions = toset([for subnet in values(local.team_subnets) : subnet.region])
-
   runtime_project_grants = merge({}, flatten([
     for team, roles in var.runtime_project_access : [
       for role, members in roles : {
@@ -188,6 +240,13 @@ locals {
     for team, config in local.gke_teams : team => "${coalesce(config.kubernetes_engine.dns_subdomain, team)}.${local.dns_domain}"
   }
 
+  team_dns_output = {
+    for team, zone in module.google_network_team_dns : team => {
+      dns_name = zone.dns_name
+      name     = zone.name
+    }
+  }
+
   team_folder_ids = {
     for team in keys(var.teams) : team => data.terraform_remote_state.foundation.outputs.teams[team].team_folder_id
   }
@@ -197,6 +256,20 @@ locals {
   }
 
   team_projects = { for team, config in var.teams : team => config.google_project if config.google_project != null }
+
+  team_projects_output = {
+    for team, project in module.google_project_teams : team => {
+      id     = project.id
+      number = project.number
+    }
+  }
+
+  team_state_output = {
+    for team, bucket in module.google_storage_bucket : team => {
+      bucket  = bucket.name
+      kms_key = google_kms_crypto_key.team_state[team].id
+    }
+  }
 
   team_subnets = merge({}, [
     for team, config in local.gke_teams : {
@@ -226,6 +299,13 @@ locals {
       contains(keys(local.hub_teams), team) ? ["multiclusteringress.googleapis.com"] : [],
       length(config.cloud_sql) > 0 ? ["servicenetworking.googleapis.com", "sqladmin.googleapis.com"] : [],
     )
+  }
+
+  workload_projects_output = {
+    for team, project in module.google_project_workloads : team => {
+      id     = project.id
+      number = project.number
+    }
   }
 
   workload_teams = {

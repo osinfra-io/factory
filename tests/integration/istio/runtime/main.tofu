@@ -26,7 +26,6 @@ module "istio_runtime" {
   cni_platform         = ""
   enable_ca_server     = true
   enable_multi_network = false
-  environment          = "local"
   image_hub            = "docker.io/istio"
   mesh_config_extension_providers = [
     module.browser_auth.extension_provider

@@ -1,4 +1,4 @@
-"""Credential-free tests for Authentik bootstrap readiness."""
+"""Credential-free tests for authentik bootstrap readiness."""
 
 import unittest
 

@@ -12,7 +12,7 @@ terraform {
   }
 }
 
-# Kubernetes Authentik
+# Kubernetes authentik
 # https://github.com/osinfra-io/pt-arche-kubernetes-authentik
 
 module "test" {
@@ -47,49 +47,4 @@ module "test" {
   google_oauth_client_secret          = var.google_oauth_client_secret
   manage_default_authentication_stage = true
   superuser_group_keys                = var.superuser_group_keys
-}
-
-output "browser_group_policy_binding_count" {
-  description = "Number of per-host Authentik browser policy bindings created by the fixture"
-  value       = length(module.test.browser_policy_bindings)
-}
-
-output "google_oauth_source_enabled" {
-  description = "Whether the fixture created the optional Google Authentik source"
-  value       = module.test.google_oauth_source_enabled
-}
-
-output "preserved_authentication_source" {
-  description = "Whether the fixture preserved its pre-existing authentication source"
-  value       = contains(module.test.default_authentication_source_uuids, "00000000-0000-0000-0000-000000000013")
-}
-
-output "default_authentication_stage_managed" {
-  description = "Whether the fixture keeps the shared authentication stage managed"
-  value       = module.test.default_authentication_stage_managed
-}
-
-variable "application_groups" {
-  default     = {}
-  description = "Managed application groups exercised by the fixture"
-  type = map(object({
-    description = string
-    members     = list(string)
-    name        = string
-  }))
-}
-
-output "application_groups" {
-  description = "Managed application groups"
-  value       = module.test.application_groups
-}
-
-output "pending_application_members" {
-  description = "Members awaiting verified Google enrollment"
-  value       = module.test.pending_application_members
-}
-
-output "google_authentication_user_write_stages" {
-  description = "Existing-user updates during Google sign-in"
-  value       = module.test.google_authentication_user_write_stages
 }

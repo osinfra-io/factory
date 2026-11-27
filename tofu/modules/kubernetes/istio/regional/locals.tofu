@@ -8,8 +8,6 @@ locals {
 
   gateway_domains = keys(var.gateway_dns)
 
-  gateway_mci_pre_shared_certs = join(",", var.gateway_mci_ssl_certificate_names)
-
   # Gateway listener. A single catch-all HTTPS listener terminates TLS for every
   # team's traffic. hostname is null so Envoy builds a default (no-SNI) filter
   # chain: the fronting GCP L7 load balancer re-originates TLS to the backend
@@ -48,6 +46,8 @@ locals {
       }
     }
   ]
+
+  gateway_mci_pre_shared_certs = join(",", var.gateway_mci_ssl_certificate_names)
 
   # Strategic-merge patch for the generated east-west gateway Deployment. istiod names the
   # gateway container "istio-proxy". The chart's default requests are sized for gateways
@@ -197,6 +197,81 @@ locals {
   # supported multi-network east-west gateway path (same-network ambient multicluster is
   # untested upstream).
   istio_network = local.multi_cluster_name
+
+  kubernetes_manifest_istio_gateway_manifest = {
+    apiVersion = "gateway.networking.k8s.io/v1"
+    kind       = "Gateway"
+
+    metadata = {
+      name      = "gateway"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      gatewayClassName = "istio"
+
+      # istiod provisions the data plane Deployment/Service (named gateway-istio) from this
+      # Gateway. The GKE Service annotations are copied onto the generated resources via
+      # infrastructure; the parametersRef ConfigMap carries the strategic-merge patches for the
+      # Service (NodePort), Deployment, HPA, and PodDisruptionBudget.
+
+      infrastructure = {
+        annotations = {
+          "cloud.google.com/app-protocols"  = jsonencode({ "https" = "HTTPS" })
+          "cloud.google.com/backend-config" = jsonencode({ "default" = "istio-gateway-backend" })
+          "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
+
+          # Suppress IST0170: The MCS only exports port 443 (not status-port 15021) by design,
+          # so Istio sees inconsistent ports across clusters. This is expected.
+          "galley.istio.io/analyze-suppress" = "IST0170"
+        }
+
+        parametersRef = {
+          group = ""
+          kind  = "ConfigMap"
+          name  = kubernetes_config_map_v1.istio_gateway_options.metadata[0].name
+        }
+      }
+
+      listeners = local.gateway_listeners
+    }
+  }
+
+  kubernetes_manifest_istio_gateway_mcs_manifest = {
+    apiVersion = "networking.gke.io/v1"
+    kind       = "MultiClusterService"
+
+    metadata = {
+      annotations = {
+        "cloud.google.com/backend-config" = jsonencode({ "default" = kubernetes_manifest.istio_gateway_backendconfig.manifest.metadata.name })
+        "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
+        "networking.gke.io/app-protocols" = jsonencode({ "https" = "HTTPS" })
+      }
+      name      = "istio-gateway-mcs"
+      namespace = "istio-ingress"
+    }
+
+    spec = {
+      template = {
+        spec = {
+          selector = {
+            "gateway.networking.k8s.io/gateway-name" = "gateway"
+          }
+
+          ports = [
+            {
+              name       = "https"
+              port       = 443
+              protocol   = "TCP"
+              targetPort = 443
+            }
+          ]
+        }
+      }
+
+      clusters = var.multi_cluster_service_clusters
+    }
+  }
 
   multi_cluster_name = module.core_helpers.zone != null ? "${var.cluster_prefix}-${module.core_helpers.region}-${module.core_helpers.zone}-${module.core_helpers.env}" : "${var.cluster_prefix}-${module.core_helpers.region}-${module.core_helpers.env}"
 }

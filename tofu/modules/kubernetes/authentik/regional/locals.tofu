@@ -1,12 +1,12 @@
 # Local Values
 # https://opentofu.org/docs/language/values/locals
 
-# Redis is intentionally absent: modern Authentik (2025.10+) caches core state, sessions, the
+# Redis is intentionally absent: modern authentik (2025.10+) caches core state, sessions, the
 # embedded outpost store, and WebSocket connections in PostgreSQL, so no Redis is deployed.
 # https://docs.goauthentik.io/install-config/high-availability
 
 # The Cloud SQL Auth Proxy runs as a sidecar in every server and worker pod and authenticates to
-# Cloud SQL via Workload Identity, so Authentik reaches the private-IP, ENCRYPTED_ONLY instance over
+# Cloud SQL via Workload Identity, so authentik reaches the private-IP, ENCRYPTED_ONLY instance over
 # the pod loopback without the database being exposed on the mesh.
 # https://cloud.google.com/sql/docs/postgres/connect-auth-proxy
 

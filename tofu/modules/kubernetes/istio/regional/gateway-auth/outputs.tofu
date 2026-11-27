@@ -12,7 +12,7 @@ output "custom_authorization_policy_manifests" {
 }
 
 output "extension_provider" {
-  description = "Fail-closed Authentik HTTP extension provider for meshConfig.extensionProviders."
+  description = "Fail-closed authentik HTTP extension provider for meshConfig.extensionProviders."
   value       = local.extension_provider
 }
 

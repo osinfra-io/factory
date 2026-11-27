@@ -23,7 +23,8 @@ resource "google_service_account_iam_member" "authentik_cloud_sql_workload_ident
 resource "google_sql_database" "authentik" {
   lifecycle {
     precondition {
-      condition     = local.cloud_sql_instance != null
+      condition = local.cloud_sql_instance != null
+
       error_message = "No Cloud SQL instance matching authentik-* was found in ${local.primary_region}; apply Assembly with the authentik cloud_sql entry first."
     }
   }

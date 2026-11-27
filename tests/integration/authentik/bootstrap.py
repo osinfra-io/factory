@@ -1,4 +1,4 @@
-"""Helpers for deciding when Authentik has finished bootstrapping its defaults."""
+"""Helpers for deciding when authentik has finished bootstrapping its defaults."""
 
 DEFAULT_SCOPE_MAPPINGS = frozenset({
     "goauthentik.io/providers/oauth2/scope-email",

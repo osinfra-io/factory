@@ -21,7 +21,7 @@ resource "kubernetes_deployment_v1" "istio_test" {
 
       spec {
         container {
-          image             = "${local.registry}:${var.image_version}"
+          image             = local.kubernetes_deployment_v1_istio_test_container_image
           image_pull_policy = "Always"
 
           liveness_probe {
@@ -150,7 +150,7 @@ resource "kubernetes_service_v1" "istio_test_zonal" {
       "istio.io/global" = "true"
     }
 
-    name      = "istio-test-${local.location}"
+    name      = local.kubernetes_service_v1_istio_test_zonal_metadata_name
     namespace = local.namespace
   }
 

@@ -78,7 +78,7 @@ def verify_oidc(root_token):
         or config.get("default_role") != "default"
         or not config.get("oidc_discovery_ca_pem")
     ):
-        fail("OpenBao OIDC issuer, client ID, default role, or discovery CA does not match the local Authentik provider")
+        fail("OpenBao OIDC issuer, client ID, default role, or discovery CA does not match the local authentik provider")
 
     mounts = expect(root_token, "GET", "sys/auth", {200}).get("data", {})
     oidc_mount = mounts.get("oidc/", {})
@@ -105,7 +105,7 @@ def verify_oidc(root_token):
             or authorization_url.netloc != "authentik.localhost"
             or authorization_url.path != "/application/o/authorize/"
         ):
-            fail("OpenBao did not generate the expected Authentik authorization endpoint")
+            fail("OpenBao did not generate the expected authentik authorization endpoint")
         connection = LoopbackHTTPSConnection("authentik.localhost", timeout=15)
         try:
             connection.request("GET", f"{authorization_url.path}?{authorization_url.query}")
@@ -118,7 +118,7 @@ def verify_oidc(root_token):
                 or location.netloc not in ("", "authentik.localhost")
                 or not location.path.startswith("/if/flow/")
             ):
-                fail("Authentik rejected the OpenBao authorization request before browser sign-in")
+                fail("authentik rejected the OpenBao authorization request before browser sign-in")
         finally:
             connection.close()
 

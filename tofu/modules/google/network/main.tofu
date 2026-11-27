@@ -69,3 +69,16 @@ resource "google_compute_shared_vpc_service_project" "this" {
   host_project    = google_compute_shared_vpc_host_project.this.id
   service_project = each.key
 }
+
+# DNS Policy Resource
+# https://search.opentofu.org/provider/hashicorp/google/latest/docs/resources/dns_policy
+
+resource "google_dns_policy" "this" {
+  enable_logging = true
+  name           = var.name
+  project        = var.project
+
+  networks {
+    network_url = google_compute_network.this.id
+  }
+}

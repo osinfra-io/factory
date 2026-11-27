@@ -9,6 +9,20 @@ locals {
     if contains(instance.regions, module.core_helpers.region)
   }
 
+  cloud_sql_instances_output = {
+    for key, instance in module.google_cloud_sql : key => {
+      host               = google_dns_record_set.cloud_sql[key].name
+      instance           = instance.instance
+      private_ip_address = instance.private_ip_address
+    }
+  }
+
+  google_network_master_subnets_name_by_instance = {
+    for instance_key, instance_value in local.regional_subnets : instance_key => "${instance_key}-master"
+  }
+
+  google_network_nat_for_each = length(local.regional_subnets) > 0 ? toset([module.core_helpers.region]) : toset([])
+
   main = data.terraform_remote_state.assembly.outputs
 
   main_workspace = "assembly-main-${coalesce(module.core_helpers.environment, "unsupported")}"

@@ -2,15 +2,15 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "failover_from_region" {
+  default     = ""
   description = "The region to fail over from"
   type        = string
-  default     = ""
 }
 
 variable "failover_to_region" {
+  default     = ""
   description = "The region to fail over to"
   type        = string
-  default     = ""
 }
 
 variable "routes" {

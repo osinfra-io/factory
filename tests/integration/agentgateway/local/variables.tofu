@@ -2,78 +2,78 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "authentik_http_port" {
-  description = "HTTP port exposed by the Authentik server Service"
-  type        = number
   default     = 80
+  description = "HTTP port exposed by the authentik server Service"
+  type        = number
 }
 
 variable "authentik_namespace" {
-  description = "Namespace containing the Authentik server"
-  type        = string
   default     = "authentik"
+  description = "Namespace containing the authentik server"
+  type        = string
 }
 
 variable "authentik_service" {
-  description = "Authentik server Service name"
-  type        = string
   default     = "authentik-server"
+  description = "authentik server Service name"
+  type        = string
 }
 
 variable "data_port" {
-  description = "AgentGateway proxy data port reachable only from the Istio ingress Gateway"
-  type        = number
   default     = 80
+  description = "agentgateway proxy data port reachable only from the Istio ingress Gateway"
+  type        = number
 }
 
 variable "diagnostic_namespace" {
+  default     = "istio-test"
   description = "Namespace containing the diagnostic Service"
   type        = string
-  default     = "istio-test"
 }
 
 variable "diagnostic_service" {
+  default     = "istio-test"
   description = "Diagnostic Service name"
   type        = string
-  default     = "istio-test"
 }
 
 variable "diagnostic_service_port" {
+  default     = 8080
   description = "Diagnostic Service HTTP port"
   type        = number
-  default     = 8080
 }
 
 variable "gateway_name" {
-  description = "AgentGateway Gateway name"
-  type        = string
   default     = "agentgateway-proxy"
+  description = "agentgateway Gateway name"
+  type        = string
 }
 
 variable "hostname" {
+  default     = "agentgateway.localhost"
   description = "Local hostname routed through the Istio ingress Gateway"
   type        = string
-  default     = "agentgateway.localhost"
 }
 
 variable "istio_gateway_name" {
+  default     = "gateway"
   description = "Istio ingress Gateway name"
   type        = string
-  default     = "gateway"
 }
 
 variable "istio_gateway_namespace" {
+  default     = "istio-ingress"
   description = "Namespace containing the Istio ingress Gateway"
   type        = string
-  default     = "istio-ingress"
 }
 
 variable "istio_ingress_principal" {
-  description = "Istio principal allowed to reach the AgentGateway admin and data ports"
-  type        = string
   default     = "cluster.local/ns/istio-ingress/sa/gateway-istio"
+  description = "Istio principal allowed to reach the agentgateway admin and data ports"
+  type        = string
 }
 
 variable "namespace" {
-  description = "Namespace containing AgentGateway"
+  description = "Namespace containing agentgateway"
   type        = string
 }

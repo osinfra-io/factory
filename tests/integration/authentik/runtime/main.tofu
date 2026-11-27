@@ -1,4 +1,4 @@
-# Authentik
+# authentik
 # https://github.com/osinfra-io/factory
 
 module "authentik" {

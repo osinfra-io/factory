@@ -4,6 +4,10 @@
 locals {
   cluster_id = module.core_helpers.zone != null ? "${var.cluster_prefix}-${module.core_helpers.region}-${module.core_helpers.zone}-${module.core_helpers.env}" : "${var.cluster_prefix}-${module.core_helpers.region}-${module.core_helpers.env}"
 
+  helm_release_cert_manager_istio_csr_values = [
+    yamlencode(local.helm_values)
+  ]
+
   helm_values = {
     app = {
       server = {

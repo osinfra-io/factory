@@ -18,7 +18,7 @@ repos:
         args: ["-x"]
 
   - repo: https://github.com/osinfra-io/tofu-pre-commit-hooks
-    rev:  11f29896c7f6cdb18c6fe8028a44dd724918ba58 # frozen: v0.2.9
+    rev:  a415d17a2efd722387cb0ade3b48b315d42d879f  # frozen: v0.3.2
     hooks:
       - id: tofu-fmt
         verbose: true
@@ -36,3 +36,22 @@ repos:
 
       - id: tofu-scan
         verbose: true
+
+      - id: tofu-test
+        verbose: true
+
+  - repo: local
+    hooks:
+      - id: shared-files
+        name: check Floor shared files
+        entry: python tests/check_shared_files.py
+        language: python
+        always_run: true
+        pass_filenames: false
+
+      - id: regal-lint
+        name: regal lint
+        entry: regal lint tofu/modules/kubernetes/opa-gatekeeper/regional/templates
+        language: system  # requires regal to be installed locally (see StyraInc/setup-regal in CI)
+        files: ^tofu/modules/kubernetes/opa-gatekeeper/regional/templates/.*\.rego$
+        pass_filenames: false

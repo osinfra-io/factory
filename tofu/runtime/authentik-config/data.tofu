@@ -16,7 +16,7 @@ data "terraform_remote_state" "authentik_global" {
     bucket = var.bucket
     prefix = "runtime"
   }
-  workspace = "authentik-global-${coalesce(module.core_helpers.environment, "unsupported")}"
+  workspace = local.terraform_remote_state_authentik_global_workspace
 }
 
 data "terraform_remote_state" "istio_global" {
@@ -25,5 +25,5 @@ data "terraform_remote_state" "istio_global" {
     bucket = var.bucket
     prefix = "runtime"
   }
-  workspace = "istio-global-${coalesce(module.core_helpers.environment, "unsupported")}"
+  workspace = local.terraform_remote_state_istio_global_workspace
 }

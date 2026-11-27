@@ -48,36 +48,10 @@ locals {
   # Note: Platform currently only supports these two regions
   region_regex = "^(us-east1|us-east4)(-|$)"
 
-  # Google Cloud zone regex - supports all available zones (a, b, c, d, e, f)
-  zone_regex = "^(us-east1|us-east4)-([abcdef])(-|$)"
-
   workspace = var.workspace != null ? var.workspace : terraform.workspace
 
   zone = local.parsed_workspace.zone
-}
 
-output "env" {
-  description = "The short name for the environment for example prod, nonprod, sb"
-  value       = local.env
-}
-
-output "environment" {
-  description = "The environment name for example production, non-production, sandbox"
-  value       = local.environment
-}
-
-output "region" {
-  description = "The region where resources will be deployed"
-  value       = local.region
-}
-
-output "zone" {
-  description = "The zone where resources will be deployed"
-  value       = local.zone
-}
-
-variable "workspace" {
-  description = "This is used for tests to set the workspace name. Do not set this variable in any other context"
-  type        = string
-  default     = null
+  # Google Cloud zone regex - supports all available zones (a, b, c, d, e, f)
+  zone_regex = "^(us-east1|us-east4)-([abcdef])(-|$)"
 }

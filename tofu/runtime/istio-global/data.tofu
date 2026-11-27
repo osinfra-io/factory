@@ -4,5 +4,5 @@ data "terraform_remote_state" "assembly" {
     bucket = var.bucket
     prefix = "assembly"
   }
-  workspace = "assembly-main-${coalesce(module.core_helpers.environment, "unsupported")}"
+  workspace = local.terraform_remote_state_assembly_workspace
 }

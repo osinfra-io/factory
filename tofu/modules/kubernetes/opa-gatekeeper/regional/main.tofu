@@ -11,10 +11,7 @@ resource "helm_release" "gatekeeper" {
   namespace  = "gatekeeper-system"
   repository = var.chart_repository
 
-  values = [
-    file("${path.module}/helm/gatekeeper.yml"),
-    yamlencode(local.helm_values)
-  ]
+  values = local.helm_release_gatekeeper_values
 
   version = var.gatekeeper_version
 }

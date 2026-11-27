@@ -7,15 +7,15 @@ variable "billing_account" {
 }
 
 variable "budget_notification_email" {
+  default     = "billing-admins@osinfra.io"
   description = "The email address to send budget notifications to"
   type        = string
-  default     = "billing-admins@osinfra.io"
 }
 
 variable "cis_2_2_logging_bucket_locked" {
+  default     = true
   description = "Boolean to enable CIS 2.2 logging bucket lock"
   type        = bool
-  default     = true
 }
 
 variable "cis_2_2_logging_sink" {
@@ -26,21 +26,22 @@ variable "cis_2_2_logging_sink" {
   })
 
   validation {
-    condition     = var.cis_2_2_logging_sink == null || var.cis_2_2_logging_sink_project_id == ""
+    condition = var.cis_2_2_logging_sink == null || var.cis_2_2_logging_sink_project_id == ""
+
     error_message = "Set either cis_2_2_logging_sink or cis_2_2_logging_sink_project_id, not both."
   }
 }
 
 variable "cis_2_2_logging_sink_project_id" {
+  default     = ""
   description = "The CIS 2.2 logging sink project ID"
   type        = string
-  default     = ""
 }
 
 variable "deletion_policy" {
+  default     = "PREVENT"
   description = "The deletion policy for the project"
   type        = string
-  default     = "PREVENT"
 }
 
 variable "folder_id" {
@@ -49,33 +50,33 @@ variable "folder_id" {
 }
 
 variable "key_ring_location" {
+  default     = "us"
   description = "The location of the key ring to create"
   type        = string
-  default     = "us"
 }
 
 variable "labels" {
+  default     = {}
   description = "A map of key/value pairs to assign to the resources being created"
   type        = map(string)
-  default     = {}
 }
 
 variable "monthly_budget_amount" {
+  default     = 5
   description = "The monthly budget amount in USD to set for the project"
   type        = number
-  default     = 5
 }
 
 variable "prefix" {
+  default     = "test"
   description = "The team prefix for example: `ops` (Operations), `sec` (Security)"
   type        = string
-  default     = "test"
 }
 
 variable "random_project_id" {
+  default     = true
   description = "If true, a random hex value with a prefix of tf will be added to the `project_id`"
   type        = bool
-  default     = true
 }
 
 variable "random_project_id_hex_length" {
@@ -84,19 +85,20 @@ variable "random_project_id_hex_length" {
   type        = number
 
   validation {
-    condition     = var.random_project_id_hex_length >= 1 && var.random_project_id_hex_length <= 24 && floor(var.random_project_id_hex_length) == var.random_project_id_hex_length
+    condition = var.random_project_id_hex_length >= 1 && var.random_project_id_hex_length <= 24 && floor(var.random_project_id_hex_length) == var.random_project_id_hex_length
+
     error_message = "The random project ID suffix length must be a whole number between 1 and 24."
   }
 }
 
 variable "security_notification_email" {
+  default     = "security@osinfra.io"
   description = "The email address to send security notifications to"
   type        = string
-  default     = "security@osinfra.io"
 }
 
 variable "services" {
+  default     = []
   description = "A list of services to enable in the project"
   type        = list(string)
-  default     = []
 }

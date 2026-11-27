@@ -30,7 +30,7 @@ resource "google_compute_global_address" "openbao_ingress" {
   for_each = local.instances
 
   labels  = local.labels
-  name    = "openbao-${local.location}"
+  name    = local.google_compute_global_address_openbao_ingress_name
   project = local.project
 }
 
@@ -41,7 +41,7 @@ resource "google_dns_record_set" "openbao_zonal" {
   for_each = local.instances
 
   managed_zone = local.global.openbao_public_dns_zone_name
-  name         = "${local.zonal_hostname}."
+  name         = local.google_dns_record_set_openbao_zonal_name
   project      = local.global.shared_vpc_host_project_id
   rrdatas      = [google_compute_global_address.openbao_ingress[each.key].address]
   ttl          = 300
@@ -269,39 +269,7 @@ resource "kubernetes_manifest" "openbao_mcs" {
 
   for_each = local.config_instances
 
-  manifest = {
-    apiVersion = "networking.gke.io/v1"
-    kind       = "MultiClusterService"
-    metadata = {
-      annotations = {
-        "cloud.google.com/backend-config" = jsonencode({ "default" = kubernetes_manifest.openbao_backendconfig[each.key].manifest.metadata.name })
-        "cloud.google.com/neg"            = jsonencode({ "ingress" = true })
-        "networking.gke.io/app-protocols" = jsonencode({ "https" = "HTTPS" })
-      }
-      name      = "openbao-mcs"
-      namespace = kubernetes_namespace_v1.openbao[each.key].metadata[0].name
-    }
-    spec = {
-      clusters = local.multi_cluster_service_clusters
-      template = {
-        spec = {
-          ports = [
-            {
-              name       = "https"
-              port       = 8200
-              protocol   = "TCP"
-              targetPort = 8200
-            }
-          ]
-          selector = {
-            "app.kubernetes.io/instance" = "openbao"
-            "app.kubernetes.io/name"     = "openbao"
-            component                    = "server"
-          }
-        }
-      }
-    }
-  }
+  manifest = local.kubernetes_manifest_openbao_mcs_manifest_by_instance[each.key]
 }
 
 resource "kubernetes_manifest" "openbao_selfsigned_issuer" {

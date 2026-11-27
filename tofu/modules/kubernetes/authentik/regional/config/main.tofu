@@ -1,4 +1,4 @@
-# Authentik Outpost
+# authentik Outpost
 # https://registry.terraform.io/providers/goauthentik/authentik/latest/docs/resources/outpost
 
 # The embedded outpost runs in the regional authentik-server pods and serves the instance's proxy

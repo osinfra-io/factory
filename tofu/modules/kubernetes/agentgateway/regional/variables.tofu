@@ -2,57 +2,57 @@
 # https://opentofu.org/docs/language/values/variables
 
 variable "agentgateway_version" {
-  description = "AgentGateway Helm chart version"
-  type        = string
   default     = "v1.6.0"
+  description = "agentgateway Helm chart version"
+  type        = string
 }
 
 variable "chart_repository" {
-  description = "OCI repository containing the AgentGateway Helm charts"
-  type        = string
   default     = "oci://cr.agentgateway.dev/charts"
+  description = "OCI repository containing the agentgateway Helm charts"
+  type        = string
 }
 
 variable "controller_cpu_limits" {
-  description = "CPU limit for the AgentGateway controller"
-  type        = string
   default     = "500m"
+  description = "CPU limit for the agentgateway controller"
+  type        = string
 }
 
 variable "controller_cpu_requests" {
-  description = "CPU request for the AgentGateway controller"
-  type        = string
   default     = "100m"
+  description = "CPU request for the agentgateway controller"
+  type        = string
 }
 
 variable "controller_memory_limits" {
-  description = "Memory limit for the AgentGateway controller"
-  type        = string
   default     = "512Mi"
+  description = "Memory limit for the agentgateway controller"
+  type        = string
 }
 
 variable "controller_memory_requests" {
-  description = "Memory request for the AgentGateway controller"
-  type        = string
   default     = "128Mi"
+  description = "Memory request for the agentgateway controller"
+  type        = string
 }
 
 variable "crds_postrender" {
+  default     = null
   description = "Optional Helm post-renderer for the CRD chart; local fixtures use it to retain cluster-wide CRDs on uninstall"
   type = object({
     args        = optional(list(string), [])
     binary_path = string
   })
-  default = null
 }
 
 variable "labels" {
-  description = "Labels applied to AgentGateway resources"
-  type        = map(string)
   default     = {}
+  description = "Labels applied to agentgateway resources"
+  type        = map(string)
 }
 
 variable "namespace" {
-  description = "Kubernetes namespace for AgentGateway"
+  description = "Kubernetes namespace for agentgateway"
   type        = string
 }

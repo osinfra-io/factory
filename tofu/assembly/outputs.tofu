@@ -1,11 +1,6 @@
 output "artifact_registries" {
   description = "Standard push and virtual pull repositories by team"
-  value = {
-    for team, registry in google_artifact_registry_repository.docker_standard : team => {
-      standard = registry.id
-      virtual  = google_artifact_registry_repository.docker_virtual[team].id
-    }
-  }
+  value       = local.artifact_registries_output
 }
 
 output "cloud_sql_instances" {
@@ -15,12 +10,7 @@ output "cloud_sql_instances" {
 
 output "github_registry_publishers" {
   description = "Federated registry publishing service accounts and identity provider"
-  value = {
-    for team, publisher in google_service_account.registry_publishers : team => {
-      provider        = google_iam_workload_identity_pool_provider.github[var.environment].name
-      service_account = publisher.email
-    }
-  }
+  value       = local.github_registry_publishers_output
 }
 
 output "private_dns" {
@@ -45,12 +35,7 @@ output "shared_vpc" {
 
 output "team_dns" {
   description = "Public DNS zones delegated to teams"
-  value = {
-    for team, zone in module.google_network_team_dns : team => {
-      dns_name = zone.dns_name
-      name     = zone.name
-    }
-  }
+  value       = local.team_dns_output
 }
 
 output "team_folder_ids" {
@@ -60,30 +45,15 @@ output "team_folder_ids" {
 
 output "team_projects" {
   description = "Team-managed project IDs and numbers"
-  value = {
-    for team, project in module.google_project_teams : team => {
-      id     = project.id
-      number = project.number
-    }
-  }
+  value       = local.team_projects_output
 }
 
 output "team_state" {
   description = "Versioned GCS buckets and encryption keys for team-owned state"
-  value = {
-    for team, bucket in module.google_storage_bucket : team => {
-      bucket  = bucket.name
-      kms_key = google_kms_crypto_key.team_state[team].id
-    }
-  }
+  value       = local.team_state_output
 }
 
 output "workload_projects" {
   description = "Platform-managed workload project IDs and numbers"
-  value = {
-    for team, project in module.google_project_workloads : team => {
-      id     = project.id
-      number = project.number
-    }
-  }
+  value       = local.workload_projects_output
 }

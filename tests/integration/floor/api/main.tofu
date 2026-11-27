@@ -2,46 +2,6 @@
 # https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/role_binding_v1
 
 # Bind only in the fixture namespace and explicitly opted-in namespaces.
-resource "kubernetes_role_binding_v1" "floor_api" {
-  metadata {
-    name      = "floor-api"
-    namespace = var.fixture_namespace
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role_v1.floor_api.metadata[0].name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account_v1.floor_api.metadata[0].name
-    namespace = var.namespace
-  }
-}
-
-resource "kubernetes_role_binding_v1" "floor_api_additional_namespaces" {
-  for_each = var.additional_namespaces
-
-  metadata {
-    name      = "floor-api"
-    namespace = each.value
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role_v1.floor_api.metadata[0].name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account_v1.floor_api.metadata[0].name
-    namespace = var.namespace
-  }
-}
-
 # Kubernetes Cluster Role
 # https://search.opentofu.org/provider/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1
 
@@ -203,38 +163,7 @@ resource "kubernetes_manifest" "authentik_outpost" {
 
 # Only the agentgateway proxy may reach floor-api, which trusts the identity headers it forwards.
 resource "kubernetes_manifest" "floor_api_authorization" {
-  manifest = {
-    apiVersion = "security.istio.io/v1"
-    kind       = "AuthorizationPolicy"
-    metadata = {
-      name      = "floor-api"
-      namespace = var.namespace
-    }
-    spec = {
-      action = "DENY"
-      rules = [
-        {
-          from = [
-            {
-              source = {
-                notPrincipals = [var.gateway_principal]
-              }
-            }
-          ]
-          to = [
-            {
-              operation = {
-                ports = [tostring(var.service_port)]
-              }
-            }
-          ]
-        }
-      ]
-      selector = {
-        matchLabels = local.selector_labels
-      }
-    }
-  }
+  manifest = local.kubernetes_manifest_floor_api_authorization_manifest
 }
 
 # agentgateway proxies the MCP endpoint, so the backend route is parented by its Gateway.
@@ -344,6 +273,46 @@ resource "kubernetes_manifest" "floor_reference_grant" {
         }
       ]
     }
+  }
+}
+
+resource "kubernetes_role_binding_v1" "floor_api" {
+  metadata {
+    name      = "floor-api"
+    namespace = var.fixture_namespace
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role_v1.floor_api.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account_v1.floor_api.metadata[0].name
+    namespace = var.namespace
+  }
+}
+
+resource "kubernetes_role_binding_v1" "floor_api_additional_namespaces" {
+  for_each = var.additional_namespaces
+
+  metadata {
+    name      = "floor-api"
+    namespace = each.value
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role_v1.floor_api.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account_v1.floor_api.metadata[0].name
+    namespace = var.namespace
   }
 }
 

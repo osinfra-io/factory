@@ -16,10 +16,6 @@ locals {
           topologyKey: kubernetes.io/hostname
   EOT
 
-  raft_configuration = merge(
-    { enabled = true },
-    var.raft_configuration == "" ? {} : { config = var.raft_configuration }
-  )
 
   helm_values = yamlencode({
     global = {
@@ -81,6 +77,10 @@ locals {
       enabled = true
     }
   })
+  raft_configuration = merge(
+    { enabled = true },
+    var.raft_configuration == "" ? {} : { config = var.raft_configuration }
+  )
 
   service_name = "openbao"
 }

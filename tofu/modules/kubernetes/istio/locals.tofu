@@ -35,5 +35,6 @@ locals {
 
   gateway_mci_enabled = var.gke_fleet_host_project_id == ""
 
+
   gateway_mci_global_address = local.gateway_mci_enabled ? google_compute_global_address.istio_gateway_mci.address : ""
 }

@@ -1,7 +1,3 @@
-module "gateway_auth" {
-  source = "../../modules/kubernetes/istio/regional/gateway-auth"
-}
-
 module "istio" {
   source = "../../modules/kubernetes/istio/regional"
 
@@ -32,6 +28,10 @@ module "istio" {
   tls_self_signed_cert_cert_manager_root_key  = data.terraform_remote_state.trust.outputs.ca_key_pem
   ztunnel_cpu_requests                        = var.resources.ztunnel_cpu_requests
   ztunnel_memory_requests                     = var.resources.ztunnel_memory_requests
+}
+
+module "gateway_auth" {
+  source = "../../modules/kubernetes/istio/regional/gateway-auth"
 }
 
 # Kubernetes Secret Resource

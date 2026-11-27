@@ -33,7 +33,8 @@ variable "purpose" {
   type        = string
 
   validation {
-    condition     = var.purpose == null || contains(["PRIVATE_RFC_1918", "INTERNAL_HTTPS_LOAD_BALANCER", "REGIONAL_MANAGED_PROXY"], var.purpose)
+    condition = var.purpose == null || contains(["PRIVATE_RFC_1918", "INTERNAL_HTTPS_LOAD_BALANCER", "REGIONAL_MANAGED_PROXY"], var.purpose)
+
     error_message = "The purpose must be one of: PRIVATE_RFC_1918, INTERNAL_HTTPS_LOAD_BALANCER, REGIONAL_MANAGED_PROXY"
   }
 }
@@ -44,7 +45,8 @@ variable "role" {
   type        = string
 
   validation {
-    condition     = var.role == null || contains(["ACTIVE", "BACKUP"], var.role)
+    condition = var.role == null || contains(["ACTIVE", "BACKUP"], var.role)
+
     error_message = "The role must be one of: ACTIVE, BACKUP"
   }
 }

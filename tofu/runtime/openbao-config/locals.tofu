@@ -23,38 +23,6 @@ locals {
 
   openbao_hostname = data.terraform_remote_state.istio_global.outputs.openbao_hostname
 
-  team_readme_content = {
-    for team_key in keys(var.teams) : team_key => <<-EOT
-      # OpenBao team secrets
-
-      Use the environment's openbao endpoint and sign in with your Google-backed account:
-
-      ```bash
-      export BAO_ADDR=https://${local.openbao_hostname}
-      bao login -method=oidc -path=oidc role=default
-      ```
-
-      Your team prefix is `${team_key}`. List team prefixes, list your secrets, and read this guide with:
-
-      ```bash
-      bao kv list kv2
-      bao kv list kv2/${team_key}
-      bao kv get kv2/${team_key}/README
-      ```
-
-      Create or update a secret under your team prefix with:
-
-      ```bash
-      bao kv put kv2/${team_key}/my-secret example=value
-      ```
-
-      Team access is granted through the `openbao-secret-readers`, `openbao-secret-writers`,
-      and `openbao-secret-admins` groups. Readers can list and read; writers can create and update;
-      admins can also manage secret metadata and versions. Do not store credentials in source
-      repositories or CI settings.
-    EOT
-  }
-
   team_policy_documents = {
     for key, paths in local.team_policy_paths : key => join("\n\n", [
       for path in paths : format(
@@ -100,5 +68,61 @@ locals {
         },
       ] : [],
     )
+  }
+
+  team_readme_content = {
+    for team_key in keys(var.teams) : team_key => <<-EOT
+      # OpenBao team secrets
+
+      Use the environment's openbao endpoint and sign in with your Google-backed account:
+
+      ```bash
+      export BAO_ADDR=https://${local.openbao_hostname}
+      bao login -method=oidc -path=oidc role=default
+      ```
+
+      Your team prefix is `${team_key}`. List team prefixes, list your secrets, and read this guide with:
+
+      ```bash
+      bao kv list kv2
+      bao kv list kv2/${team_key}
+      bao kv get kv2/${team_key}/README
+      ```
+
+      Create or update a secret under your team prefix with:
+
+      ```bash
+      bao kv put kv2/${team_key}/my-secret example=value
+      ```
+
+      Team access is granted through the `openbao-secret-readers`, `openbao-secret-writers`,
+      and `openbao-secret-admins` groups. Readers can list and read; writers can create and update;
+      admins can also manage secret metadata and versions. Do not store credentials in source
+      repositories or CI settings.
+    EOT
+  }
+
+  terraform_remote_state_authentik_config_workspace = "authentik-config-${coalesce(module.core_helpers.environment, "unsupported")}"
+
+  terraform_remote_state_istio_global_workspace = "istio-global-${coalesce(module.core_helpers.environment, "unsupported")}"
+
+  vault_jwt_auth_backend_role_oidc_allowed_redirect_uris = [
+    "https://${local.openbao_hostname}/ui/vault/auth/oidc/oidc/callback",
+    "https://${var.openbao_zone}.${local.openbao_hostname}/ui/vault/auth/oidc/oidc/callback",
+    "http://localhost:8250/oidc/callback",
+  ]
+
+  vault_kv_secret_v2_team_readme_data_json_by_instance = {
+    for instance_key, instance_value in local.team_readme_content : instance_key => jsonencode({
+      README = instance_value
+    })
+  }
+
+  vault_kv_secret_v2_team_readme_name_by_instance = {
+    for instance_key, instance_value in local.team_readme_content : instance_key => "${instance_key}/README"
+  }
+
+  vault_policy_team_name_by_instance = {
+    for instance_key, instance_value in local.team_policy_documents : instance_key => replace(instance_key, "/", "-")
   }
 }

@@ -1,60 +1,55 @@
 # Input Variables
 # https://opentofu.org/docs/language/values/variables
 
-variable "agentgateway_version" {
-  description = "AgentGateway Helm chart version"
-  type        = string
-  default     = "v1.6.0"
-}
-
 variable "labels" {
-  description = "Labels applied to AgentGateway resources"
-  type        = map(string)
   default     = {}
+  description = "Labels applied to agentgateway resources"
+  type        = map(string)
 }
 
 variable "namespace" {
-  description = "Kubernetes namespace for AgentGateway"
+  description = "Kubernetes namespace for agentgateway"
   type        = string
 }
 
 variable "proxy_cpu_limits" {
-  description = "CPU limit for the AgentGateway proxy"
-  type        = string
   default     = "500m"
+  description = "CPU limit for the agentgateway proxy"
+  type        = string
 }
 
 variable "proxy_cpu_requests" {
-  description = "CPU request for the AgentGateway proxy"
-  type        = string
   default     = "100m"
+  description = "CPU request for the agentgateway proxy"
+  type        = string
 }
 
 variable "proxy_env" {
-  description = "Additional environment variables for the AgentGateway proxy"
-  type        = map(string)
   default     = {}
+  description = "Additional environment variables for the agentgateway proxy"
+  type        = map(string)
 }
 
 variable "proxy_memory_limits" {
-  description = "Memory limit for the AgentGateway proxy"
-  type        = string
   default     = "512Mi"
+  description = "Memory limit for the agentgateway proxy"
+  type        = string
 }
 
 variable "proxy_memory_requests" {
-  description = "Memory request for the AgentGateway proxy"
-  type        = string
   default     = "128Mi"
+  description = "Memory request for the agentgateway proxy"
+  type        = string
 }
 
 variable "proxy_replicas" {
-  description = "Number of AgentGateway proxy replicas"
-  type        = number
   default     = 1
+  description = "Number of agentgateway proxy replicas"
+  type        = number
 
   validation {
-    condition     = var.proxy_replicas > 0
+    condition = var.proxy_replicas > 0
+
     error_message = "proxy_replicas must be greater than zero."
   }
 }

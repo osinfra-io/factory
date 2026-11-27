@@ -8,7 +8,7 @@ readonly SCRIPT_DIR
 source "${SCRIPT_DIR}/../shared/cluster.sh"
 
 fail() {
-  echo "AgentGateway local verification: $*" >&2
+  echo "agentgateway local verification: $*" >&2
   exit 1
 }
 
@@ -62,14 +62,14 @@ kubectl wait --for=condition=Programmed gateway/agentgateway-proxy \
 kubectl get service authentik-server --namespace=authentik \
   --output=jsonpath='{range .spec.ports[*]}{.port}{" "}{end}' |
   grep --word-regexp --quiet 80 ||
-  fail "expected Authentik Service authentik-server to expose HTTP port 80"
+  fail "expected authentik Service authentik-server to expose HTTP port 80"
 
 proxy_pods="$(
   kubectl get pods --namespace=agentgateway \
     --selector=gateway.networking.k8s.io/gateway-name=agentgateway-proxy \
     --output=jsonpath='{.items[*].metadata.name}'
 )"
-[ -n "${proxy_pods}" ] || fail "AgentGateway proxy pods were not found"
+[ -n "${proxy_pods}" ] || fail "agentgateway proxy pods were not found"
 for pod in ${proxy_pods}; do
   kubectl wait --namespace=agentgateway "pod/${pod}" \
     --for=jsonpath='{.metadata.annotations.ambient\.istio\.io/redirection}'=enabled \
@@ -77,7 +77,7 @@ for pod in ${proxy_pods}; do
   if kubectl get pod "${pod}" --namespace=agentgateway \
     --output=jsonpath='{.spec.containers[*].name} {.spec.initContainers[*].name}' |
     grep --quiet --word-regexp istio-proxy; then
-    fail "AgentGateway proxy pod ${pod} unexpectedly has an Istio sidecar"
+    fail "agentgateway proxy pod ${pod} unexpectedly has an Istio sidecar"
   fi
 done
 
@@ -91,13 +91,13 @@ redirect_headers="$(
     https://agentgateway.localhost/agentgateway-test/auth
 )"
 grep --quiet '^HTTP/.* 302' <<<"${redirect_headers}" ||
-  fail "protected diagnostic route did not redirect to Authentik"
+  fail "protected diagnostic route did not redirect to authentik"
 grep --quiet '^location: https://authentik.localhost/application/o/authorize/' \
   <<<"${redirect_headers,,}" ||
   fail "diagnostic route redirect did not target authentik.localhost"
 grep --quiet 'redirect_uri=https%3a%2f%2fagentgateway.localhost%2foutpost.goauthentik.io%2fcallback' \
   <<<"${redirect_headers,,}" ||
-  fail "Authentik redirect did not use the agentgateway outpost callback"
+  fail "authentik redirect did not use the agentgateway outpost callback"
 
 expect_status 302 https://agentgateway.localhost/ui/
 ui_headers="$(
@@ -106,7 +106,7 @@ ui_headers="$(
     https://agentgateway.localhost/ui/
 )"
 grep --quiet '^location: https://authentik.localhost/application/o/authorize/' \
-  <<<"${ui_headers,,}" || fail "AgentGateway admin UI did not redirect to Authentik"
+  <<<"${ui_headers,,}" || fail "agentgateway admin UI did not redirect to authentik"
 
 spoofed_status="$(
   curl --noproxy '*' --connect-timeout 5 --max-time 15 \
@@ -117,6 +117,6 @@ spoofed_status="$(
     https://agentgateway.localhost/agentgateway-test/auth
 )"
 [ "${spoofed_status}" = "302" ] ||
-  fail "forged Authentik identity headers bypassed browser authentication"
+  fail "forged authentik identity headers bypassed browser authentication"
 
-echo "AgentGateway automated checks passed. Google sign-in and authenticated identity checks remain a manual browser step."
+echo "agentgateway automated checks passed. Google sign-in and authenticated identity checks remain a manual browser step."

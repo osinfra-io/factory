@@ -1,4 +1,4 @@
-// Package auth provides handlers for displaying authenticated Authentik identity details.
+// Package auth provides handlers for displaying authenticated authentik identity details.
 package auth
 
 import (
@@ -37,7 +37,7 @@ type Request struct {
 	Traceparent      string   `json:"traceparent,omitempty"`
 }
 
-// Authentik describes the application, provider and outpost that authorized the request.
+// authentik describes the application, provider and outpost that authorized the request.
 type Authentik struct {
 	Application  string `json:"application,omitempty"`
 	Entitlements string `json:"entitlements,omitempty"`
@@ -71,7 +71,7 @@ type Response struct {
 	Workload  Workload  `json:"workload"`
 }
 
-// Handler returns the identity details injected by Authentik's trusted forward-auth outpost.
+// Handler returns the identity details injected by authentik's trusted forward-auth outpost.
 func Handler(w http.ResponseWriter, r *http.Request) {
 	identity := Identity{
 		Username: r.Header.Get(usernameHeader),
